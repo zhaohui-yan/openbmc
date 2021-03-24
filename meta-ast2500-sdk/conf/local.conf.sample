@@ -1,4 +1,4 @@
-MACHINE ??= "ast2600-default"
+MACHINE ??= "ast2500-default"
 DISTRO ?= "openbmc-phosphor"
 PACKAGE_CLASSES ?= "package_rpm"
 SANITY_TESTED_DISTROS_append ?= " *"
