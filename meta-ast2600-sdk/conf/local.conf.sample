@@ -1,4 +1,5 @@
 MACHINE ??= "ast2600-default"
+#MACHINE ??= "ast2600-secure-rsa2048-sha256"
 DISTRO ?= "openbmc-phosphor"
 PACKAGE_CLASSES ?= "package_rpm"
 SANITY_TESTED_DISTROS_append ?= " *"
@@ -21,3 +22,6 @@ EXTRA_USERS_PARAMS = " \
   "
 
 require conf/machine/include/obmc-bsp-common.inc
+
+# ASPEED initramfs if build aspeed-image-norootfs
+#INITRAMFS_IMAGE = "aspeed-image-initramfs"

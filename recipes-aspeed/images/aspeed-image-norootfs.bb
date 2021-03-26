@@ -1,10 +1,13 @@
 SUMMARY = "Two partition MTD image with u-boot and kernel"
 HOMEPAGE = "https://github.com/openbmc/meta-aspeed"
 LICENSE = "MIT"
+PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 inherit deploy
 
 UBOOT_SUFFIX ?= "bin"
+ASPEED_IMAGE_UBOOT_SPL_IMAGE ?= "u-boot-spl"
+ASPEED_IMAGE_UBOOT_IMAGE ?= "u-boot"
 ASPEED_IMAGE_UBOOT_OFFSET_KB ?= "0"
 ASPEED_IMAGE_UBOOT_SPL_SIZE_KB ?= "64"
 ASPEED_IMAGE_KERNEL_OFFSET_KB ?= "1024"
@@ -20,13 +23,13 @@ do_compile() {
 
     if [ ! -z ${SPL_BINARY} ]; then
         dd bs=1k conv=notrunc seek=${ASPEED_IMAGE_UBOOT_OFFSET_KB} \
-            if=${DEPLOY_DIR_IMAGE}/u-boot-spl.${UBOOT_SUFFIX} \
+            if=${DEPLOY_DIR_IMAGE}/${ASPEED_IMAGE_UBOOT_SPL_IMAGE}.${UBOOT_SUFFIX} \
             of=${B}/aspeed-norootfs.bin
         uboot_offset=${ASPEED_IMAGE_UBOOT_SPL_SIZE_KB}
     fi
 
     dd bs=1k conv=notrunc seek=${uboot_offset} \
-        if=${DEPLOY_DIR_IMAGE}/u-boot.${UBOOT_SUFFIX} \
+        if=${DEPLOY_DIR_IMAGE}/${ASPEED_IMAGE_UBOOT_IMAGE}.${UBOOT_SUFFIX} \
         of=${B}/aspeed-norootfs.bin \
 
     dd bs=1k conv=notrunc seek=${ASPEED_IMAGE_KERNEL_OFFSET_KB} \
@@ -38,7 +41,11 @@ do_deploy() {
     install -m644 -D ${B}/aspeed-norootfs.bin ${DEPLOYDIR}/${ASPEED_IMAGE_NAME}
 }
 
-do_compile[depends] = "virtual/kernel:do_deploy u-boot:do_deploy"
+do_compile[depends] = " \
+    virtual/kernel:do_deploy \
+    u-boot:do_deploy \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'ast-secure', 'aspeed-image-secureboot:do_deploy', '', d)} \
+    "
 do_fetch[noexec] = "1"
 do_unpack[noexec] = "1"
 do_patch[noexec] = "1"

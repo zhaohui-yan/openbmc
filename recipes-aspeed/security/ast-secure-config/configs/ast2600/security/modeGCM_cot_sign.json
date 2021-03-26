@@ -1,0 +1,36 @@
+{
+    "name": "modeGCM_cot_sign",
+    "bin_file": "u-boot-spl.bin",
+    "version": "a1",
+    "secure_mode": "Mode_GCM",
+    "image_encryption": true,
+    "header_offset": "0x20",
+    "image_encryption_key": {
+        "key_bin": "test_gcm_aes_key_1.bin",
+        "iv_bin": "test_gcm_aes_iv_1.bin",
+        //mode 3, key should put in otp
+        "key_in_otp": true
+    },
+    "header": {
+        "image_start": "0x40",
+        //Must be multiple of 512byte, Minimum size is 0x4000 (in unit of byte)
+        "sign_image_size": "0xec00",
+        "key_location": "0xee00",
+        "sign_location": "0xec00",
+        //COT BL2 verify
+        "bl2_verified_header":{
+            "verify_method": "signature",
+            "sha_mode": "SHA256",
+            "signature_key": {
+                "rsa_mode": "RSA2048",
+                "key_pem": "test_bl2_private_2048.pem"
+            },
+            "bl2_verified_info_offset": "0xe800"
+        }
+    },
+    "bl2_image": {
+        "bin_file": "u-boot.bin",
+        "load_address": "0x10000",
+        "header_offset": "0x20"
+    }
+}

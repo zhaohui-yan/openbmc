@@ -10,3 +10,6 @@ IMAGE_INSTALL_append = " \
         mmc-utils \
         memtester \
         "
+
+### Workaround
+inherit image_types_phosphor_aspeed
