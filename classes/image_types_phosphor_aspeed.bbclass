@@ -59,3 +59,4 @@ do_make_ubi[depends] += "${@bb.utils.contains('MACHINE_FEATURES', 'ast-secure', 
 do_generate_ubi_tar[depends] += "${@bb.utils.contains('MACHINE_FEATURES', 'ast-secure', 'aspeed-image-secureboot:do_deploy', '', d)}"
 do_generate_static_tar[depends] += "${@bb.utils.contains('MACHINE_FEATURES', 'ast-secure', 'aspeed-image-secureboot:do_deploy', '', d)}"
 do_generate_ext4_tar[depends] += "${@bb.utils.contains('MACHINE_FEATURES', 'ast-secure', 'aspeed-image-secureboot:do_deploy', '', d)}"
+do_generate_static[depends] += "${@bb.utils.contains('MACHINE_FEATURES', 'ast-secure', 'aspeed-image-secureboot:do_deploy', '', d)}"
