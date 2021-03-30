@@ -1,4 +1,5 @@
 MACHINE ??= "ast2600-default"
+#MACHINE ??= "ast2600-a1"
 #MACHINE ??= "ast2600-secure-gcm"
 #MACHINE ??= "ast2600-secure-rsa2048-sha256"
 #MACHINE ??= "ast2600-secure-rsa2048-sha256-ncot"
