@@ -19,26 +19,26 @@ do_compile() {
     uboot_offset=${ASPEED_IMAGE_UBOOT_OFFSET_KB}
 
     dd if=/dev/zero bs=1k count=${ASPEED_IMAGE_SIZE_KB} | \
-        tr '\000' '\377' > ${B}/aspeed-norootfs.bin
+        tr '\000' '\377' > ${B}/aspeed-sdk.bin
 
     if [ ! -z ${SPL_BINARY} ]; then
         dd bs=1k conv=notrunc seek=${ASPEED_IMAGE_UBOOT_OFFSET_KB} \
             if=${DEPLOY_DIR_IMAGE}/${ASPEED_IMAGE_UBOOT_SPL_IMAGE}.${UBOOT_SUFFIX} \
-            of=${B}/aspeed-norootfs.bin
+            of=${B}/aspeed-sdk.bin
         uboot_offset=${ASPEED_IMAGE_UBOOT_SPL_SIZE_KB}
     fi
 
     dd bs=1k conv=notrunc seek=${uboot_offset} \
         if=${DEPLOY_DIR_IMAGE}/${ASPEED_IMAGE_UBOOT_IMAGE}.${UBOOT_SUFFIX} \
-        of=${B}/aspeed-norootfs.bin \
+        of=${B}/aspeed-sdk.bin \
 
     dd bs=1k conv=notrunc seek=${ASPEED_IMAGE_KERNEL_OFFSET_KB} \
         if=${DEPLOY_DIR_IMAGE}/${ASPEED_IMAGE_KERNEL_IMAGE} \
-        of=${B}/aspeed-norootfs.bin
+        of=${B}/aspeed-sdk.bin
 }
 
 do_deploy() {
-    install -m644 -D ${B}/aspeed-norootfs.bin ${DEPLOYDIR}/${ASPEED_IMAGE_NAME}
+    install -m644 -D ${B}/aspeed-sdk.bin ${DEPLOYDIR}/${ASPEED_IMAGE_NAME}
 }
 
 do_compile[depends] = " \

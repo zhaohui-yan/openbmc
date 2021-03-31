@@ -12,4 +12,3 @@ FLASH_KERNEL_IMAGE_df-obmc-ubi-fs = "s-fitImage-${MACHINE}.bin"
 ASPEED_IMAGE_UBOOT_SPL_IMAGE = "s-u-boot-spl"
 ASPEED_IMAGE_UBOOT_IMAGE = "s-u-boot"
 ASPEED_IMAGE_KERNEL_IMAGE = "s-fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE}"
-

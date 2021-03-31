@@ -1,5 +1,4 @@
 MACHINE ??= "ast2600-default"
-#MACHINE ??= "ast2600-a1"
 #MACHINE ??= "ast2600-emmc"
 #MACHINE ??= "ast2600-secure-gcm"
 #MACHINE ??= "ast2600-secure-rsa2048-sha256"
@@ -15,6 +14,21 @@ MACHINE ??= "ast2600-default"
 #MACHINE ??= "ast2600-secure-rsa4096-sha512-o1"
 #MACHINE ??= "ast2600-secure-rsa4096-sha512-o2-priv"
 #MACHINE ??= "ast2600-secure-rsa4096-sha512-o2-pub"
+#MACHINE ??= "ast2600-a1"
+#MACHINE ??= "ast2600-a1-secure-gcm"
+#MACHINE ??= "ast2600-a1-secure-rsa2048-sha256"
+#MACHINE ??= "ast2600-a1-secure-rsa2048-sha256-ncot"
+#MACHINE ??= "ast2600-a1-secure-rsa2048-sha256-o1"
+#MACHINE ??= "ast2600-a1-secure-rsa2048-sha256-o2-priv"
+#MACHINE ??= "ast2600-a1-secure-rsa2048-sha256-o2-pub"
+#MACHINE ??= "ast2600-a1-secure-rsa3072-sha384"
+#MACHINE ??= "ast2600-a1-secure-rsa3072-sha384-o1"
+#MACHINE ??= "ast2600-a1-secure-rsa3072-sha384-o2-priv"
+#MACHINE ??= "ast2600-a1-secure-rsa3072-sha384-o2-pub"
+#MACHINE ??= "ast2600-a1-secure-rsa4096-sha512"
+#MACHINE ??= "ast2600-a1-secure-rsa4096-sha512-o1"
+#MACHINE ??= "ast2600-a1-secure-rsa4096-sha512-o2-priv"
+#MACHINE ??= "ast2600-a1-secure-rsa4096-sha512-o2-pub"
 
 DISTRO ?= "openbmc-phosphor"
 PACKAGE_CLASSES ?= "package_rpm"
@@ -39,5 +53,5 @@ EXTRA_USERS_PARAMS = " \
 
 require conf/machine/include/obmc-bsp-common.inc
 
-# ASPEED initramfs if build aspeed-image-norootfs
+# ASPEED initramfs if build aspeed-image-sdk
 #INITRAMFS_IMAGE = "aspeed-image-initramfs"

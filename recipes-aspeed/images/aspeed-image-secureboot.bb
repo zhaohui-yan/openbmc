@@ -39,7 +39,7 @@ create_otp_image() {
         otptool \
         ${OTP_CONFIG} \
         --key_folder ${KEY_DIR} \
-        --user_data_folder ${S}/configs/${ASPEED_SECURE_BOOT_TARGET}/security/data \
+        --user_data_folder ${STAGING_DATADIR_NATIVE}/ast-secure-config/${ASPEED_SECURE_BOOT_TARGET}/security/data \
         --output_folder ${OUTPUT_IMAGE_DIR}/otp-image
 
         if [ $? -ne 0 ]; then
