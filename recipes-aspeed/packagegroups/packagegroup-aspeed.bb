@@ -5,13 +5,15 @@ PR = "r1"
 inherit packagegroup
 
 PROVIDES = "${PACKAGES}"
+RPROVIDES_${PN} = "${PACKAGES}"
 
-PACKAGES = " \
+PACKAGES_append = " \
         ${PN}-chassis \
         ${PN}-extras \
         ${PN}-fans \
         ${PN}-flash \
         ${PN}-system \
+	${PN}-apps \
 	"
 
 PROVIDES_append = " virtual/obmc-chassis-mgmt"
@@ -47,4 +49,9 @@ RDEPENDS_${PN}-system = " \
         ipmitool \
         phosphor-post-code-manager \
         phosphor-host-postd \
+        "
+
+SUMMARY_${PN}-apps = "AspeedTech Test App"
+RDEPENDS_${PN}-apps = " \
+        ast-app \
         "

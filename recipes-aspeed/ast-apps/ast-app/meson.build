@@ -6,15 +6,15 @@ executable('ast-video', ['video/ast-video.c', 'video/video.c'], install: true)
 install_data('video/video.inf')
 
 # i2c
-executable('i2c-test', 'i2c-test/i2c-test.c', install: true, 
+executable('i2c-test', 'i2c-test/i2c-test.c', install: true,
     dependencies: thread_dep)
 executable('i2c-slave-mqueue', 'i2c-slave-mqueue/i2c-slave-mqueue.c', install: true)
 
 # i3c
-i3cincdir = include_directories('i3c-tools/include/i3c')
+# i3cincdir = include_directories('i3c-tools/include/i3c')
 executable('i3c-test', 'i3c-test/i3c-test.c', install: true)
-executable('i3ctransfer', 'i3c-tools/i3ctransfer.c', install: true, 
-    include_directories: include_directories('i3c-tools/include/i3c'))
+# executable('i3ctransfer', 'i3c-tools/i3ctransfer.c', install: true,
+#    include_directories: include_directories('i3c-tools/include/i3c'))
 
 # eSPI
 executable('mafs-test', 'espi_test/mafs-test.c', install: true)
@@ -24,14 +24,14 @@ executable('safs-test', 'espi_test/safs-test.c', install: true)
 executable('vw-test', 'espi_test/vw-test.c', install: true)
 
 # kcs/bt
-executable('kcs-test', 'kcs-test/kcs-test.c', install: true, 
+executable('kcs-test', 'kcs-test/kcs-test.c', install: true,
     dependencies: thread_dep)
 executable('kcs_bt_test', 'kcs_bt_test/kcs_bt_test.c', install: true)
 
 # mctp
-executable('mctp', ['mctp/mctp.c', 'mctp/libmctp.c'], install: true, 
+executable('mctp', ['mctp/mctp.c', 'mctp/libmctp.c'], install: true,
     include_directories: include_directories('mctp'), dependencies: thread_dep)
-executable('mctp_rw', ['mctp_rw/mctp_rw.c', 'mctp/libmctp.c'], install: true, 
+executable('mctp_rw', ['mctp_rw/mctp_rw.c', 'mctp/libmctp.c'], install: true,
     include_directories: include_directories('mctp_rw'), dependencies: thread_dep)
 
 # peci
@@ -58,3 +58,6 @@ executable('xdma', 'xdma/xdma.c', install: true)
 
 # tty-test
 executable('tty-test', 'tty-test/tty-test.c', install: true, dependencies: thread_dep)
+
+# flash
+executable('flash-test', 'flash/flash-test.c', install: true, dependencies: thread_dep)

@@ -1,15 +1,16 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 IMAGE_INSTALL_append = " \
-        webui-vue mctp \
-        gperf \
-        iperf3 \
+        webui-vue \
+        mctp \
         entity-manager \
         dbus-sensors \
-        pciutils \
-        ethtool \
-        mmc-utils \
-        memtester \
         "
+
+IMAGE_INSTALL_append = " \
+        packagegroup-aspeed-apps \
+        packagegroup-oss-apps \
+        "
+
 
 ### Workaround
 inherit image_types_phosphor_aspeed
