@@ -22,12 +22,12 @@ inherit python3native deploy
 # Image composition
 UBOOT_SPL_IMAGE ?= "u-boot-spl.bin"
 UBOOT_IMAGE ?= "u-boot.bin"
-SUBOOT_SPL_IMAGE ?= "s-${UBOOT_SPL_IMAGE}"
-SUBOOT_IMAGE ?= "s-${UBOOT_IMAGE}"
+SUBOOT_SPL_IMAGE ?= "s_${UBOOT_SPL_IMAGE}"
+SUBOOT_IMAGE ?= "s_${UBOOT_IMAGE}"
 
 KERNEL_FIT_IMAGE ?= "fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE}"
 KERNEL_FIT_IMAGE_df-obmc-ubi-fs ?= "fitImage-${MACHINE}.bin"
-SKERNEL_FIT_IMAGE ?= "s-${KERNEL_FIT_IMAGE}"
+SKERNEL_FIT_IMAGE ?= "s_${KERNEL_FIT_IMAGE}"
 
 OUTPUT_IMAGE_DIR ?= "${S}/output"
 SOURCE_IMAGE_DIR ?= "${S}/source"
@@ -40,7 +40,7 @@ create_otp_image() {
         ${OTP_CONFIG} \
         --key_folder ${KEY_DIR} \
         --user_data_folder ${STAGING_DATADIR_NATIVE}/ast-secure-config/${ASPEED_SECURE_BOOT_TARGET}/security/data \
-        --output_folder ${OUTPUT_IMAGE_DIR}/otp-image
+        --output_folder ${OUTPUT_IMAGE_DIR}/otp_image
 
         if [ $? -ne 0 ]; then
             echo "Generated OTP image failed."
@@ -124,8 +124,8 @@ create_secure_boot_image() {
     fi
 
     if [ "${OTP_CONFIG}" != "" ]; then
-        echo "Verifying COT Image ..."
-        socsec verify --sec_image ${OUTPUT_IMAGE_DIR}/${SUBOOT_SPL_IMAGE} --otp_image ${OUTPUT_IMAGE_DIR}/otp-image/otp-all.image
+        echo "Verifying OTP Image ..."
+        socsec verify --sec_image ${OUTPUT_IMAGE_DIR}/${SUBOOT_SPL_IMAGE} --otp_image ${OUTPUT_IMAGE_DIR}/otp_image/otp-all.image
 
          if [ $? -ne 0 ]; then
             echo "Verified OTP image failed."
@@ -147,12 +147,19 @@ do_deploy () {
     export SFIT_IMAGE="${SKERNEL_FIT_IMAGE}"
     export ROOT_DIR="${STAGING_DATADIR_NATIVE}"
 
-    if [ ! -f ${STAGING_DATADIR_NATIVE}/ast-secure-config/${ASPEED_SECURE_BOOT_TARGET}/${ASPEED_SECURE_BOOT_CONFIG} ]; then
-        echo "ast secure boot config not found."
-        exit 1
-    fi
+    if [ -f ${ASPEED_SECURE_BOOT_CONFIG} ]; then
+        source ${ASPEED_SECURE_BOOT_CONFIG}
+    else
+        bbwarn "User secure boot config not found!"
 
-    source ${STAGING_DATADIR_NATIVE}/ast-secure-config/${ASPEED_SECURE_BOOT_TARGET}/${ASPEED_SECURE_BOOT_CONFIG}
+        if [ ! -f ${STAGING_DATADIR_NATIVE}/ast-secure-config/${ASPEED_SECURE_BOOT_TARGET}/${ASPEED_SECURE_BOOT_CONFIG} ]; then
+            echo "ast secure boot config not found!"
+            exit 1
+        fi
+
+        source ${STAGING_DATADIR_NATIVE}/ast-secure-config/${ASPEED_SECURE_BOOT_TARGET}/${ASPEED_SECURE_BOOT_CONFIG}
+        bbwarn "Using an ast insecure config signing key!"
+    fi
 
     if [ -d ${SOURCE_IMAGE_DIR} ]; then
         rm -rf ${SOURCE_IMAGE_DIR}
@@ -177,8 +184,8 @@ do_deploy () {
 
     # Deploy OTP image
     install -d ${DEPLOYDIR}
-    install -d ${DEPLOYDIR}/otp-image
-    install -m 0644 ${OUTPUT_IMAGE_DIR}/otp-image/* ${DEPLOYDIR}/otp-image/.
+    install -d ${DEPLOYDIR}/otp_image
+    install -m 0644 ${OUTPUT_IMAGE_DIR}/otp_image/* ${DEPLOYDIR}/otp_image/.
 
     # Deploy ROT and COT images
     install -m 0644 ${OUTPUT_IMAGE_DIR}/*.bin ${DEPLOYDIR}/.

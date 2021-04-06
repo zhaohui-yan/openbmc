@@ -23,7 +23,18 @@ Reference:
 git clone https://github.com/openbmc/openbmc
 git clone ssh://git@192.168.10.30:7999/bmc/meta-aspeed-sdk.git
 cd openbmc
+```
+
+1. AST2600
+
+```
 TEMPLATECONF=../meta-aspeed-sdk/meta-ast2600-sdk/conf/ . openbmc-env [BUILD_DIR]
+```
+
+2. AST2500
+
+```
+TEMPLATECONF=../meta-aspeed-sdk/meta-ast2500-sdk/conf/ . openbmc-env [BUILD_DIR]
 ```
 
 ## Build OpenBMC firmware
@@ -89,7 +100,7 @@ Then the image will be built according to the setting of `meta-aspeed-sdk/meta-a
 After you successfully built the image, the image file can be found in: `[BUILD_DIR]/tmp/work/deploy/images/${MACHINE}/`
 
 ## OpenBMC firmware
- 
+
 ### Boot from SPI image
 - `image-bmc`: whole flash image
 - `image-u-boot`: u-boot-spl.bin + u-boot.bin

@@ -13,6 +13,7 @@ inherit python3native
 
 RDEPENDS_${PN} += "python3-core"
 RDEPENDS_${PN} += "python3-hexdump"
+RDEPENDS_${PN} += "vim"
 
 BBCLASSEXTEND = "native nativesdk"
 
