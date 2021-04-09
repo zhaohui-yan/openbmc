@@ -17,7 +17,6 @@ do_generate_image_uboot_file() {
         of=${image_dst}
 }
 
-
 # Include the full u-boot-spl and u-boot in the final static image
 python do_generate_static_append() {
     uboot_offset = int(d.getVar('FLASH_UBOOT_OFFSET', True))

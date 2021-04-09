@@ -64,7 +64,15 @@ bitbake obmc-phosphor-image
 + #KERNEL_DEVICETREE = "aspeed-ast2600-obmc.dtb"
 ```
 
-3. Then trigger the build.
+3. Change u-boot default config from `evb-ast2600-obmc-emmc_defconfig` to `evb-ast2600-emmc_defconfig` in meta-ast2600-sdk/conf/machine/${MACHINE}.conf` file for boot from eMMC, e.g.,
+
+```
+# ASPEED ast2600 evb config file if build aspeed-image-sdk
+#UBOOT_MACHINE = "evb-ast2600-emmc_defconfig"
+UBOOT_MACHINE = "evb-ast2600-obmc-emmc_defconfig"
+```
+
+4. Then trigger the build.
 
 ```
 bitbake aspeed-image-sdk
@@ -72,6 +80,7 @@ bitbake aspeed-image-sdk
 
 ## Build different machine config
 If you want to create different machine, e.g. emmc, secure-boot, you could edit `conf/local.conf`, please unmark the desired `MACHINE`.
+
 ```
 - MACHINE ??= "ast2600-default"
 + #MACHINE ??= "ast2600-default"
@@ -97,7 +106,7 @@ If you want to create different machine, e.g. emmc, secure-boot, you could edit 
 Then the image will be built according to the setting of `meta-aspeed-sdk/meta-ast2600-sdk/conf/machine/${MACHINE}.conf`.
 
 # Output image
-After you successfully built the image, the image file can be found in: `[BUILD_DIR]/tmp/work/deploy/images/${MACHINE}/`
+After you successfully built the image, the image file can be found in: `[BUILD_DIR]/tmp/work/deploy/images/${MACHINE}/`.
 
 ## OpenBMC firmware
 
@@ -107,9 +116,45 @@ After you successfully built the image, the image file can be found in: `[BUILD_
 - `image-kernel`: Linux Kernel FIT image
 - `image-rofs`: read-only root file system
 
+### Boot from SPI with secure boot image
+- `image-bmc`: whole flash image
+- `image-u-boot`: s_u-boot-spl.bin(RoT) + s_u-boot.bin (CoT1)
+- `image-kernel`: Linux Kernel FIT Image the same as s_fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE (CoT2)
+- `image-rofs`: read-only root file system
+- `s_u-boot-spl`: u-boot-spl.bin processed with socsec tool signing for RoT image
+- `s_u-boot`: u-boot.bin processed with socsec tool siging for CoT1 image
+- `s_fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE}`: fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE} with processed socsec tool signing for CoT2 image
+- `otp_image`: OTP image
+
 ### Boot from eMMC image
 - `emmc_image-u-boot`: u-boot-spl.bin + u-boot.bin processed with gen\_emmc\_image.py for boot partition
 - `obmc-phosphor-image-${MACHINE}.wic.xz`: compressed emmc flash image for user data partition
 
+### Boot from eMMC with secure boot image
+- `s_emmc_image-u-boot`: s_u-boot-spl.bin(RoT) + s_u-boot.bin(CoT1) for boot partition
+- `obmc-phosphor-image-${MACHINE}.wic.xz`: compressed emmc flash image for user data partition
+- `s_u-boot_spl`: u-boot-spl.bin processed with socsec tool signing for RoT image
+- `s_u-boot`: u-boot.bin processed with socsec tool siging for CoT1 image
+- `s_fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE}`: fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE} with processed socsec tool signing for CoT2 image
+- `otp_image`: OTP image
+
 ## SDK Image
+
+### Boot from SPI image
 - `all.bin`: whole flash image
+
+### Boot from eMMC image
+- `emmc_u-boot-spl`: u-boot-spl.bin processed with gen\_emmc\_image.py for boot partition
+- `all.bin`: image consists of u-boot and fitImage for user data partition
+
+### Boot from eMMC with secure boot image
+- `s_u-boot-spl`: u-boot-spl.bin processed with socsec tool signing for boot partition
+- `all.bin`: image consists of s_u-boot and s_fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE} for user data partition
+- `s_u-boot`: u-boot.bin processed with socsec tool siging for CoT1 image
+- `s_fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE}`: fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE} with processed socsec tool signing for CoT2 image
+- `otp_image`" OTP image
+
+## Recovery Image via UART
+- `recovery_u-boot-spl` : u-boot-spl.bin processed with gen_uart_booting_image.sh for recovery image via UART
+- `recovery_s_u-boot-spl` : s_u-boot-spl.bin processed with socsec tool signing for recovery image via UART with secure boot
+
