@@ -156,5 +156,5 @@ After you successfully built the image, the image file can be found in: `[BUILD_
 
 ## Recovery Image via UART
 - `recovery_u-boot-spl` : u-boot-spl.bin processed with gen_uart_booting_image.sh for recovery image via UART
-- `recovery_s_u-boot-spl` : s_u-boot-spl.bin processed with socsec tool signing for recovery image via UART with secure boot
+- `recovery_s_u-boot-spl` : s_u-boot-spl.bin processed with gen_uart_booting_image.sh for recovery image via UART with secure boot
 
