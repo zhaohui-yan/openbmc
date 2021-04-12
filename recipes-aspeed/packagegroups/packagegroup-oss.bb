@@ -19,4 +19,5 @@ RDEPENDS_${PN}-apps = " \
 	ethtool \
 	mmc-utils \
 	memtester \
+	i3c-tools \
         "
