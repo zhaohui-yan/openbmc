@@ -28,6 +28,11 @@ OUTPUT_IMAGE_DIR ?= "${S}/output"
 SOURCE_IMAGE_DIR ?= "${S}/source"
 
 do_deploy () {
+    if [ -z ${SPL_BINARY} ]; then
+        echo "To support ASPEED recovery image via uart, u-boot should support spl."
+        exit 1
+    fi
+
     if [ -d ${SOURCE_IMAGE_DIR} ]; then
         rm -rf ${SOURCE_IMAGE_DIR}
     fi

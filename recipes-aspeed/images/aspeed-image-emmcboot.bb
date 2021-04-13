@@ -33,7 +33,7 @@ SOURCE_IMAGE_DIR ?= "${S}/source"
 
 do_deploy () {
     if [ -z ${SPL_BINARY} ]; then
-        echo "ASPEED boot from emmc only supports u-boot spl."
+        echo "To support ASPEED boot from emmc, u-boot should support spl."
         exit 1
     fi
 

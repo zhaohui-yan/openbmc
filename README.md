@@ -72,7 +72,15 @@ bitbake obmc-phosphor-image
 UBOOT_MACHINE = "evb-ast2600-obmc-emmc_defconfig"
 ```
 
-4. Then trigger the build.
+4. Remove phosphor-mmc distro feature in `meta-ast2600-sdk/conf/machine/${MACHINE}.conf` file for boot from eMMC, e.g.,
+
+```
+# remove phosphor-mmc distro feature if build aspeed-image-sdk
+- require conf/distro/include/phosphor-mmc.inc
++ #require conf/distro/include/phosphor-mmc.inc
+```
+
+5. Then trigger the build.
 
 ```
 bitbake aspeed-image-sdk

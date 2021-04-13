@@ -29,6 +29,8 @@ KERNEL_FIT_IMAGE ?= "fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE}"
 KERNEL_FIT_IMAGE_df-obmc-ubi-fs ?= "fitImage-${MACHINE}.bin"
 SKERNEL_FIT_IMAGE ?= "s_${KERNEL_FIT_IMAGE}"
 
+ASPEED_SECURE_BOOT_CONFIG_ROOT_DIR ?= "${STAGING_DATADIR_NATIVE}"
+
 OUTPUT_IMAGE_DIR ?= "${S}/output"
 SOURCE_IMAGE_DIR ?= "${S}/source"
 
@@ -145,20 +147,25 @@ do_deploy () {
     export SUBOOT_IMAGE="${SUBOOT_IMAGE}"
     export FIT_IMAGE="${KERNEL_FIT_IMAGE}"
     export SFIT_IMAGE="${SKERNEL_FIT_IMAGE}"
-    export ROOT_DIR="${STAGING_DATADIR_NATIVE}"
+    export ROOT_DIR="${ASPEED_SECURE_BOOT_CONFIG_ROOT_DIR}"
+
+    if [ -z ${SPL_BINARY} ]; then
+        echo "To support ASPEED secure boot, u-boot should support spl."
+        exit 1
+    fi
 
     if [ -f ${ASPEED_SECURE_BOOT_CONFIG} ]; then
         source ${ASPEED_SECURE_BOOT_CONFIG}
     else
-        bbwarn "User secure boot config not found!"
+        bbwarn "User secure boot config not found!, ${ASPEED_SECURE_BOOT_CONFIG}"
 
         if [ ! -f ${STAGING_DATADIR_NATIVE}/ast-secure-config/${ASPEED_SECURE_BOOT_TARGET}/${ASPEED_SECURE_BOOT_CONFIG} ]; then
-            echo "ast secure boot config not found!"
+            echo "ast secure boot config not found!, ${STAGING_DATADIR_NATIVE}/ast-secure-config/${ASPEED_SECURE_BOOT_TARGET}/${ASPEED_SECURE_BOOT_CONFIG}"
             exit 1
         fi
 
         source ${STAGING_DATADIR_NATIVE}/ast-secure-config/${ASPEED_SECURE_BOOT_TARGET}/${ASPEED_SECURE_BOOT_CONFIG}
-        bbwarn "Using an ast insecure config signing key!"
+        bbwarn "Using an ast insecure config signing key!, ${STAGING_DATADIR_NATIVE}/ast-secure-config/${ASPEED_SECURE_BOOT_TARGET}/${ASPEED_SECURE_BOOT_CONFIG}"
     fi
 
     if [ -d ${SOURCE_IMAGE_DIR} ]; then
