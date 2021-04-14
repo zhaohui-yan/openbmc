@@ -43,47 +43,48 @@ bitbake obmc-phosphor-image
 ```
 
 ## Build SDK Image (all.bin)
-1. Apply the following change to `conf/local.conf`:
+Add `ast-img-sdk` DISTRO_FEATURES and `df-ast-img-sdk` DISTROOVERRIDES to apply the following change in `conf/local.conf`:
 
 ```
-- require conf/machine/include/obmc-bsp-common.inc
-+ #require conf/machine/include/obmc-bsp-common.inc
-
-# ASPEED initramfs if build aspeed-image-norootfs
-- #INITRAMFS_IMAGE = "aspeed-image-initramfs"
-+ INITRAMFS_IMAGE = "aspeed-image-initramfs"
+# ASPEED initramfs if build aspeed-image-sdk
+- #require conf/distro/include/ast-img-sdk.inc
++ require conf/distro/include/ast-img-sdk.inc
 ```
 
-2. Change device tree from `aspeed-ast2600-obmc.dtb` to `aspeed-ast2600-evb.dtb` in `meta-ast2600-sdk/conf/machine/${MACHINE}.conf` file, e.g.,
+Then trigger the build.
+
+```
+bitbake aspeed-image-sdk
+```
+
+It changes the following settings.
+1. Change INITRAMFS_IMAGE to `aspeed-image-initramfs` in `conf/local.conf`.
+
+```
+INITRAMFS_IMAGE_df-ast-img-sdk = "aspeed-image-initramfs"
+```
+
+2. Change device tree from `aspeed-ast2600-obmc.dtb` to `aspeed-ast2600-evb.dtb` in meta-ast2600-sdk/conf/machine/${MACHINE}.conf file, e.g.,
 
 ```
 # ASPEED ast2600 evb dtb file if build aspeed-image-sdk
-- #KERNEL_DEVICETREE = "aspeed-ast2600-evb.dtb"
-- KERNEL_DEVICETREE = "aspeed-ast2600-obmc.dtb"
-+ KERNEL_DEVICETREE = "aspeed-ast2600-evb.dtb"
-+ #KERNEL_DEVICETREE = "aspeed-ast2600-obmc.dtb"
+KERNEL_DEVICETREE_df-ast-img-sdk = "aspeed-ast2600-evb.dtb"
+KERNEL_DEVICETREE = "aspeed-ast2600-obmc.dtb"
 ```
 
 3. Change u-boot default config from `evb-ast2600-obmc-emmc_defconfig` to `evb-ast2600-emmc_defconfig` in meta-ast2600-sdk/conf/machine/${MACHINE}.conf` file for boot from eMMC, e.g.,
 
 ```
-# ASPEED ast2600 evb config file if build aspeed-image-sdk
-#UBOOT_MACHINE = "evb-ast2600-emmc_defconfig"
-UBOOT_MACHINE = "evb-ast2600-obmc-emmc_defconfig"
+# ASPEED ast2600 evb dtb file if build aspeed-image-sdk
+KERNEL_DEVICETREE_df-ast-img-sdk = "aspeed-ast2600-evb.dtb"
+KERNEL_DEVICETREE = "aspeed-ast2600-obmc.dtb"
 ```
 
-4. Remove phosphor-mmc distro feature in `meta-ast2600-sdk/conf/machine/${MACHINE}.conf` file for boot from eMMC, e.g.,
+4. Remove `phosphor-mmc` DISTRO_FEATURES and DISTROOVERRIDES in `meta-ast2600-sdk/conf/machine/${MACHINE}.conf` file for boot from eMMC, e.g.,
 
 ```
 # remove phosphor-mmc distro feature if build aspeed-image-sdk
-- require conf/distro/include/phosphor-mmc.inc
-+ #require conf/distro/include/phosphor-mmc.inc
-```
-
-5. Then trigger the build.
-
-```
-bitbake aspeed-image-sdk
+require ${@bb.utils.contains('INITRAMFS_IMAGE', 'aspeed-image-initramfs', '', 'conf/distro/include/phosphor-mmc.inc', d)}
 ```
 
 ## Build different machine config
@@ -160,7 +161,7 @@ After you successfully built the image, the image file can be found in: `[BUILD_
 - `all.bin`: image consists of s_u-boot and s_fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE} for user data partition
 - `s_u-boot`: u-boot.bin processed with socsec tool siging for CoT1 image
 - `s_fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE}`: fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE} with processed socsec tool signing for CoT2 image
-- `otp_image`" OTP image
+- `otp_image`: OTP image
 
 ## Recovery Image via UART
 - `recovery_u-boot-spl` : u-boot-spl.bin processed with gen_uart_booting_image.sh for recovery image via UART

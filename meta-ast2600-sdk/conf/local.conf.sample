@@ -54,6 +54,8 @@ EXTRA_USERS_PARAMS = " \
   "
 
 require conf/machine/include/obmc-bsp-common.inc
-
 # ASPEED initramfs if build aspeed-image-sdk
-#INITRAMFS_IMAGE = "aspeed-image-initramfs"
+#require conf/distro/include/ast-img-sdk.inc
+
+INITRAMFS_IMAGE_df-ast-img-sdk = "aspeed-image-initramfs"
+
