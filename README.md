@@ -75,9 +75,9 @@ KERNEL_DEVICETREE = "aspeed-ast2600-obmc.dtb"
 3. Change u-boot default config from `evb-ast2600-obmc-emmc_defconfig` to `evb-ast2600-emmc_defconfig` in meta-ast2600-sdk/conf/machine/${MACHINE}.conf` file for boot from eMMC, e.g.,
 
 ```
-# ASPEED ast2600 evb dtb file if build aspeed-image-sdk
-KERNEL_DEVICETREE_df-ast-img-sdk = "aspeed-ast2600-evb.dtb"
-KERNEL_DEVICETREE = "aspeed-ast2600-obmc.dtb"
+# ASPEED ast2600 evb config file if build aspeed-image-sdk
+UBOOT_MACHINE_df-ast-img-sdk = "evb-ast2600-emmc_defconfig"
+UBOOT_MACHINE = "evb-ast2600-obmc-emmc_defconfig"
 ```
 
 4. Remove `phosphor-mmc` DISTRO_FEATURES and DISTROOVERRIDES in `meta-ast2600-sdk/conf/machine/${MACHINE}.conf` file for boot from eMMC, e.g.,

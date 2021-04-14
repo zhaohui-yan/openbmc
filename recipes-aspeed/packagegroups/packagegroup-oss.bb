@@ -22,6 +22,7 @@ RDEPENDS_${PN}-apps = " \
     memtester \
     i3c-tools \
     i2c-tools \
+    ${@d.getVar('PREFERRED_PROVIDER_u-boot-fw-utils', True) or 'u-boot-fw-utils'} \
     "
 
 SUMMARY_${PN}-libs = "Open Source Library"
