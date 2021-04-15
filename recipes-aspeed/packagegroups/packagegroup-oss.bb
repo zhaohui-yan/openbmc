@@ -23,6 +23,7 @@ RDEPENDS_${PN}-apps = " \
     i3c-tools \
     i2c-tools \
     xdma-test \
+    libpeci \
     ${@d.getVar('PREFERRED_PROVIDER_u-boot-fw-utils', True) or 'u-boot-fw-utils'} \
     "
 
