@@ -22,7 +22,7 @@ do_compile() {
     dd if=/dev/zero bs=1k count=${ASPEED_IMAGE_SIZE_KB} | \
         tr '\000' '\377' > ${B}/aspeed-sdk.bin
 
-    if [ ! -z ${SPL_BINARY} ] && [ ASPEED_BOOT_EMMC == "no"] ; then
+    if [ ! -z ${SPL_BINARY} ] && [ ${ASPEED_BOOT_EMMC} == "no" ] ; then
         dd bs=1k conv=notrunc seek=${ASPEED_IMAGE_UBOOT_OFFSET_KB} \
             if=${DEPLOY_DIR_IMAGE}/${ASPEED_IMAGE_UBOOT_SPL_IMAGE}.${UBOOT_SUFFIX} \
             of=${B}/aspeed-sdk.bin
