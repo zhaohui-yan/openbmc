@@ -13,3 +13,4 @@ SRCREV = "${AUTOREV}"
 S = "${WORKDIR}/git"
 
 PV = "1.0+git${SRCPV}"
+UBOOT_LOCALVERSION = "-${SRCPV}"
