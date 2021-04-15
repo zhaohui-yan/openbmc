@@ -1,4 +1,5 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
+FILESEXTRAPATHS_prepend_df-ast-img-sdk := "${THISDIR}/files/df-ast-img:"
 
 SRC_URI_append = " file://fw_env_ast2600_nor.config "
 SRC_URI_append_ast-mmc = " file://fw_env_ast2600_mmc.config "
