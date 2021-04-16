@@ -24,6 +24,7 @@ RDEPENDS_${PN}-apps = " \
     i2c-tools \
     xdma-test \
     libpeci \
+    dhrystone \
     ${@d.getVar('PREFERRED_PROVIDER_u-boot-fw-utils', True) or 'u-boot-fw-utils'} \
     "
 
