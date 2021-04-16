@@ -9,8 +9,8 @@ IMAGE_INSTALL_append = " \
 IMAGE_INSTALL_append = " \
         packagegroup-aspeed-apps \
         packagegroup-oss-apps \
+        ${@bb.utils.contains('MACHINE_FEATURES', 'ast-ssp', 'packagegroup-aspeed-ssp', '', d)} \
         "
-
 
 ### Workaround
 inherit image_types_phosphor_aspeed

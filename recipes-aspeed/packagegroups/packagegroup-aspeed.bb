@@ -8,13 +8,14 @@ PROVIDES = "${PACKAGES}"
 RPROVIDES_${PN} = "${PACKAGES}"
 
 PACKAGES_append = " \
-        ${PN}-chassis \
-        ${PN}-extras \
-        ${PN}-fans \
-        ${PN}-flash \
-        ${PN}-system \
-	${PN}-apps \
-	"
+    ${PN}-chassis \
+    ${PN}-extras \
+    ${PN}-fans \
+    ${PN}-flash \
+    ${PN}-system \
+    ${PN}-apps \
+    ${PN}-ssp \
+    "
 
 PROVIDES_append = " virtual/obmc-chassis-mgmt"
 PROVIDES_append = " virtual/obmc-fan-mgmt"
@@ -28,30 +29,36 @@ RPROVIDES_${PN}-system = " virtual-obmc-system-mgmt"
 
 SUMMARY_${PN}-chassis = "AspeedTech Chassis"
 RDEPENDS_${PN}-chassis = " \
-        x86-power-control \
-        "
+    x86-power-control \
+    "
 
 SUMMARY_${PN}-fans = "AspeedTech Fans"
 RDEPENDS_${PN}-fans = " \
-        phosphor-pid-control \
-        "
+    phosphor-pid-control \
+    "
 
 SUMMARY_${PN}-flash = "AspeedTech Flash"
 RDEPENDS_${PN}-flash = " \
-        phosphor-software-manager \
-        "
+    phosphor-software-manager \
+    "
 
 SUMMARY_${PN}-system = "AspeedTech System"
 RDEPENDS_${PN}-system = " \
-        phosphor-ipmi-ipmb \
-        phosphor-hostlogger \
-        phosphor-sel-logger \
-        ipmitool \
-        phosphor-post-code-manager \
-        phosphor-host-postd \
-        "
+    phosphor-ipmi-ipmb \
+    phosphor-hostlogger \
+    phosphor-sel-logger \
+    ipmitool \
+    phosphor-post-code-manager \
+    phosphor-host-postd \
+    "
 
 SUMMARY_${PN}-apps = "AspeedTech Test App"
 RDEPENDS_${PN}-apps = " \
-        ast-app \
-        "
+    ast-app \
+    "
+
+SUMMARY_${PN}-ssp = "AspeedTech Secondary Service Processor"
+RDEPENDS_${PN}-ssp = " \
+    ssp \
+    kernel-module-aspeed-ssp \
+    "

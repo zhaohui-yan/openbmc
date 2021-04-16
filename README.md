@@ -21,7 +21,7 @@ Reference:
 ## Get the source code
 ```
 git clone https://github.com/openbmc/openbmc
-git clone ssh://git@192.168.10.30:7999/bmc/meta-aspeed-sdk.git
+git clone ssh://192.168.10.13:29418/meta-aspeed-sdk
 cd openbmc
 ```
 

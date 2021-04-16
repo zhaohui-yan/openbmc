@@ -1,7 +1,5 @@
 # Secure Boot Settings
-MACHINE_FEATURES_append = " \
-    ast-secure \
-    "
+require conf/machine/include/ast-secure.inc
 
 ASPEED_SECURE_BOOT_TARGET = "ast2600"
 
