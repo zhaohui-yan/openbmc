@@ -15,6 +15,7 @@ PACKAGES_append = " \
     ${PN}-system \
     ${PN}-apps \
     ${PN}-ssp \
+    ${PN}-crypto \
     "
 
 PROVIDES_append = " virtual/obmc-chassis-mgmt"
@@ -60,5 +61,13 @@ RDEPENDS_${PN}-apps = " \
 SUMMARY_${PN}-ssp = "AspeedTech Secondary Service Processor"
 RDEPENDS_${PN}-ssp = " \
     ssp \
+    "
+RRECOMMENDS_${PN}-ssp= " \
     kernel-module-aspeed-ssp \
+    "
+
+SUMMARY_${PN}-crypto = "AspeedTech Crypto"
+RDEPENDS_${PN}-crypto = ""
+RRECOMMENDS_${PN}-crypto = " \
+    kernel-module-cryptodev \
     "
