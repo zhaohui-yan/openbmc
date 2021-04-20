@@ -67,7 +67,14 @@ RRECOMMENDS_${PN}-ssp= " \
     "
 
 SUMMARY_${PN}-crypto = "AspeedTech Crypto"
-RDEPENDS_${PN}-crypto = ""
+RDEPENDS_${PN}-crypto = " \
+    libcrypto \
+    libssl \
+    openssl \
+    openssl-bin \
+    openssl-conf \
+    openssl-misc \
+    "
 RRECOMMENDS_${PN}-crypto = " \
     kernel-module-cryptodev \
     "

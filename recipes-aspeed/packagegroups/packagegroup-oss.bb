@@ -31,5 +31,6 @@ RDEPENDS_${PN}-apps = " \
 SUMMARY_${PN}-libs = "Open Source Library"
 RDEPENDS_${PN}-libs = " \
     libgpiod \
+    libgpiod-tools \
     "
 
