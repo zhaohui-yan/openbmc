@@ -1,0 +1,32 @@
+{
+    "name": "mode2_256_2048_cot_sign",
+    "bin_file": "u-boot-spl.bin",
+    "version": "a1",
+    "secure_mode": "Mode_2",
+    "image_encryption": false,
+    "header_offset": "0x20",
+    "signature_key": {
+        "key_pem": "test_oem_dss_private_key_4096_3.pem",
+        "sha_mode": "SHA512"
+    },
+    "header": {
+        "image_start": "0x0",
+        //Must be multiple of 512byte, Minimum size is 0x4000 and Maximum size is 0xec00 (in unit of byte) 
+        "sign_image_size": "0xec00",
+        "sign_location": "0xec00",
+        "bl2_verified_header":{
+            "verify_method": "signature",
+            "sha_mode": "SHA256",
+            "signature_key": {
+                "rsa_mode": "RSA2048",
+                "key_pem": "test_bl2_private_2048.pem"
+            },
+            "bl2_verified_info_offset": "0xe800"
+        }
+    },
+    "bl2_image": {
+        "bin_file": "u-boot.bin",
+        "load_address": "0x10000",
+        "header_offset": "0x20"
+    }
+}

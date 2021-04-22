@@ -1,0 +1,26 @@
+{
+    "name": "mode2_enc_evb_a0",
+    "bin_file": "u-boot-spl.bin",
+    "version": "a0",
+    "secure_mode": "Mode_2",
+    "image_encryption": true,
+    "header_offset": "0x20",
+    "signature_key": {
+        "key_pem": "test_oem_dss_private_key_1024_1.pem",
+        "sha_mode": "SHA256"
+    },
+    "image_encryption_key": {
+        "key_bin": "test_aes_key.bin",
+        "iv_bin": "test_aes_iv.bin",
+        "rsa_pem": "test_soc_private_key_1024.pem",
+        "key_type": "public",
+        "key_in_otp": false
+    },
+    "header": {
+        "image_start": "0x0",
+        //Must be multiple of 512 bytes, Minimum size is 0x4000 (in unit of byte)
+        "sign_image_size": "0x4000",
+        "key_location": "0x4000",
+        "sign_location": "0x4200"
+    }
+}

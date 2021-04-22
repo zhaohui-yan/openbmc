@@ -1,0 +1,6 @@
+Common targets are:
+     # OpenBMC Firmware
+     obmc-phosphor-image
+
+     # SDK Image
+     aspeed-image-sdk
