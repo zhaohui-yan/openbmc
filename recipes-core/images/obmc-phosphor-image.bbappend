@@ -13,5 +13,9 @@ IMAGE_INSTALL_append = " \
         ${@bb.utils.contains('MACHINE_FEATURES', 'ast-ssp', 'packagegroup-aspeed-ssp', '', d)} \
         "
 
+EXTRA_IMAGE_FEATURES_append = " \
+        nfs-client \
+        "
+
 ### Workaround
 inherit image_types_phosphor_aspeed
