@@ -55,7 +55,7 @@ RDEPENDS_${PN}-system = " \
 
 SUMMARY_${PN}-apps = "AspeedTech Test App"
 RDEPENDS_${PN}-apps = " \
-    ast-app \
+    aspeed-app \
     "
 
 SUMMARY_${PN}-ssp = "AspeedTech Secondary Service Processor"

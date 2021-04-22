@@ -19,8 +19,9 @@ LIC_FILES_CHKSUM = ""
 
 S = "${WORKDIR}/git"
 
-SRC_URI = " git://192.168.10.30:7999/bmc/ast_app.git;protocol=ssh;branch=${BRANCH} \
+SRC_URI = " git://192.168.10.13:29418/aspeed_app.git;protocol=ssh;branch=${BRANCH} \
             file://meson.build \
+            file://video_ioctl.h \
 "
 PV = "1.0+git${SRCPV}"
 
@@ -34,4 +35,7 @@ inherit meson
 
 do_configure_prepend() {
   cp ${WORKDIR}/meson.build ${S}
+  cp ${WORKDIR}/video_ioctl.h ${S}/ast_rvas/rvas_lib
 }
+
+FILES_${PN}_append = " /usr/share/* "
