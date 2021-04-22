@@ -12,8 +12,8 @@ BBLAYERS ?= " \
   ##OEROOT##/meta-openembedded/meta-networking \
   ##OEROOT##/meta-openembedded/meta-python \
   ##OEROOT##/meta-phosphor \
-  ##OEROOT##/../meta-aspeed-sdk \
-  ##OEROOT##/../meta-aspeed-sdk/meta-ast2600-sdk \
+  ##OEROOT##/meta-aspeed-sdk \
+  ##OEROOT##/meta-aspeed-sdk/meta-ast2600-sdk \
   "
 BBLAYERS_NON_REMOVABLE ?= " \
   ##OEROOT##/meta \
@@ -22,6 +22,6 @@ BBLAYERS_NON_REMOVABLE ?= " \
   ##OEROOT##/meta-openembedded/meta-networking \
   ##OEROOT##/meta-openembedded/meta-python \
   ##OEROOT##/meta-phosphor \
-  ##OEROOT##/../meta-aspeed-sdk \
-  ##OEROOT##/../meta-aspeed-sdk/meta-ast2600-sdk \
+  ##OEROOT##/meta-aspeed-sdk \
+  ##OEROOT##/meta-aspeed-sdk/meta-ast2600-sdk \
   "

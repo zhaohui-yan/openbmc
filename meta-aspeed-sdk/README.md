@@ -25,16 +25,41 @@ git clone ssh://192.168.10.13:29418/meta-aspeed-sdk
 cd openbmc
 ```
 
+## Target the machine
+```
+. setup
+Target machine must be specified. Use one of:
+ast2500-default                                 ast2600-emmc-secure-rsa4096-sha512-ncot
+ast2600-a1                                      ast2600-secure-gcm
+ast2600-a1-secure-gcm                           ast2600-secure-rsa2048-sha256
+ast2600-a1-secure-rsa2048-sha256                ast2600-secure-rsa2048-sha256-ncot
+ast2600-a1-secure-rsa2048-sha256-ncot           ast2600-secure-rsa2048-sha256-o1
+ast2600-a1-secure-rsa2048-sha256-o1             ast2600-secure-rsa2048-sha256-o2-priv
+ast2600-a1-secure-rsa2048-sha256-o2-priv        ast2600-secure-rsa2048-sha256-o2-pub
+ast2600-a1-secure-rsa2048-sha256-o2-pub         ast2600-secure-rsa3072-sha384
+ast2600-a1-secure-rsa3072-sha384                ast2600-secure-rsa3072-sha384-o1
+ast2600-a1-secure-rsa3072-sha384-o1             ast2600-secure-rsa3072-sha384-o2-priv
+ast2600-a1-secure-rsa3072-sha384-o2-priv        ast2600-secure-rsa3072-sha384-o2-pub
+ast2600-a1-secure-rsa3072-sha384-o2-pub         ast2600-secure-rsa4096-sha512
+ast2600-a1-secure-rsa4096-sha512                ast2600-secure-rsa4096-sha512-o1
+ast2600-a1-secure-rsa4096-sha512-o1             ast2600-secure-rsa4096-sha512-o2-priv
+ast2600-a1-secure-rsa4096-sha512-o2-priv        ast2600-secure-rsa4096-sha512-o2-pub
+ast2600-a1-secure-rsa4096-sha512-o2-pub
+ast2600-default
+ast2600-emmc
+ast2600-emmc-secure
+```
+
 1. AST2600
 
 ```
-TEMPLATECONF=../meta-aspeed-sdk/meta-ast2600-sdk/conf/ . openbmc-env [BUILD_DIR]
+. setup ast2600-default [BUID_DIR]
 ```
 
 2. AST2500
 
 ```
-TEMPLATECONF=../meta-aspeed-sdk/meta-ast2500-sdk/conf/ . openbmc-env [BUILD_DIR]
+. setup ast2500-default [BUID_DIR]
 ```
 
 ## Build OpenBMC firmware
@@ -85,31 +110,6 @@ UBOOT_MACHINE = "evb-ast2600-obmc-emmc_defconfig"
 ```
 # remove phosphor-mmc distro feature if build aspeed-image-sdk
 require ${@bb.utils.contains('INITRAMFS_IMAGE', 'aspeed-image-initramfs', '', 'conf/distro/include/phosphor-mmc.inc', d)}
-```
-
-## Build different machine config
-If you want to create different machine, e.g. emmc, secure-boot, you could edit `conf/local.conf`, please unmark the desired `MACHINE`.
-
-```
-- MACHINE ??= "ast2600-default"
-+ #MACHINE ??= "ast2600-default"
-#MACHINE ??= "ast2600-a1"
-- #MACHINE ??= "ast2600-emmc"
-+ MACHINE ??= "ast2600-emmc"
-#MACHINE ??= "ast2600-secure-gcm"
-#MACHINE ??= "ast2600-secure-rsa2048-sha256"
-#MACHINE ??= "ast2600-secure-rsa2048-sha256-ncot"
-#MACHINE ??= "ast2600-secure-rsa2048-sha256-o1"
-#MACHINE ??= "ast2600-secure-rsa2048-sha256-o2-priv"
-#MACHINE ??= "ast2600-secure-rsa2048-sha256-o2-pub"
-#MACHINE ??= "ast2600-secure-rsa3072-sha384"
-#MACHINE ??= "ast2600-secure-rsa3072-sha384-o1"
-#MACHINE ??= "ast2600-secure-rsa3072-sha384-o2-priv"
-#MACHINE ??= "ast2600-secure-rsa3072-sha384-o2-pub"
-#MACHINE ??= "ast2600-secure-rsa4096-sha512"
-#MACHINE ??= "ast2600-secure-rsa4096-sha512-o1"
-#MACHINE ??= "ast2600-secure-rsa4096-sha512-o2-priv"
-#MACHINE ??= "ast2600-secure-rsa4096-sha512-o2-pub"
 ```
 
 Then the image will be built according to the setting of `meta-aspeed-sdk/meta-ast2600-sdk/conf/machine/${MACHINE}.conf`.
