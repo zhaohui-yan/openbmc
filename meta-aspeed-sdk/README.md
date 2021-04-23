@@ -18,13 +18,6 @@ Reference:
 - [OpenBMC/README.md](https://github.com/openbmc/openbmc#1-prerequisite)
 - [Yocto Quick Start](https://www.yoctoproject.org/docs/1.8/yocto-project-qs/yocto-project-qs.html#the-linux-distro)
 
-## Get the source code
-```
-git clone https://github.com/openbmc/openbmc
-git clone ssh://192.168.10.13:29418/meta-aspeed-sdk
-cd openbmc
-```
-
 ## Target the machine
 ```
 . setup
