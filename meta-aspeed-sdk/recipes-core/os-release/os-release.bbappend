@@ -5,13 +5,13 @@ python do_compile_prepend() {
     work_dir = d.getVar("COREBASE")
     sdk_ver = ""
     try:
-        res=bb.process.run(("git --git-dir=%s symbolic-ref -q --short HEAD ||" +
-                            "git --git-dir=%s describe --tags --exact-match")
+        res=bb.process.run(("git -C %s symbolic-ref -q --short HEAD ||" +
+                            "git -C %s describe --tags --exact-match")
             % (work_dir, work_dir))[0].strip("\n")
         if re.match("^\d+\.\d+$", res):
             sdk_ver=res
         else:
-            sdk_ver=bb.process.run("git --git-dir=%s rev-parse HEAD"
+            sdk_ver=bb.process.run("git -C %s rev-parse HEAD"
                 % work_dir)[0].strip("\n")
     except Exception as e:
         print(e)
