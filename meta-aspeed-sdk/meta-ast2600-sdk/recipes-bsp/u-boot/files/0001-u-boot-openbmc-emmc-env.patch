@@ -1,0 +1,17 @@
+diff --git a/include/configs/aspeed-common.h b/include/configs/aspeed-common.h
+index c9c40eed60..6c00faf8b4 100644
+--- a/include/configs/aspeed-common.h
++++ b/include/configs/aspeed-common.h
+@@ -54,6 +54,12 @@
+ #define CONFIG_SYS_BOOTM_LEN 		(0x800000 * 2)
+ 
+ #define CONFIG_EXTRA_ENV_SETTINGS \
++	"boota=setenv bootpart 2; setenv rootfs rofs-a; run setmmcargs; ext4load mmc 0:${bootpart} ${loadaddr} fitImage && bootm; echo Error loading kernel FIT image\0"	\
++	"bootb=setenv bootpart 3; setenv rootfs rofs-b; run setmmcargs; ext4load mmc 0:${bootpart} ${loadaddr} fitImage && bootm; echo Error loading kernel FIT image\0"	\
++	"bootside=a\0"	\
++	"rootfs=rofs-a\0"	\
++	"loadaddr=83000000\0"	\
++	"setmmcargs=setenv bootargs ${bootargs} rootwait root=PARTLABEL=${rootfs}\0"	\
+ 	"verify=yes\0"	\
+ 	""
+ 

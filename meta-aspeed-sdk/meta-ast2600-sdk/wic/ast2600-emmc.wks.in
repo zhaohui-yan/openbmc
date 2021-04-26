@@ -6,7 +6,7 @@
 # |GPT| | env | boot-a | boot-b | rofs-a | rofs-b | rwfs |GPT-sec|
 #  --- - ----- -------- -------- -------- -------- ------ -------
 #       ^ 1MB   16MB     16MB     128MB    128MB   16MB
-#       | 
+#       |
 #       0x5000
 #
 # Primary GPT size (Beginning of image):
