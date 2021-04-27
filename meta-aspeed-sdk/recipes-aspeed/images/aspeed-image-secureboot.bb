@@ -34,11 +34,27 @@ ASPEED_SECURE_BOOT_CONFIG_ROOT_DIR ?= "${STAGING_DATADIR_NATIVE}"
 OUTPUT_IMAGE_DIR ?= "${S}/output"
 SOURCE_IMAGE_DIR ?= "${S}/source"
 
-create_otp_image() {
-    echo "Generating OTP Image ..."
-
+print_otp_image() {
     if [ "${OTP_CONFIG}" != "" ]; then
+        echo "Printing OTP Image ..."
+
         otptool \
+        print \
+        ${OUTPUT_IMAGE_DIR}/otp_image/otp-all.image
+
+        if [ $? -ne 0 ]; then
+            echo "Printed OTP image failed."
+            exit 1
+        fi
+   fi
+}
+
+create_otp_image() {
+    if [ "${OTP_CONFIG}" != "" ]; then
+        echo "Generating OTP Image ..."
+
+        otptool \
+        make_otp_image \
         ${OTP_CONFIG} \
         --key_folder ${KEY_DIR} \
         --user_data_folder ${STAGING_DATADIR_NATIVE}/ast-secure-config/${ASPEED_SECURE_BOOT_TARGET}/security/data \
@@ -187,6 +203,7 @@ do_deploy () {
     install -m 0644 ${DEPLOY_DIR_IMAGE}/${KERNEL_FIT_IMAGE} ${SOURCE_IMAGE_DIR}
 
     create_otp_image
+    print_otp_image
     create_secure_boot_image
 
     # Deploy OTP image
