@@ -79,6 +79,7 @@ create_secure_boot_image() {
         --gcm_aes_key ${ROT_SIGN_KEY} \
         --cot_algorithm ${COT_ALGORITHM} \
         --cot_verify_key ${COT_FIRST_VERIFY_KEY} \
+        --stack_intersects_verification_region "false" \
         --signing_helper ${SIGNING_HELPER} \
         --signing_helper_with_files ${SIGNING_HELPER_WITH_FILES}
     else
@@ -94,6 +95,7 @@ create_secure_boot_image() {
             --key_in_otp \
             --aes_key ${AES_KEY} \
             --rsa_aes ${RSA_AES_KEY} \
+            --stack_intersects_verification_region "false" \
             --signing_helper ${SIGNING_HELPER} \
             --signing_helper_with_files ${SIGNING_HELPER_WITH_FILES}
         else
@@ -107,6 +109,7 @@ create_secure_boot_image() {
             --cot_verify_key ${COT_FIRST_VERIFY_KEY} \
             --aes_key ${AES_KEY} \
             --rsa_aes ${RSA_AES_KEY} \
+            --stack_intersects_verification_region "false" \
             --signing_helper ${SIGNING_HELPER} \
             --signing_helper_with_files ${SIGNING_HELPER_WITH_FILES}
         fi
