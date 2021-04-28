@@ -13,4 +13,25 @@ SRCREV = "${AUTOREV}"
 S = "${WORKDIR}/git"
 
 PV = "v2019.04+git${SRCPV}"
-UBOOT_LOCALVERSION = "-${SRCPV}"
+
+do_set_local_version() {
+    rm -f ${S}/.scmversion
+    rm -f ${B}/.scmversion
+    is_tag="$(git -C ${S} name-rev --name-only --tags HEAD)"
+
+    if [ $? -ne 0 ] ; then
+        echo "not a git repository!!!"
+    else
+        if test "x${is_tag}" =  "xundefined"; then
+            version="$(git -C ${S} rev-parse --verify --short HEAD)"
+            echo "-dirty-${version}" > ${S}/.scmversion
+            echo "-dirty-${version}" > ${B}/.scmversion
+        else
+            version="$(git -C ${S} describe --tags --exact-match HEAD)"
+            echo "-${version}"> ${S}/.scmversion
+            echo "-${version}"> ${B}/.scmversion
+        fi
+    fi
+}
+
+addtask set_local_version before do_compile after do_configure
