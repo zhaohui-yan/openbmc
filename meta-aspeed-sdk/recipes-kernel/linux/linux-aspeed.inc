@@ -37,7 +37,13 @@ do_set_local_version() {
             echo "CONFIG_LOCALVERSION="\"-dirty-${version}\" >> ${B}/.config
         else
             version="$(git -C ${S} describe --tags --exact-match HEAD)"
-            echo "CONFIG_LOCALVERSION="\"-${version}\" >> ${B}/.config
+
+            if echo "${version}" | grep -q "devtool"; then
+                version_ext="$(git -C ${S} rev-parse --verify --short HEAD)"
+                echo "CONFIG_LOCALVERSION="\"-${version}-${version_ext}\" >> ${B}/.config
+            else
+                echo "CONFIG_LOCALVERSION="\"-${version}\" >> ${B}/.config
+            fi
         fi
     fi
 }

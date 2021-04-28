@@ -28,8 +28,15 @@ do_set_local_version() {
             echo "-dirty-${version}" > ${B}/.scmversion
         else
             version="$(git -C ${S} describe --tags --exact-match HEAD)"
-            echo "-${version}"> ${S}/.scmversion
-            echo "-${version}"> ${B}/.scmversion
+
+            if echo "${version}" | grep -q "devtool"; then
+                 version_ext="$(git -C ${S} rev-parse --verify --short HEAD)"
+                 echo "-${version}-${version_ext}"> ${S}/.scmversion
+                 echo "-${version}-${version_ext}"> ${B}/.scmversion
+            else
+                echo "-${version}"> ${S}/.scmversion
+                echo "-${version}"> ${B}/.scmversion
+            fi
         fi
     fi
 }
