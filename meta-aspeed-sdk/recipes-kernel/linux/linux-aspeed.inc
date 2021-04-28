@@ -22,3 +22,24 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=bbea815ee2795b2f4230826c0c6b8814"
 
 # Do not install the kernel image into rootfs at /boot directory
 RDEPENDS_${KERNEL_PACKAGE_NAME}-base = ""
+
+do_set_local_version() {
+    is_tag="$(git -C ${S} name-rev --name-only --tags HEAD)"
+
+    if [ $? -ne 0 ] ; then
+        echo "not a git repository!!!"
+    else
+        # Remove previous CONFIG_LOCALVERSION
+        sed -i '/CONFIG_LOCALVERSION/d' ${B}/.config
+
+        if test "x${is_tag}" =  "xundefined"; then
+            version="$(git -C ${S} rev-parse --verify --short HEAD)"
+            echo "CONFIG_LOCALVERSION="\"-dirty-${version}\" >> ${B}/.config
+        else
+            version="$(git -C ${S} describe --tags --exact-match HEAD)"
+            echo "CONFIG_LOCALVERSION="\"-${version}\" >> ${B}/.config
+        fi
+    fi
+}
+
+addtask set_local_version before do_configure after do_kernel_configme
