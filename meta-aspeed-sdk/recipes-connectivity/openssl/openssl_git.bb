@@ -11,8 +11,8 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=d343e62fc9c833710bbbed25f27364c8"
 
 DEPENDS = "hostperl-runtime-native"
 
-BRANCH="aspeed-dev-v1.1.1g"
-SRC_URI = "git://192.168.10.13:29418/openssl.git;protocol=ssh;branch=${BRANCH} \
+BRANCH="aspeed-master-v1.1.1g"
+SRC_URI = "git://github.com/AspeedTech-BMC/openssl.git;protocol=https;branch=${BRANCH} \
            file://run-ptest \
            file://0001-skip-test_symbol_presence.patch \
            file://0001-buildinfo-strip-sysroot-and-debug-prefix-map-from-co.patch \

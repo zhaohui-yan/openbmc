@@ -1,0 +1,463 @@
+{
+    "name": "evb",
+    "version": "A0",
+    "data_region": {
+        "ecc_region": true,
+        "key": [
+            {
+                // "aes_oem"
+                // "aes_vault"
+                // "rsa_pub_oem"
+                // "rsa_pub_aes"
+                // "rsa_priv_aes"
+                "types": "rsa_pub_oem",
+                "key_pem": "test_oem_dss_private_key_1024_0.pem",
+                "offset": "0x40",
+                "number_id": 0
+            },
+            {
+                "types": "rsa_pub_oem",
+                "key_pem": "test_oem_dss_private_key_1024_1.pem",
+                "offset": "0x240",
+                "number_id": 1
+            },
+            {
+                "types": "rsa_pub_oem",
+                "key_pem": "test_oem_dss_private_key_1024_2.pem",
+                "offset": "0x440",
+                "number_id": 2
+            },
+            {
+                "types": "rsa_pub_oem",
+                "key_pem": "test_oem_dss_private_key_1024_3.pem",
+                "offset": "0x640",
+                "number_id": 3
+            },
+            {
+                "types": "rsa_pub_oem",
+                "key_pem": "test_oem_dss_private_key_1024_4.pem",
+                "offset": "0x840",
+                "number_id": 4
+            },
+            {
+                "types": "rsa_priv_aes",
+                "key_pem": "test_soc_private_key_1024.pem",
+                "offset": "0xa40"
+            },
+            {
+                "types": "aes_oem",
+                "key_bin": "test_aes_key.bin",
+                "iv_bin": "test_aes_iv.bin",
+                "offset": "0xc40"
+            }
+        ]
+    },
+    "config_region": {
+        // false: Enable
+        // true : Disable
+        "Disable Secure Region programming": false,
+        // false: Disable
+        // true : Enable
+        "Enable Secure Boot": false,
+        // false: User region ECC disable
+        // true : User region ECC enable
+        "User region ECC enable": false,
+        // false: Secure region ECC disable
+        // true : Secure region ECC enable
+        "Secure Region ECC enable": false,
+        // false: Enable
+        // true : Disable
+        "Disable low security key": false,
+        // false: Do not ignore Secure Boot hardware strap
+        // true : Ignore Secure Boot hardware strap 
+        "Ignore Secure Boot hardware strap": false,
+        // "Mode_GCM"
+        // "Mode_2"
+        "Secure Boot Mode": "Mode_2",
+        // "RSA1024"
+        // "RSA2048"
+        // "RSA3072"
+        // "RSA4096"
+        "Secure crypto RSA length": "RSA1024",
+        // "SHA224"
+        // "SHA256"
+        // "SHA384"
+        // "SHA512"
+        "Hash mode": "SHA256",
+        // Secure Region Size in hex(in unit of 32DW)
+        "Secure Region size": "0x0",
+        "Write Protect: Secure Region": false,
+        "Write Protect: User region": false,
+        // OTPCFG4-D[31:16] ("Keys Retire ID") are excluded
+        // OTPCFG16~OTPCFG31 ("otp_strap") are excluded
+        "Write Protect: Configure region": false,
+        "Write Protect: OTP strap region": false,
+        "Enable image encryption": true,
+        "Enable write Protect of OTP key retire bits": false,
+        // This will enable redundancy words replacement
+        "Data region redundancy repair enable": false,
+        // This will lock whole OTP memory and is un-recoverable
+        "OTP memory lock enable": false,
+        "Vender ID": "0x0",
+        "Key Revision": "0x0",
+        "Secure boot header offset": "0x20",
+        "Keys valid ID": 0,
+        "Keys Retire ID": 0,
+        "User define data: random number low": "0x0",
+        "User define data: random number high": "0x0",
+        "Redundancy Repair": "0x0",
+        "Manifest ID low": "0x0",
+        "Manifest ID high": "0x0"
+    },
+    "otp_strap": {
+        // OTPSTRAP[0]
+        "Enable secure boot": {
+            // false: Disable
+            // true : Enable
+            "value": false,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[1]
+        "Enable boot from eMMC": {
+            // false: Disable
+            // true : Enable
+            "value": false,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[2]
+        "Boot from debug SPI": {
+            // false: Disable
+            // true : Enable
+            "value": false,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[3]
+        "Disable ARM CM3": {
+            // false: Normal CM3
+            // true : Disable CM3
+            "value": false,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[4]
+        "Enable dedicated VGA BIOS ROM": {
+            // false: No VGA BIOS ROM, VGA BIOS is merged in the system BIOS
+            // true : Enable dedicated VGA BIOS ROM
+            "value": false,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[5]
+        "MAC 1 RMII mode": {
+            // 0: RMII/NCSI
+            // 1: RGMII
+            "value": "RGMII",
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[6]
+        "MAC 2 RMII mode": {
+            // 0: RMII/NCSI
+            // 1: RGMII
+            "value": "RGMII",
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[9:7]
+        "CPU frequency": {
+            // "1GHz"
+            // "800MHz"
+            // "1.2GHz"
+            // "1.4GHz"
+            "value": "1GHz",
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[11:10]
+        "HCLK ratio": {
+            // "2:1": Select AXI:AHB = 2:1
+            // "3:1": Select AXI:AHB = 3:1
+            // "4:1": Select AXI:AHB = 4:1
+            "value": "2:1",
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[13:12]
+        "VGA memory size": {
+            // "8MB"
+            // "16MB"
+            // "32MB"
+            // "64MB"
+            "value": "16MB",
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[17]
+        "VGA class code": {
+            // "video_device": Select the Class Code for video device
+            // "vga_device"  : Select the Class Code for VGA device
+            "value": "video_device",
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[18]
+        "Disable debug 0": {
+            // false: Enable debug interfaces 0
+            // true : Disable debug interfaces 0
+            "value": false,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[19]
+        "Boot from eMMC speed mode": {
+            // "normal": Normal eMMC speed
+            // "high"  : High eMMC speed
+            "value": "normal",
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[20]
+        "Disable PCIe EHCI": {
+            // false: Enable EHCI device
+            // true : Disable EHCI device
+            "value": false,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[21]
+        "Disable VGA XDMA": {
+            // false: Enable VGA XDMA function
+            // true : Disable VGA XDMA function
+            "value": false,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[22]
+        "Disable dedicated BMC function": {
+            // false: Normal BMC mode
+            // true : Disable dedicated BMC functions for non-BMC application
+            "value": false,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[23]
+        "Enable dedicate PCIe RC reset": {
+            // false: SSPRST# pin is for secondary processor dedicated reset pin
+            // true : SSPRST# pin is for PCIE root complex dedicated reset pin
+            "value": false,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[24]
+        "DRAM types": {
+            // "DDR3"
+            // "DDR4"
+            "value": "DDR3",
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[32]
+        "MAC 3 RMII mode": {
+            // 0: RMII/NCSI
+            // 1: RGMII
+            "value": "RGMII",
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[33]
+        "MAC 4 RMII mode": {
+            // 0: RMII/NCSI
+            // 1: RGMII
+            "value": "RGMII",
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[34]
+        "SuperIO configuration address selection": {
+            // "0x2e": Decode 0x2e
+            // "0x4e": Decode 0x4e
+            "value": "0x2e",
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[35]
+        "Disable LPC to decode SuperIO": {
+            // false: Enable address decoding
+            // true : Disable address decoding
+            "value": false,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[36]
+        "Disable debug 1": {
+            // false: Enable debug interfaces 1
+            // true : Disable debug interfaces 1
+            "value": false,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[37]
+        "Enable ACPI": {
+            // false: Disable ACPI
+            // true : Enable ACPI
+            "value": false,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[38]
+        "Select LPC/eSPI": {
+            // "eSPI"
+            // "LPC"
+            "value": "eSPI",
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[39]
+        "Enable SAFS": {
+            // false: Disable SAFS
+            // true : Enable SAFS
+            "value": false,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[42]
+        "Enable SPI 3B/4B address mode auto detection": {
+            // false: Disable
+            // true : Enable
+            "value": false,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[43]
+        "Enable boot SPI ABR": {
+            // false: Disable
+            // true : Enable
+            "value": false,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[44]
+        "Boot SPI ABR Mode": {
+            // "dual": dual SPI flash
+            // "single": single SPI flash
+            "value": "dual",
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[47:45]
+        "Boot SPI flash size": {
+            // 0: no define size
+            // 2: 2MB
+            // 4: 4MB
+            // 8: 8MB
+            // 16: 16MB
+            // 32: 32MB
+            // 64: 64MB
+            // 128: 128MB
+            "value": 0,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[48]
+        "Enable host SPI ABR": {
+            // false: Disable
+            // true : Enable
+            "value": false,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[49]
+        "Enable host SPI ABR mode select pin": {
+            // false: Disable
+            // true : Enable
+            "value": false,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[50]
+        "Host SPI ABR Mode": {
+            // "dual": dual SPI flash
+            // "single": single SPI flash
+            "value": "dual",
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[53:51]
+        "Host SPI flash size": {
+            // 0: no define size
+            // 2: 2MB
+            // 4: 4MB
+            // 8: 8MB
+            // 16: 16MB
+            // 32: 32MB
+            // 64: 64MB
+            // 128: 128MB
+            "value": 0,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[54]
+        "Enable boot SPI auxiliary control pins": {
+            // false: Disable
+            // true : Enable
+            "value": false,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[56:55]
+        "Boot SPI CRTM size": {
+            // 0: Disable CRTM
+            // 256: 256KB
+            // 512: 512KB
+            // 1024: 1MB
+            "value": 0,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[57:58]
+        "Host SPI CRTM size": {
+            // 0: Disable CRTM
+            // 1024: 1MB
+            // 2048: 2MB
+            // 4096: 4MB
+            "value": 0,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[59]
+        "Enable host SPI auxiliary control pins": {
+            // false: Disable
+            // true : Enable
+            "value": false,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[60]
+        "Enable GPIO Pass Through": {
+            // false: Disable pass through
+            // true : Enable pass-through at power on.
+            "value": false,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[61]
+        "Disable Low Security Secure Boot Key": {
+            // false: Enable
+            // true : Disable
+            "value": false,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[62]
+        "Enable Dedicate GPIO Strap Pins": {
+            // false: Disable
+            // true : Enable
+            "value": false,
+            "otp_protect": false,
+            "ignore": true
+        }
+    }
+}

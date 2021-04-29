@@ -7,8 +7,7 @@ PROVIDES += "virtual/kernel"
 KCONFIG_MODE="--alldefconfig"
 KERNEL_VERSION_SANITY_SKIP="1"
 
-KSRC = "git://192.168.10.13:29418/linux.git;protocol=ssh;branch=${KBRANCH}"
-
+KSRC = "git://github.com/AspeedTech-BMC/linux.git;protocol=https;branch=${KBRANCH}"
 SRC_URI = "${KSRC}"
 
 LINUX_VERSION_EXTENSION ?= "-${SRCREV}"
