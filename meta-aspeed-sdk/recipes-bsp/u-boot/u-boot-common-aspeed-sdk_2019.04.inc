@@ -22,7 +22,7 @@ do_set_local_version() {
     if [ $? -ne 0 ] ; then
         echo "not a git repository!!!"
     else
-        if test "x${is_tag}" =  "xundefined"; then
+        if test "x${is_tag}" = "xundefined"; then
             version="$(git -C ${S} rev-parse --verify --short HEAD)"
             echo "-dirty-${version}" > ${S}/.scmversion
             echo "-dirty-${version}" > ${B}/.scmversion
@@ -31,11 +31,11 @@ do_set_local_version() {
 
             if echo "${version}" | grep -q "devtool"; then
                  version_ext="$(git -C ${S} rev-parse --verify --short HEAD)"
-                 echo "-${version}-${version_ext}"> ${S}/.scmversion
-                 echo "-${version}-${version_ext}"> ${B}/.scmversion
+                 echo "-${version}-${version_ext}" > ${S}/.scmversion
+                 echo "-${version}-${version_ext}" > ${B}/.scmversion
             else
-                echo "-${version}"> ${S}/.scmversion
-                echo "-${version}"> ${B}/.scmversion
+                echo "-${version}" > ${S}/.scmversion
+                echo "-${version}" > ${B}/.scmversion
             fi
         fi
     fi

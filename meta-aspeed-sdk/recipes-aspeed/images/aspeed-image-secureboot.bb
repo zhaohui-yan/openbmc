@@ -7,7 +7,7 @@ PR = "r0"
 
 DEPENDS = " \
     socsec-native \
-    ast-secure-config-native \
+    aspeed-secure-config-native \
     virtual/bootloader \
     virtual/kernel \
     "
@@ -57,7 +57,7 @@ create_otp_image() {
         make_otp_image \
         ${OTP_CONFIG} \
         --key_folder ${KEY_DIR} \
-        --user_data_folder ${STAGING_DATADIR_NATIVE}/ast-secure-config/${ASPEED_SECURE_BOOT_TARGET}/security/data \
+        --user_data_folder ${STAGING_DATADIR_NATIVE}/aspeed-secure-config/${ASPEED_SECURE_BOOT_TARGET}/security/data \
         --output_folder ${OUTPUT_IMAGE_DIR}/otp_image
 
         if [ $? -ne 0 ]; then
@@ -178,13 +178,13 @@ do_deploy () {
     else
         bbwarn "User secure boot config not found!, ${ASPEED_SECURE_BOOT_CONFIG}"
 
-        if [ ! -f ${STAGING_DATADIR_NATIVE}/ast-secure-config/${ASPEED_SECURE_BOOT_TARGET}/${ASPEED_SECURE_BOOT_CONFIG} ]; then
-            echo "ast secure boot config not found!, ${STAGING_DATADIR_NATIVE}/ast-secure-config/${ASPEED_SECURE_BOOT_TARGET}/${ASPEED_SECURE_BOOT_CONFIG}"
+        if [ ! -f ${STAGING_DATADIR_NATIVE}/aspeed-secure-config/${ASPEED_SECURE_BOOT_TARGET}/${ASPEED_SECURE_BOOT_CONFIG} ]; then
+            echo "aspeed secure boot config not found!, ${STAGING_DATADIR_NATIVE}/aspeed-secure-config/${ASPEED_SECURE_BOOT_TARGET}/${ASPEED_SECURE_BOOT_CONFIG}"
             exit 1
         fi
 
-        source ${STAGING_DATADIR_NATIVE}/ast-secure-config/${ASPEED_SECURE_BOOT_TARGET}/${ASPEED_SECURE_BOOT_CONFIG}
-        bbwarn "Using an ast insecure config signing key!, ${STAGING_DATADIR_NATIVE}/ast-secure-config/${ASPEED_SECURE_BOOT_TARGET}/${ASPEED_SECURE_BOOT_CONFIG}"
+        source ${STAGING_DATADIR_NATIVE}/aspeed-secure-config/${ASPEED_SECURE_BOOT_TARGET}/${ASPEED_SECURE_BOOT_CONFIG}
+        bbwarn "Using an aspeed insecure config signing key!, ${STAGING_DATADIR_NATIVE}/aspeed-secure-config/${ASPEED_SECURE_BOOT_TARGET}/${ASPEED_SECURE_BOOT_CONFIG}"
     fi
 
     if [ -d ${SOURCE_IMAGE_DIR} ]; then

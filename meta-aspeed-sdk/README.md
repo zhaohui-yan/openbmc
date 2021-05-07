@@ -22,7 +22,7 @@ Reference:
 ```
 . setup
 Target machine must be specified. Use one of:
-ast2500-default                                 ast2600-emmc-secure-rsa4096-sha512-ncot
+ast2500-default                                 
 ast2600-a1                                      ast2600-secure-gcm
 ast2600-a1-secure-gcm                           ast2600-secure-rsa2048-sha256
 ast2600-a1-secure-rsa2048-sha256                ast2600-secure-rsa2048-sha256-ncot

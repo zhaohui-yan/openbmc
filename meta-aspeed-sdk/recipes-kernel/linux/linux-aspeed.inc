@@ -32,7 +32,7 @@ do_set_local_version() {
         # Remove previous CONFIG_LOCALVERSION
         sed -i '/CONFIG_LOCALVERSION/d' ${B}/.config
 
-        if test "x${is_tag}" =  "xundefined"; then
+        if test "x${is_tag}" = "xundefined"; then
             version="$(git -C ${S} rev-parse --verify --short HEAD)"
             echo "CONFIG_LOCALVERSION="\"-dirty-${version}\" >> ${B}/.config
         else
