@@ -20,39 +20,70 @@ Reference:
 
 ## Target the machine
 ```
-. setup
+source setup <machine> [build_dir]
 Target machine must be specified. Use one of:
-ast2500-default                                 
-ast2600-a1                                      ast2600-secure-gcm
-ast2600-a1-secure-gcm                           ast2600-secure-rsa2048-sha256
-ast2600-a1-secure-rsa2048-sha256                ast2600-secure-rsa2048-sha256-ncot
-ast2600-a1-secure-rsa2048-sha256-ncot           ast2600-secure-rsa2048-sha256-o1
-ast2600-a1-secure-rsa2048-sha256-o1             ast2600-secure-rsa2048-sha256-o2-priv
-ast2600-a1-secure-rsa2048-sha256-o2-priv        ast2600-secure-rsa2048-sha256-o2-pub
-ast2600-a1-secure-rsa2048-sha256-o2-pub         ast2600-secure-rsa3072-sha384
-ast2600-a1-secure-rsa3072-sha384                ast2600-secure-rsa3072-sha384-o1
-ast2600-a1-secure-rsa3072-sha384-o1             ast2600-secure-rsa3072-sha384-o2-priv
-ast2600-a1-secure-rsa3072-sha384-o2-priv        ast2600-secure-rsa3072-sha384-o2-pub
-ast2600-a1-secure-rsa3072-sha384-o2-pub         ast2600-secure-rsa4096-sha512
-ast2600-a1-secure-rsa4096-sha512                ast2600-secure-rsa4096-sha512-o1
-ast2600-a1-secure-rsa4096-sha512-o1             ast2600-secure-rsa4096-sha512-o2-priv
-ast2600-a1-secure-rsa4096-sha512-o2-priv        ast2600-secure-rsa4096-sha512-o2-pub
-ast2600-a1-secure-rsa4096-sha512-o2-pub
+ast2500-default
 ast2600-default
 ast2600-emmc
 ast2600-emmc-secure
+ast2600-secure-gcm
+ast2600-secure-rsa2048-sha256
+ast2600-secure-rsa2048-sha256-ncot
+ast2600-secure-rsa2048-sha256-o1
+ast2600-secure-rsa2048-sha256-o2-priv
+ast2600-secure-rsa2048-sha256-o2-pub
+ast2600-secure-rsa3072-sha384
+ast2600-secure-rsa3072-sha384-o1
+ast2600-secure-rsa3072-sha384-o2-priv
+ast2600-secure-rsa3072-sha384-o2-pub
+ast2600-secure-rsa4096-sha512
+ast2600-secure-rsa4096-sha512-o1
+ast2600-secure-rsa4096-sha512-o2-priv
+ast2600-secure-rsa4096-sha512-o2-pub
+ast2600-a2
+ast2600-a2-emmc
+ast2600-a2-emmc-secure
+ast2600-a2-secure-gcm
+ast2600-a2-secure-rsa2048-sha256
+ast2600-a2-secure-rsa2048-sha256-ncot
+ast2600-a2-secure-rsa2048-sha256-o1
+ast2600-a2-secure-rsa2048-sha256-o2-priv
+ast2600-a2-secure-rsa2048-sha256-o2-pub
+ast2600-a2-secure-rsa3072-sha384
+ast2600-a2-secure-rsa3072-sha384-o1
+ast2600-a2-secure-rsa3072-sha384-o2-priv
+ast2600-a2-secure-rsa3072-sha384-o2-pub
+ast2600-a2-secure-rsa4096-sha512
+ast2600-a2-secure-rsa4096-sha512-o1
+ast2600-a2-secure-rsa4096-sha512-o2-priv
+ast2600-a2-secure-rsa4096-sha512-o2-pub
+ast2600-a1
+ast2600-a1-secure-gcm
+ast2600-a1-secure-rsa2048-sha256
+ast2600-a1-secure-rsa2048-sha256-ncot
+ast2600-a1-secure-rsa2048-sha256-o1
+ast2600-a1-secure-rsa2048-sha256-o2-priv
+ast2600-a1-secure-rsa2048-sha256-o2-pub
+ast2600-a1-secure-rsa3072-sha384
+ast2600-a1-secure-rsa3072-sha384-o1
+ast2600-a1-secure-rsa3072-sha384-o2-priv
+ast2600-a1-secure-rsa3072-sha384-o2-pub
+ast2600-a1-secure-rsa4096-sha512
+ast2600-a1-secure-rsa4096-sha512-o1
+ast2600-a1-secure-rsa4096-sha512-o2-priv
+ast2600-a1-secure-rsa4096-sha512-o2-pub
 ```
 
 1. AST2600
 
 ```
-. setup ast2600-default [BUID_DIR]
+source setup ast2600-default [build_dir]
 ```
 
 2. AST2500
 
 ```
-. setup ast2500-default [BUID_DIR]
+source setup ast2500-default [build_dir]
 ```
 
 ## Build OpenBMC firmware
@@ -61,6 +92,7 @@ bitbake obmc-phosphor-image
 ```
 
 ## Build SDK Image (all.bin)
+The difference between ASPEED SDK image and OpenBMC firmware is that ASPEED SDK image only has necessary applications and test tools for ASPEED testing without OpenBMC phosphor packages and services.
 Add `ast-img-sdk` DISTRO_FEATURES and `df-ast-img-sdk` DISTROOVERRIDES to apply the following change in `conf/local.conf`:
 
 ```
@@ -108,7 +140,7 @@ require ${@bb.utils.contains('INITRAMFS_IMAGE', 'aspeed-image-initramfs', '', 'c
 Then the image will be built according to the setting of `meta-aspeed-sdk/meta-ast2600-sdk/conf/machine/${MACHINE}.conf`.
 
 # Output image
-After you successfully built the image, the image file can be found in: `[BUILD_DIR]/tmp/work/deploy/images/${MACHINE}/`.
+After you successfully built the image, the image file can be found in: `[build_dir]/tmp/work/deploy/images/${MACHINE}/`.
 
 ## OpenBMC firmware
 
