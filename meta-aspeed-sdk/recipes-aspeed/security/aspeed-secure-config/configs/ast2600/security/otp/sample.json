@@ -48,53 +48,91 @@
         ]
     },
     "config_region": {
+        // OTPCFG0[1]
         // false: Disable
         // true : Enable
         "Enable Secure Boot": false,
+        // OTPCFG0[3]
         // false: User region ECC disable
         // true : User region ECC enable
         "User region ECC enable": false,
+        // OTPCFG0[4]
         // false: Secure region ECC disable
         // true : Secure region ECC enable
         "Secure Region ECC enable": false,
+        // OTPCFG0[5]
         // false: Enable
         // true : Disable
         "Disable low security key": false,
+        // OTPCFG0[6]
         // false: Do not ignore Secure Boot hardware strap
         // true : Ignore Secure Boot hardware strap 
         "Ignore Secure Boot hardware strap": false,
-        // "Mode_GCM"
-        // "Mode_2"
+        // OTPCFG0[7]
+        // 0: "Mode_GCM"
+        // 1: "Mode_2"
         "Secure Boot Mode": "Mode_2",
-        // "RSA1024"
-        // "RSA2048"
-        // "RSA3072"
-        // "RSA4096"
+        // OTPCFG0[11-10]
+        // 00: "RSA1024"
+        // 01: "RSA2048"
+        // 10: "RSA3072"
+        // 11: "RSA4096"
         "Secure crypto RSA length": "RSA1024",
-        // "SHA224"
-        // "SHA256"
-        // "SHA384"
-        // "SHA512"
+        // OTPCFG0[13-12]
+        // 00: "SHA224"
+        // 01: "SHA256"
+        // 10: "SHA384"
+        // 11: "SHA512"
         "Hash mode": "SHA256",
+        // OTPCFG0[14]
+        "Disable patch code": false,
+        // OTPCFG0[15]
+        "Disable Boot from Uart": false,
+        // OTPCFG0[21-16]
         // Secure Region Size in hex(in unit of 32DW)
         "Secure Region size": "0x0",
+        // OTPCFG0[22]
         "Write Protect: Secure Region": false,
+        // OTPCFG0[23]
         "Write Protect: User region": false,
+        // OTPCFG0[24]
         // OTPCFG4-D[31:16] ("Keys Retire ID") are excluded
         // OTPCFG16~OTPCFG31 ("otp_strap") are excluded
         "Write Protect: Configure region": false,
+        // OTPCFG0[25]
         "Write Protect: OTP strap region": false,
+        // OTPCFG0[26]
+        // default is ture
+        "Copy Boot Image to Internal SRAM": true,
+        // OTPCFG0[27]
         "Enable image encryption": true,
+        // OTPCFG0[29]
         "Enable write Protect of OTP key retire bits": false,
+        // OTPCFG0[31]
         // This will lock whole OTP memory and is un-recoverable
         "OTP memory lock enable": false,
+        // OTPCFG2[31-16]
         "Vender ID": "0x0",
+        // OTPCFG2[15-0]
         "Key Revision": "0x0",
+        // OTPCFG3[15-0]
         "Secure boot header offset": "0x20",
+        // OTPCFG4[7-0]
         "Keys Retire ID": 0,
+        // OTPCFG5[31-0]
         "User define data: random number low": "0x0",
+        // OTPCFG6[31-0]
         "User define data: random number high": "0x0",
-        "Manifest ID": 0
+        // OTPCFG10[31-0]
+        // OTPCFG11[31-0]
+        // 0x0 ~ 0x3F
+        "Manifest ID": "0x0"
+        // OTPCFG14[10-0]
+        // 1B80/4
+        // "Patch code location": "0x6E0",
+        // OTPCFG14[16-11]
+        // 31 dw
+        // "Patch code size": "0x1f"
     },
     "otp_strap": {
         // OTPSTRAP[0]
@@ -165,6 +203,7 @@
         },
         // OTPSTRAP[11:10]
         "HCLK ratio": {
+            // "default": default that make HCLK = 200MHz
             // "2:1": Select AXI:AHB = 2:1
             // "3:1": Select AXI:AHB = 3:1
             // "4:1": Select AXI:AHB = 4:1
@@ -179,6 +218,22 @@
             // "32MB"
             // "64MB"
             "value": "16MB",
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[15]
+        "CPU/AXI clock ratio": {
+            // "2:1"
+            // "1:1"
+            "value": "2:1",
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[16]
+        "Disable ARM JTAG debug": {
+            // false: Enable
+            // true: Disable
+            "value": false,
             "otp_protect": false,
             "ignore": true
         },
@@ -242,6 +297,24 @@
         "Disable watchdog to reset full chip": {
             // false: Enable watchdog to reset full chip
             // true : Disable watchdog to reset full chip
+            "value": false,
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[26:25]
+        "Internal bridge speed selection": {
+            // "1x"
+            // "1/2x"
+            // "1/4x"
+            // "1/8x"
+            "value": "1x",
+            "otp_protect": false,
+            "ignore": true
+        },
+        // OTPSTRAP[29]
+        "Disable RVAS function": {
+            // false: Enable RVAS
+            // true : Disable RVAS
             "value": false,
             "otp_protect": false,
             "ignore": true

@@ -1,18 +1,9 @@
 {
     "name": "evb",
-    "version": "A1",
+    "version": "A3",
     "data_region": {
-        "patch": true,
         "ecc_region": true,
-        "user_data": [
-            {
-                // dw_hex
-                // bin
-                "types": "dw_hex",
-                "file": "rsa2048_patch.hex",
-                "offset": "0x1B80"
-            }
-        ],
+        "rsa_key_order": "big",
         "key": [
             {
                 // "aes_oem"
@@ -24,6 +15,11 @@
                 "key_bin": "test_aes_vault_key.bin",
                 "key_bin2": "test_aes_vault_key_1.bin",
                 "offset": "0x40"
+            },
+            {
+                "types": "rsa_priv_aes",
+                "key_pem": "test_soc_private_key_2048.pem",
+                "offset": "0x80"
             },
             {
                 "types": "rsa_pub_oem",
@@ -71,10 +67,6 @@
         // "SHA384"
         // "SHA512"
         "Hash mode": "SHA256",
-        "Enable patch code": true,
-        // 1B80/4
-        "Patch code location": "0x6E0",
-        // 31 dw
-        "Patch code size": "0x1f"
+        "Enable image encryption": true
     }
 }

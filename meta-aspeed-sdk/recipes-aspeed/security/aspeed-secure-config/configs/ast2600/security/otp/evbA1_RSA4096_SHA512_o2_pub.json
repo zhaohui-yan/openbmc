@@ -39,25 +39,25 @@
             {
                 "types": "rsa_pub_oem",
                 "key_pem": "test_oem_dss_public_key_4096_1.pem",
-                "offset": "0x880",
+                "offset": "0x680",
                 "number_id": 1
             },
             {
                 "types": "rsa_pub_oem",
                 "key_pem": "test_oem_dss_public_key_4096_2.pem",
-                "offset": "0xc80",
+                "offset": "0x880",
                 "number_id": 2
             },
             {
                 "types": "rsa_pub_oem",
                 "key_pem": "test_oem_dss_public_key_4096_3.pem",
-                "offset": "0x1080",
+                "offset": "0xa80",
                 "number_id": 3
             },
             {
                 "types": "rsa_pub_oem",
                 "key_pem": "test_oem_dss_public_key_4096_4.pem",
-                "offset": "0x1480",
+                "offset": "0xc80",
                 "number_id": 4
             }
         ]
@@ -77,6 +77,7 @@
         // "SHA512"
         "Hash mode": "SHA512",
         "Enable image encryption": true,
+        "Enable patch code": true,
         // 1B80/4
         "Patch code location": "0x6E0",
         // 31 dw

@@ -72,6 +72,7 @@
         // "SHA512"
         "Hash mode": "SHA224",
         "Enable image encryption": false,
+        "Enable patch code": true,
         // 1B80/4
         "Patch code location": "0x6E0",
         // 31 dw

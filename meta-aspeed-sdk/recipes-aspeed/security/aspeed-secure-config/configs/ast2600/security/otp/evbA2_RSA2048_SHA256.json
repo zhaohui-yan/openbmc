@@ -24,25 +24,25 @@
             {
                 "types": "rsa_pub_oem",
                 "key_pem": "test_oem_dss_public_key_2048_1.pem",
-                "offset": "0x680",
+                "offset": "0x580",
                 "number_id": 1
             },
             {
                 "types": "rsa_pub_oem",
                 "key_pem": "test_oem_dss_public_key_2048_2.pem",
-                "offset": "0x880",
+                "offset": "0x680",
                 "number_id": 2
             },
             {
                 "types": "rsa_pub_oem",
                 "key_pem": "test_oem_dss_public_key_2048_3.pem",
-                "offset": "0xa80",
+                "offset": "0x780",
                 "number_id": 3
             },
             {
                 "types": "rsa_pub_oem",
                 "key_pem": "test_oem_dss_public_key_2048_4.pem",
-                "offset": "0xc80",
+                "offset": "0x880",
                 "number_id": 4
             }
         ]
