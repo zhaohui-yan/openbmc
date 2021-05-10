@@ -16,7 +16,6 @@
                 "offset": "0x40"
             },
             {
-                
                 "types": "aes_oem",
                 "key_bin": "test_gcm_aes_key_0.bin",
                 "offset": "0x80",
