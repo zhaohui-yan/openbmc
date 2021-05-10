@@ -8,8 +8,8 @@ SRC_URI = "git://192.168.10.13:29418/i3c-tools.git;protocol=ssh;branch=${BRANCH}
 
 PR = "r1"
 PV = "1.0+git${SRCPV}"
-SRCREV = "${AUTOREV}"
-BRANCH = "develop"
+SRCREV = "65f947d74e3a5d33992549a0a1900481bdef95b4"
+BRANCH = "master"
 
 S = "${WORKDIR}/git"
 

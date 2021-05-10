@@ -16,7 +16,7 @@ S = "${WORKDIR}/git"
 
 BRANCH="aspeed-dev-v1.12"
 SRC_URI = "git://192.168.10.13:29418/cryptodev.git;protocol=ssh;branch=${BRANCH}"
-SRCREV = "${AUTOREV}"
+SRCREV = "c243f6c056ea69d2fe51927446f8e138c5004af3"
 
 inherit module
 
