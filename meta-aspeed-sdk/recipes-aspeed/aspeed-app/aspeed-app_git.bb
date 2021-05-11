@@ -25,10 +25,7 @@ SRC_URI = " git://192.168.10.13:29418/aspeed_app.git;protocol=ssh;branch=${BRANC
 "
 PV = "1.0+git${SRCPV}"
 
-# Build specific revision
-# SRCREV = "84d288630f3f73dfb06e11d5e04e44b3899bacf4"
-
-# Build latest revision
+# Tag for v00.01.00
 SRCREV = "4d675486db573d1cd31bc49249318f2ee064199b"
 BRANCH = "master"
 inherit meson

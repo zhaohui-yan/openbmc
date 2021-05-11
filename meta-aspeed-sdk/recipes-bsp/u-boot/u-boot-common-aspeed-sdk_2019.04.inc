@@ -8,6 +8,7 @@ PE = "1"
 
 BRANCH="aspeed-master-v2019.04"
 SRC_URI = "git://192.168.10.13:29418/u-boot.git;protocol=ssh;branch=${BRANCH}"
+# Tag for v00.04.00
 SRCREV = "181f72d886428846f1dd468dcce1d8fc738ca785"
 
 S = "${WORKDIR}/git"
