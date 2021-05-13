@@ -24,7 +24,6 @@ UBOOT_SPL_IMAGE ?= "u-boot-spl.bin"
 UBOOT_IMAGE ?= "u-boot.bin"
 SUBOOT_SPL_IMAGE ?= "s_${UBOOT_SPL_IMAGE}"
 SUBOOT_IMAGE ?= "s_${UBOOT_IMAGE}"
-KEY_ORDER ?= "little"
 
 KERNEL_FIT_IMAGE ?= "fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE}"
 KERNEL_FIT_IMAGE_df-obmc-ubi-fs ?= "fitImage-${MACHINE}.bin"
@@ -38,7 +37,6 @@ SOURCE_IMAGE_DIR ?= "${S}/source"
 print_otp_image() {
     if [ "${OTP_CONFIG}" != "" ]; then
         echo "Printing OTP Image ..."
-
         otptool \
         print \
         ${OUTPUT_IMAGE_DIR}/otp_image/otp-all.image
@@ -53,7 +51,6 @@ print_otp_image() {
 create_otp_image() {
     if [ "${OTP_CONFIG}" != "" ]; then
         echo "Generating OTP Image ..."
-
         otptool \
         make_otp_image \
         ${OTP_CONFIG} \
@@ -91,7 +88,7 @@ create_secure_boot_image() {
             --bl1_image ${SOURCE_IMAGE_DIR}/${UBOOT_SPL_IMAGE} \
             --output ${OUTPUT_IMAGE_DIR}/${SUBOOT_SPL_IMAGE} \
             --rsa_sign_key ${ROT_SIGN_KEY} \
-			--rsa_key_order ${KEY_ORDER} \
+            --rsa_key_order ${KEY_ORDER} \
             --cot_algorithm ${COT_ALGORITHM} \
             --cot_verify_key ${COT_FIRST_VERIFY_KEY} \
             --key_in_otp \
@@ -107,7 +104,7 @@ create_secure_boot_image() {
             --bl1_image ${SOURCE_IMAGE_DIR}/${UBOOT_SPL_IMAGE} \
             --output ${OUTPUT_IMAGE_DIR}/${SUBOOT_SPL_IMAGE} \
             --rsa_sign_key ${ROT_SIGN_KEY} \
-			--rsa_key_order ${KEY_ORDER} \
+            --rsa_key_order ${KEY_ORDER} \
             --cot_algorithm ${COT_ALGORITHM} \
             --cot_verify_key ${COT_FIRST_VERIFY_KEY} \
             --aes_key ${AES_KEY} \
