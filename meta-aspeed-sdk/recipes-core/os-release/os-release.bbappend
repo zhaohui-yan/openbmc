@@ -8,7 +8,7 @@ python do_compile_prepend() {
         res=bb.process.run(("git -C %s symbolic-ref -q --short HEAD ||" +
                             "git -C %s describe --tags --exact-match")
             % (work_dir, work_dir))[0].strip("\n")
-        if re.match("^\d+\.\d+$", res):
+        if re.match("^v\d+\.\d+$", res):
             sdk_ver=res
         else:
             sdk_ver=bb.process.run("git -C %s rev-parse HEAD"
