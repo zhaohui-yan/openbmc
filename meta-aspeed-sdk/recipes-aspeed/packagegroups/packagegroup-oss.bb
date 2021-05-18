@@ -25,6 +25,7 @@ RDEPENDS_${PN}-apps = " \
     xdma-test \
     libpeci \
     dhrystone \
+    nbd-client \
     ${@d.getVar('PREFERRED_PROVIDER_u-boot-fw-utils', True) or 'u-boot-fw-utils'} \
     "
 
