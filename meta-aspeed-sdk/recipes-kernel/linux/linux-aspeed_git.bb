@@ -6,3 +6,6 @@ SRCREV = "${AUTOREV}"
 require linux-aspeed.inc
 
 DEPENDS += "lzop-native"
+
+SRC_URI_append = " file://ipmi_ssif.cfg "
+

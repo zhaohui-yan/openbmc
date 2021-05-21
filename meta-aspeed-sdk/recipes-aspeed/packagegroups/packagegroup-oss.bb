@@ -26,6 +26,7 @@ RDEPENDS_${PN}-apps = " \
     libpeci \
     dhrystone \
     nbd-client \
+    freeipmi \
     ${@d.getVar('PREFERRED_PROVIDER_u-boot-fw-utils', True) or 'u-boot-fw-utils'} \
     "
 

@@ -16,6 +16,7 @@ PACKAGES_append = " \
     ${PN}-apps \
     ${PN}-ssp \
     ${PN}-crypto \
+    ${PN}-ssif \
     "
 
 PROVIDES_append = " virtual/obmc-chassis-mgmt"
@@ -78,3 +79,13 @@ RDEPENDS_${PN}-crypto = " \
 RRECOMMENDS_${PN}-crypto = " \
     kernel-module-cryptodev \
     "
+
+SUMMARY_${PN}-ssif = "IPMI SMBus System Interface"
+RDEPENDS_${PN}-ssif = " \
+    "
+RRECOMMENDS_${PN}-ssif= " \
+    kernel-module-ipmi-msghandler \
+    kernel-module-ipmi-ssif \
+    "
+
+
