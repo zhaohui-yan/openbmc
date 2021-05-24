@@ -15,7 +15,7 @@
 # licenses then you should change the value to separate the licenses with |
 # instead of &. If there is any doubt, check the accompanying documentation
 # to determine which situation is applicable.
-LICENSE = "GPLv3 & Unknown"
+LICENSE = "GPLv3"
 LIC_FILES_CHKSUM = "file://COPYING;md5=d32239bcb673463ab874e80d47fae504 \
                     file://COPYING.ipmi-fru;md5=d32239bcb673463ab874e80d47fae504 \
                     file://COPYING.ZRESEARCH;md5=d32239bcb673463ab874e80d47fae504 \

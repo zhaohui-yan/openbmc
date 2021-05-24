@@ -17,6 +17,7 @@ PACKAGES_append = " \
     ${PN}-ssp \
     ${PN}-crypto \
     ${PN}-ssif \
+    ${PN}-inband \
     "
 
 PROVIDES_append = " virtual/obmc-chassis-mgmt"
@@ -88,4 +89,7 @@ RRECOMMENDS_${PN}-ssif= " \
     kernel-module-ipmi-ssif \
     "
 
-
+SUMMARY_${PN}-inband = "AspeedTech Inband Test"
+RDEPENDS_${PN}-inband = " \
+    phosphor-ipmi-ipmb phosphor-ipmi-ssif phosphor-ipmi-bt phosphor-ipmi-kcs \
+    "
