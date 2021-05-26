@@ -87,6 +87,8 @@ RDEPENDS_${PN}-ssif = " \
 RRECOMMENDS_${PN}-ssif= " \
     kernel-module-ipmi-msghandler \
     kernel-module-ipmi-ssif \
+    kernel-module-ipmi-si \
+    kernel-module-ipmi-devintf \
     "
 
 SUMMARY_${PN}-inband = "AspeedTech Inband Test"
