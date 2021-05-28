@@ -21,6 +21,7 @@ inherit deploy
 # Image composition
 UBOOT_SUFFIX ?= "bin"
 ASPEED_IMAGE_UBOOT_SPL_IMAGE ?= "u-boot-spl"
+ASPEED_IMAGE_UBOOT_FIT_IMAGE ?= "u-boot-fitImage"
 ASPEED_EMMC_IMAGE_UBOOT_SPL_IMAGE ?= "emmc_${ASPEED_IMAGE_UBOOT_SPL_IMAGE}"
 ASPEED_EMMC_IMAGE_UBOOT_IMAGE ?= "u-boot"
 ASPEED_EMMC_IMAGE_UBOOT_SPL_SIZE_KB ?= "64"
@@ -57,14 +58,24 @@ do_deploy () {
     fi
 
     install -m 0644 ${DEPLOY_DIR_IMAGE}/${ASPEED_EMMC_IMAGE_UBOOT_IMAGE}.${UBOOT_SUFFIX} ${SOURCE_IMAGE_DIR}
+    if [ ${UBOOT_FITIMAGE_ENABLE} == "1" ]; then
+        install -m 0644 ${DEPLOY_DIR_IMAGE}/${ASPEED_IMAGE_UBOOT_FIT_IMAGE} ${SOURCE_IMAGE_DIR}
+    fi
 
     # Generate emmc_image-u-boot for boot from eMMC
     dd bs=1k count=${ASPEED_EMMC_IMAGE_MERGE_UBOOT_SIZE_KB} \
         if=/dev/zero of=${OUTPUT_IMAGE_DIR}/${ASPEED_EMMC_IMAGE_MERGE_UBOOT_IMAGE}
     dd bs=1k count=${ASPEED_EMMC_IMAGE_UBOOT_SPL_SIZE_KB} conv=notrunc \
         if=${SOURCE_IMAGE_DIR}/${ASPEED_EMMC_IMAGE_UBOOT_SPL_IMAGE}.${UBOOT_SUFFIX} of=${OUTPUT_IMAGE_DIR}/${ASPEED_EMMC_IMAGE_MERGE_UBOOT_IMAGE}
-    dd bs=1k seek=${ASPEED_EMMC_IMAGE_UBOOT_SPL_SIZE_KB} conv=notrunc \
-        if=${SOURCE_IMAGE_DIR}/${ASPEED_EMMC_IMAGE_UBOOT_IMAGE}.${UBOOT_SUFFIX}  of=${OUTPUT_IMAGE_DIR}/${ASPEED_EMMC_IMAGE_MERGE_UBOOT_IMAGE}
+
+    if [ ${UBOOT_FITIMAGE_ENABLE} == "1" ]; then
+
+        dd bs=1k seek=${ASPEED_EMMC_IMAGE_UBOOT_SPL_SIZE_KB} conv=notrunc \
+            if=${SOURCE_IMAGE_DIR}/${ASPEED_IMAGE_UBOOT_FIT_IMAGE}  of=${OUTPUT_IMAGE_DIR}/${ASPEED_EMMC_IMAGE_MERGE_UBOOT_IMAGE}
+    else
+        dd bs=1k seek=${ASPEED_EMMC_IMAGE_UBOOT_SPL_SIZE_KB} conv=notrunc \
+            if=${SOURCE_IMAGE_DIR}/${ASPEED_EMMC_IMAGE_UBOOT_IMAGE}.${UBOOT_SUFFIX}  of=${OUTPUT_IMAGE_DIR}/${ASPEED_EMMC_IMAGE_MERGE_UBOOT_IMAGE}
+    fi
 
     # Deploy image for boot from emmc
     install -d ${DEPLOYDIR}

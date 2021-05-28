@@ -3,7 +3,7 @@ HOMEPAGE = "https://github.com/openbmc/meta-aspeed"
 LICENSE = "MIT"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-inherit deploy
+inherit ${@bb.utils.contains('MACHINE_FEATURES', 'ast-mmc', 'image', 'deploy', d)}
 
 UBOOT_SUFFIX ?= "bin"
 ASPEED_IMAGE_UBOOT_SPL_IMAGE ?= "u-boot-spl"
@@ -15,6 +15,8 @@ ASPEED_IMAGE_SIZE_KB ?= "16384"
 ASPEED_IMAGE_KERNEL_IMAGE ?= "fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE}"
 ASPEED_IMAGE_NAME ?= "all.bin"
 ASPEED_BOOT_EMMC ?= "${@bb.utils.contains('MACHINE_FEATURES', 'ast-mmc', 'yes', 'no', d)}"
+
+IMAGE_FSTYPES_ast-mmc += "wic.xz mmc-ext4-tar"
 
 do_compile() {
     uboot_offset=${ASPEED_IMAGE_UBOOT_OFFSET_KB}
@@ -40,6 +42,10 @@ do_compile() {
 
 do_deploy() {
     install -m644 -D ${B}/aspeed-sdk.bin ${DEPLOYDIR}/${ASPEED_IMAGE_NAME}
+}
+
+do_deploy_ast-mmc() {
+    echo dummy
 }
 
 do_compile[depends] = " \
