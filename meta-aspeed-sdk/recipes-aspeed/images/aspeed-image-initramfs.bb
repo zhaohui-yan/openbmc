@@ -8,7 +8,6 @@ IMAGE_INSTALL_append = " \
         packagegroup-oss-libs \
         packagegroup-aspeed-crypto \
 	packagegroup-aspeed-ssif \
-	packagegroup-aspeed-inband \
         ${@bb.utils.contains('MACHINE_FEATURES', 'ast-ssp', 'packagegroup-aspeed-ssp', '', d)} \
         "
 
