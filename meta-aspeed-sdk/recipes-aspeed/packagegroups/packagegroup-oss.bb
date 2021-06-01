@@ -27,6 +27,7 @@ RDEPENDS_${PN}-apps = " \
     dhrystone \
     nbd-client \
     freeipmi \
+    iozone3 \
     ${@d.getVar('PREFERRED_PROVIDER_u-boot-fw-utils', True) or 'u-boot-fw-utils'} \
     "
 
