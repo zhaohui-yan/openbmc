@@ -83,3 +83,8 @@ require conf/machine/include/obmc-bsp-common.inc
 
 INITRAMFS_IMAGE_df-ast-img-sdk = "aspeed-image-initramfs"
 
+# Free Open Source Software (FOSS) Creation
+# INHERIT += "archiver"
+# ARCHIVER_MODE[src] = "original"
+# ARCHIVER_MODE[recipe] = "1"
+# COPYLEFT_LICENSE_INCLUDE = "*"

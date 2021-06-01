@@ -192,3 +192,24 @@ After you successfully built the image, the image file can be found in: `[build_
 - `recovery_u-boot-spl` : u-boot-spl.bin processed with gen_uart_booting_image.sh for recovery image via UART
 - `recovery_s_u-boot-spl` : s_u-boot-spl.bin processed with gen_uart_booting_image.sh for recovery image via UART with secure boot
 
+# Free Open Source Software (FOSS)
+The Yocto/OpenBMC build system supports to provide the following things to meet the FOSS requirement.
+- Source code must be provided.
+- License text for the software must be provided.
+- Compilation scripts and modifications to the source code must be provided.
+
+The Yocto Project generates a license manifest during image creation that is located in ${DEPLOY_DIR}/licenses/image_name-datestamp to assist with any audits.
+During the creation of your image, the source and patch from all recipes that deploy packages to the image is placed within subdirectories of DEPLOY_DIR/sources on the LICENSE for each recipe.
+Please refer to [Working With Licenses](https://docs.yoctoproject.org/dev-manual/common-tasks.html#working-with-licenses) for detail.
+
+To create it, please add the following settings in `local.conf`.
+By default, it only creates for `GPL, LGPL and AGPL` LICENSE. User can add `COPYLEFT_LICENSE_INCLUDE = "*"` to create for all LICENSE.
+Please refer to `archiver.bbclass` for detail.
+
+```
+INHERIT += "archiver"
+ARCHIVER_MODE[src] = "original"
+ARCHIVER_MODE[recipe] = "1"
+COPYLEFT_LICENSE_INCLUDE = "*"
+```
+
