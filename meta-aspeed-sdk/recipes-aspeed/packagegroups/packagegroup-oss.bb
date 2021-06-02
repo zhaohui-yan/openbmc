@@ -29,6 +29,7 @@ RDEPENDS_${PN}-apps = " \
     freeipmi \
     ipmitool \
     iozone3 \
+    ncsi-netlink \
     ${@d.getVar('PREFERRED_PROVIDER_u-boot-fw-utils', True) or 'u-boot-fw-utils'} \
     "
 
