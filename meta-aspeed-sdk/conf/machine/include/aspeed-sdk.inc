@@ -13,7 +13,7 @@ KERNEL_CLASSES ?= "kernel-fitimage"
 INITRAMFS_IMAGE ?= "aspeed-image-initramfs"
 INITRAMFS_FSTYPES ?= "cpio.xz"
 
-WKS_FILE ?= "emmc-aspeed.wks.in"
+WKS_FILE ?= "ast2600-emmc.wks.in"
 WKS_FILE_DEPENDS ?= " \
     phosphor-hostfw-image \
     virtual/bootloader \

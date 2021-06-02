@@ -9,6 +9,7 @@ PROVIDES = "${PACKAGES}"
 PACKAGES = " \
     ${PN}-apps \
     ${PN}-libs \
+    ${PN}-obmc-apps \
     "
 
 SUMMARY_${PN}-apps = "Open Source Applications"
@@ -26,8 +27,6 @@ RDEPENDS_${PN}-apps = " \
     libpeci \
     dhrystone \
     nbd-client \
-    freeipmi \
-    ipmitool \
     iozone3 \
     ncsi-netlink \
     ${@d.getVar('PREFERRED_PROVIDER_u-boot-fw-utils', True) or 'u-boot-fw-utils'} \
@@ -39,3 +38,8 @@ RDEPENDS_${PN}-libs = " \
     libgpiod-tools \
     "
 
+SUMMARY_${PN}-obmc-apps = "Open Source Applications for OpenBMC Image"
+RDEPENDS_${PN}-obmc-apps = " \
+    freeipmi \
+    ipmitool \
+    "
