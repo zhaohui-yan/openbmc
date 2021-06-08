@@ -42,4 +42,5 @@ SUMMARY_${PN}-obmc-apps = "Open Source Applications for OpenBMC Image"
 RDEPENDS_${PN}-obmc-apps = " \
     freeipmi \
     ipmitool \
+    at-scale-debug \
     "
