@@ -29,6 +29,7 @@ RDEPENDS_${PN}-apps = " \
     nbd-client \
     iozone3 \
     ncsi-netlink \
+    hdparm \
     ${@d.getVar('PREFERRED_PROVIDER_u-boot-fw-utils', True) or 'u-boot-fw-utils'} \
     "
 
