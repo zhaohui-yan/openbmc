@@ -9,6 +9,7 @@ IMAGE_INSTALL_append = " \
         packagegroup-aspeed-crypto \
 	packagegroup-aspeed-ssif \
         ${@bb.utils.contains('MACHINE_FEATURES', 'ast-ssp', 'packagegroup-aspeed-ssp', '', d)} \
+        packagegroup-aspeed-mtdtest \
         "
 
 EXTRA_IMAGE_FEATURES_append = " \

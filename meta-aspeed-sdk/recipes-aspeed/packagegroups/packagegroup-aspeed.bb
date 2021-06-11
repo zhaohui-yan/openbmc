@@ -12,6 +12,7 @@ PACKAGES_append = " \
     ${PN}-ssp \
     ${PN}-crypto \
     ${PN}-ssif \
+    ${PN}-mtdtest \
     "
 
 SUMMARY_${PN}-apps = "AspeedTech Test App"
@@ -48,4 +49,12 @@ RRECOMMENDS_${PN}-ssif= " \
     kernel-module-ipmi-ssif \
     kernel-module-ipmi-si \
     kernel-module-ipmi-devintf \
+    "
+
+SUMMARY_${PN}-mtdtest = "MTD test utility"
+RDEPENDS_${PN}-mtdtest = " \
+    "
+RRECOMMENDS_${PN}-mtdtest= " \
+    kernel-module-mtd-speedtest \
+    kernel-module-mtd-stresstest \
     "
