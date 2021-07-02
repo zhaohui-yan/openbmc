@@ -31,6 +31,7 @@ RDEPENDS_${PN}-apps = " \
     ncsi-netlink \
     hdparm \
     fio \
+    stressapptest \
     ${@d.getVar('PREFERRED_PROVIDER_u-boot-fw-utils', True) or 'u-boot-fw-utils'} \
     "
 
