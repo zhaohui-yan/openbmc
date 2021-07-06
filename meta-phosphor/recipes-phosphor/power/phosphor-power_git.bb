@@ -39,7 +39,12 @@ DEPENDS += " \
          ${PYTHON_PN}-setuptools-native \
          ${PYTHON_PN}-mako-native \
          boost \
+         libgpiod \
          "
+
+# The monitor package uses an org.open_power D-Bus interface and so
+# should only build when told to.
+PACKAGECONFIG[monitor] = "-Dsupply-monitor=true, -Dsupply-monitor=false"
 
 SEQ_MONITOR_SVC = "pseq-monitor.service"
 SEQ_PGOOD_SVC = "pseq-monitor-pgood.service"
@@ -51,7 +56,7 @@ REGS_MON_ENA_SVC = "phosphor-regulators-monitor-enable.service"
 REGS_MON_DIS_SVC = "phosphor-regulators-monitor-disable.service"
 
 SYSTEMD_SERVICE_${PN}-sequencer = "${SEQ_MONITOR_SVC} ${SEQ_PGOOD_SVC}"
-SYSTEMD_SERVICE_${PN}-monitor = "${PSU_MONITOR_TMPL}"
+SYSTEMD_SERVICE_${PN}-monitor = "${@bb.utils.contains('PACKAGECONFIG', 'monitor', '${PSU_MONITOR_TMPL}', '', d)}"
 SYSTEMD_SERVICE_${PN}-psu-monitor = "${PSU_MONITOR_SVC}"
 SYSTEMD_SERVICE_${PN}-regulators = "${REGS_SVC} ${REGS_CONF_SVC} ${REGS_MON_ENA_SVC} ${REGS_MON_DIS_SVC}"
 

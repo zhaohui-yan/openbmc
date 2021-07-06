@@ -2,15 +2,7 @@
 
 devpath="/sys/bus/i2c/devices/13-0077/driver"
 
-# set_gpio_ctrl
-# pin #, direction, high(1)/low(0)
-function set_gpio_ctrl() {
-  echo $1 > /sys/class/gpio/export
-  echo $2 > /sys/class//gpio/gpio$1/direction
-  echo $3 > /sys/class/gpio/gpio$1/value
-  echo $1 > /sys/class/gpio/unexport
-  sleep 1
-}
+source /usr/sbin/kudo-lib.sh
 
 function fwbios() {
   KERNEL_FIU_ID="c0000000.spi"
@@ -32,8 +24,8 @@ function fwbios() {
   if [ ! -f $1 ]; then
     echo " Cannot find the" $1 "image file"
     exit 1
-  fi
 
+  fi
   echo "Flashing BIOS @/dev/$BIOS_MTD"
   flashcp -v $1 /dev/$BIOS_MTD
   wait
@@ -49,9 +41,10 @@ function fwbios() {
     dd if=$1 bs=1024 skip=17156 count=256 of=/run/initramfs/myscp.img
     fwscp /run/initramfs/myscp.img
   fi
+  # Disable LPI mode NV_SI_CPU_LPI_FREQ_DISABLE.
+  nvparm -s 0x1 -o 0x114090
   rm -f $1
 }
-
 
 function fwbmccpld() {
   # BMC_JTAG_MUX_1 #218 0:BMC 1:MB

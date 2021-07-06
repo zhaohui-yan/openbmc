@@ -37,6 +37,7 @@ PACKAGECONFIG[mmc_layout] = "-Ddevice-type=mmc"
 PACKAGECONFIG[virtual_pnor] = "-Dvpnor=enabled, -Dvpnor=disabled"
 
 EXTRA_OEMESON += " \
+    -Dtests=disabled \
     -Dmsl="v2.0.10 v2.2" \
     "
 
@@ -59,7 +60,7 @@ S = "${WORKDIR}/git"
 
 SRC_URI += "git://github.com/openbmc/openpower-pnor-code-mgmt"
 
-SRCREV = "a7b1f4caa49390064d0b66de04764547f3aa41c9"
+SRCREV = "fdc91fa011c28b857220e30320fba65e69907f20"
 
 DBUS_SERVICE_${PN} += "org.open_power.Software.Host.Updater.service"
 
