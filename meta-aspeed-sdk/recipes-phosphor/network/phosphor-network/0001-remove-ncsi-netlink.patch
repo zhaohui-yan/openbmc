@@ -1,33 +1,13 @@
-diff -Naur '--exclude=.git' a/Makefile.am b/Makefile.am
---- a/Makefile.am	2020-08-11 11:18:29.132208483 +0800
-+++ b/Makefile.am	2020-08-11 11:46:48.424313308 +0800
-@@ -12,7 +12,7 @@
- 		xyz.openbmc_project.Network.conf
- endif
+diff --git a/src/meson.build b/src/meson.build
+index 283995a..4edbfdb 100644
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -17,7 +17,7 @@ executable(
+     phosphor_dbus_interfaces_dep,
+     phosphor_logging_dep,
+   ],
+-  install: true,
++  install: false,
+   install_dir: get_option('bindir'))
  
--bin_PROGRAMS = phosphor-network-manager ncsi-netlink
-+bin_PROGRAMS = phosphor-network-manager
- 
- noinst_HEADERS = \
- 		ethernet_interface.hpp \
-@@ -33,19 +33,6 @@
- 		watch.hpp \
- 		argument.hpp
- 
--ncsi_netlink_SOURCES = \
--		argument.cpp \
--		ncsi_netlink_main.cpp \
--		ncsi_util.cpp
--
--ncsi_netlink_LDFLAGS = \
--        $(PHOSPHOR_LOGGING_LIBS) \
--		$(LIBNL_LIBS)
--
--ncsi_netlink_CPPFLAGS = $(LIBNL_CFLAGS)
--ncsi_netlink_CXXFLAGS = -flto
--
--
- phosphor_network_manager_SOURCES = \
- 		ethernet_interface.cpp \
- 		neighbor.cpp \
-
+ json_dep = declare_dependency()
