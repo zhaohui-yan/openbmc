@@ -45,3 +45,6 @@ executable('spw', ['mem_utils/spw.c', 'mem_utils/mem_common.c'], install: true)
 
 # svf
 executable('svf', ['svf/main.c', 'svf/ast-jtag.c', 'svf/svf.c'], install: true)
+
+# otp
+executable('otp', 'otp/otp.c', install: true)
