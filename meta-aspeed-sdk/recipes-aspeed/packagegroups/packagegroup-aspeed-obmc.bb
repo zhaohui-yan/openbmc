@@ -52,5 +52,9 @@ RDEPENDS_${PN}-system = " \
 
 SUMMARY_${PN}-inband = "AspeedTech Inband Test"
 RDEPENDS_${PN}-inband = " \
-    phosphor-ipmi-ipmb phosphor-ipmi-ssif phosphor-ipmi-bt phosphor-ipmi-kcs \
+    phosphor-ipmi-ipmb \
+    phosphor-ipmi-ssif \
+    phosphor-ipmi-bt \
+    phosphor-ipmi-kcs \
+    netusb \
     "
