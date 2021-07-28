@@ -41,3 +41,4 @@ UBOOT_LOADADDRESS_aspeed-g6 ?= "0x80001000"
 
 PREFERRED_VERSION_iperf3 ?= "3.1.4"
 PREFERRED_VERSION_safec ?= "3.4"
+PREFERRED_VERSION_python3-bitarray-native ?= "1.9.2"
