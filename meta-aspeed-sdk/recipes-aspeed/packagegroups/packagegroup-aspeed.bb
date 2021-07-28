@@ -13,6 +13,7 @@ PACKAGES_append = " \
     ${PN}-crypto \
     ${PN}-ssif \
     ${PN}-mtdtest \
+    ${PN}-ktools \
     "
 
 SUMMARY_${PN}-apps = "AspeedTech Test App"
@@ -57,4 +58,11 @@ RDEPENDS_${PN}-mtdtest = " \
 RRECOMMENDS_${PN}-mtdtest= " \
     kernel-module-mtd-speedtest \
     kernel-module-mtd-stresstest \
+    "
+
+SUMMARY_${PN}-ktools = "kernel tools"
+RDEPENDS_${PN}-ktools = " \
+    "
+RRECOMMENDS_${PN}-ktools= " \
+    perf \
     "
