@@ -125,8 +125,8 @@
         "User define data: random number high": "0x0",
         // OTPCFG10[31-0]
         // OTPCFG11[31-0]
-        // 0x0 ~ 0x3F
-        "Manifest ID": "0x0"
+        // 0 ~ 64
+        "Manifest ID": 0
         // OTPCFG14[10-0]
         // 1B80/4
         // "Patch code location": "0x6E0",
