@@ -19,5 +19,6 @@ RDEPENDS_${PN} += "python3-hexdump"
 RDEPENDS_${PN} += "python3-jsonschema"
 RDEPENDS_${PN} += "python3-jstyleson"
 RDEPENDS_${PN} += "python3-pycryptodome"
+RDEPENDS_${PN} += "python3-ecdsa"
 
 BBCLASSEXTEND = "native nativesdk"
