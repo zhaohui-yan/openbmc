@@ -47,5 +47,4 @@ executable('spw', ['mem_utils/spw.c', 'mem_utils/mem_common.c'], install: true)
 executable('svf', ['svf/main.c', 'svf/ast-jtag.c', 'svf/svf.c'], install: true)
 
 # otp
-executable('otp', ['otp/otp.c', 'otp/sha256.c'], install: true,
-    include_directories: include_directories('otp'))
+executable('otp', 'otp/otp.c', install: true)
