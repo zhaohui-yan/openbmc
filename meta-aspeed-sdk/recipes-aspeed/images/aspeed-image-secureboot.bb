@@ -68,57 +68,38 @@ create_secure_boot_image() {
     echo "ROT_SIGN_KEY=${ROT_SIGN_KEY}"
     echo "SIGNING_HELPER=${SIGNING_HELPER}"
     echo "SIGNING_HELPER_WITH_FILES=${SIGNING_HELPER_WITH_FILES}"
+    echo "AES_KEY_IN_OTP=${AES_KEY_IN_OTP}"
+    echo "KEY_ORDER=${KEY_ORDER}"
+    echo "AES_KEY=${AES_KEY}"
+    echo "RSA_AES_KEY=${RSA_AES_KEY}"
 
-    if [ "${ROT_ALGORITHM}" == "AES_GCM" ]; then
+    if [ "${AES_KEY_IN_OTP}" == "1" ]; then
         socsec \
         make_secure_bl1_image \
         --algorithm ${ROT_ALGORITHM} \
         --bl1_image ${SOURCE_IMAGE_DIR}/${UBOOT_SPL_IMAGE} \
         --output ${OUTPUT_IMAGE_DIR}/${SUBOOT_SPL_IMAGE} \
-        --gcm_aes_key ${ROT_SIGN_KEY} \
-        --cot_algorithm ${COT_ALGORITHM} \
-        --cot_verify_key ${COT_FIRST_VERIFY_KEY} \
+        --rsa_sign_key ${ROT_SIGN_KEY} \
+        --rsa_key_order ${KEY_ORDER} \
+        --key_in_otp \
+        --aes_key ${AES_KEY} \
+        --rsa_aes ${RSA_AES_KEY} \
         --stack_intersects_verification_region "false" \
         --signing_helper ${SIGNING_HELPER} \
         --signing_helper_with_files ${SIGNING_HELPER_WITH_FILES}
     else
-        echo "AES_KEY_IN_OTP=${AES_KEY_IN_OTP}"
-        echo "KEY_ORDER=${KEY_ORDER}"
-        echo "AES_KEY=${AES_KEY}"
-        echo "RSA_AES_KEY=${RSA_AES_KEY}"
-
-        if [ "${AES_KEY_IN_OTP}" == "1" ]; then
-            socsec \
-            make_secure_bl1_image \
-            --algorithm ${ROT_ALGORITHM} \
-            --bl1_image ${SOURCE_IMAGE_DIR}/${UBOOT_SPL_IMAGE} \
-            --output ${OUTPUT_IMAGE_DIR}/${SUBOOT_SPL_IMAGE} \
-            --rsa_sign_key ${ROT_SIGN_KEY} \
-            --rsa_key_order ${KEY_ORDER} \
-            --cot_algorithm ${COT_ALGORITHM} \
-            --cot_verify_key ${COT_FIRST_VERIFY_KEY} \
-            --key_in_otp \
-            --aes_key ${AES_KEY} \
-            --rsa_aes ${RSA_AES_KEY} \
-            --stack_intersects_verification_region "false" \
-            --signing_helper ${SIGNING_HELPER} \
-            --signing_helper_with_files ${SIGNING_HELPER_WITH_FILES}
-        else
-            socsec \
-            make_secure_bl1_image \
-            --algorithm ${ROT_ALGORITHM} \
-            --bl1_image ${SOURCE_IMAGE_DIR}/${UBOOT_SPL_IMAGE} \
-            --output ${OUTPUT_IMAGE_DIR}/${SUBOOT_SPL_IMAGE} \
-            --rsa_sign_key ${ROT_SIGN_KEY} \
-            --rsa_key_order ${KEY_ORDER} \
-            --cot_algorithm ${COT_ALGORITHM} \
-            --cot_verify_key ${COT_FIRST_VERIFY_KEY} \
-            --aes_key ${AES_KEY} \
-            --rsa_aes ${RSA_AES_KEY} \
-            --stack_intersects_verification_region "false" \
-            --signing_helper ${SIGNING_HELPER} \
-            --signing_helper_with_files ${SIGNING_HELPER_WITH_FILES}
-        fi
+        socsec \
+        make_secure_bl1_image \
+        --algorithm ${ROT_ALGORITHM} \
+        --bl1_image ${SOURCE_IMAGE_DIR}/${UBOOT_SPL_IMAGE} \
+        --output ${OUTPUT_IMAGE_DIR}/${SUBOOT_SPL_IMAGE} \
+        --rsa_sign_key ${ROT_SIGN_KEY} \
+        --rsa_key_order ${KEY_ORDER} \
+        --aes_key ${AES_KEY} \
+        --rsa_aes ${RSA_AES_KEY} \
+        --stack_intersects_verification_region "false" \
+        --signing_helper ${SIGNING_HELPER} \
+        --signing_helper_with_files ${SIGNING_HELPER_WITH_FILES}
     fi
 
     if [ $? -ne 0 ]; then
