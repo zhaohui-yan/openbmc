@@ -6,6 +6,7 @@ require u-boot-aspeed.inc
 
 PROVIDES += "u-boot"
 DEPENDS += "bc-native dtc-native"
+DEPENDS += "${@bb.utils.contains('MACHINE_FEATURES', 'ast-secure', 'aspeed-secure-config-native', '', d)}"
 
 UBOOT_ENV_SIZE_ast-mmc = "0x10000"
 UBOOT_ENV_ast-mmc = "u-boot-env"
