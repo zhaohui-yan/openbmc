@@ -29,6 +29,11 @@ do_compile() {
             if=${DEPLOY_DIR_IMAGE}/${ASPEED_IMAGE_UBOOT_SPL_IMAGE}.${UBOOT_SUFFIX} \
             of=${B}/aspeed-sdk.bin
         uboot_offset=${ASPEED_IMAGE_UBOOT_SPL_SIZE_KB}
+    elif [ ! -z ${AST2605_SSP_BINARY} ] ; then
+        dd bs=1k conv=notrunc seek=${ASPEED_IMAGE_UBOOT_OFFSET_KB} \
+            if=${DEPLOY_DIR_IMAGE}/${AST2605_SSP_BINARY} \
+            of=${B}/aspeed-sdk.bin
+        uboot_offset=${FLASH_AST2605_SSP_SIZE}
     fi
 
     dd bs=1k conv=notrunc seek=${uboot_offset} \
@@ -51,6 +56,7 @@ do_deploy_ast-mmc() {
 do_compile[depends] = " \
     virtual/kernel:do_deploy \
     u-boot:do_deploy \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'ast2605-ssp', 'aspeed-image-ast2605-ssp:do_deploy', '', d)} \
     ${@bb.utils.contains('MACHINE_FEATURES', 'ast-secure', 'aspeed-image-secureboot:do_deploy', '', d)} \
     "
 do_fetch[noexec] = "1"
