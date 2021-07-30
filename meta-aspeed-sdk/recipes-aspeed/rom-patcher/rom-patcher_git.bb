@@ -20,6 +20,7 @@ do_configure_prepend() {
 }
 
 do_install_append() {
+    install -d ${DEPLOY_DIR_IMAGE}
     install -m 644 ${S}/zephyr.bin ${DEPLOY_DIR_IMAGE}
 }
 
