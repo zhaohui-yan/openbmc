@@ -30,11 +30,14 @@ RDEPENDS_${PN}-apps = " \
     iozone3 \
     ncsi-netlink \
     hdparm \
-    fio \
     stressapptest \
     e2fsprogs-mke2fs \
     nvme-cli \
     ${@d.getVar('PREFERRED_PROVIDER_u-boot-fw-utils', True) or 'u-boot-fw-utils'} \
+    "
+
+RDEPENDS_${PN}-apps_append_aspeed-g6 = " \
+    fio \
     "
 
 SUMMARY_${PN}-libs = "Open Source Library"
