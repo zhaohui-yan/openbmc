@@ -32,6 +32,8 @@ RDEPENDS_${PN}-apps = " \
     hdparm \
     fio \
     stressapptest \
+    e2fsprogs-mke2fs \
+    nvme-cli \
     ${@d.getVar('PREFERRED_PROVIDER_u-boot-fw-utils', True) or 'u-boot-fw-utils'} \
     "
 
