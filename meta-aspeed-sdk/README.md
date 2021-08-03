@@ -162,14 +162,15 @@ After you successfully built the image, the image file can be found in: `[build_
 - `all.bin`: whole flash image
 
 ### Boot from eMMC image
-- `emmc_u-boot-spl`: u-boot-spl.bin processed with gen\_emmc\_image.py for boot partition
-- `all.bin`: image consists of u-boot and fitImage for user data partition
+- `emmc_image-u-boot`: u-boot-spl.bin + u-boot.bin processed with gen\_emmc\_image.py for boot partition
+- `aspeed-image-sdk-${MACHINE}.wic.xz`: compressed emmc flash image for user data partition
 
 ### Boot from eMMC with secure boot image
-- `s_u-boot-spl`: u-boot-spl.bin processed with socsec tool signing for boot partition
-- `all.bin`: image consists of u-boot and fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE} for user data partition
+- `s_emmc_image-u-boot`: s_u-boot-spl.bin(RoT) + u-boot.bin(CoT1) for boot partition
+- `aspeed-image-sdk-${MACHINE}.wic.xz`: compressed emmc flash image for user data partition
+- `s_u-boot_spl`: u-boot-spl.bin processed with socsec tool signing for RoT image
 - `u-boot`: u-boot.bin processed with verified boot signing for CoT1 image
-- `fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE}`: fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE} with verified boot signing for CoT2 image
+- `fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE}`: fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE} processed with verified boot signing for CoT2 image
 - `otp_image`: OTP image
 
 ## Recovery Image via UART
