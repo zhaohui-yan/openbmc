@@ -39,6 +39,7 @@ MACHINE ??= "ast2600-default"
 #MACHINE ??= "ast2600-a1-secure-rsa4096-sha512"
 #MACHINE ??= "ast2600-a1-secure-rsa4096-sha512-o1"
 #MACHINE ??= "ast2600-a1-secure-rsa4096-sha512-o2-pub"
+#MACHINE ??= "ast2605-default"
 
 DISTRO ?= "openbmc-phosphor"
 PACKAGE_CLASSES ?= "package_rpm"

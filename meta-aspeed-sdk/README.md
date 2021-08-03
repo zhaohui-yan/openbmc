@@ -23,6 +23,7 @@ Reference:
 source setup <machine> [build_dir]
 Target machine must be specified. Use one of:
 ast2500-default
+ast2605-default
 ast2600-default
 ast2600-ecc
 ast2600-emmc
@@ -113,15 +114,7 @@ KERNEL_DEVICETREE_df-ast-img-sdk = "aspeed-ast2600-evb.dtb"
 KERNEL_DEVICETREE = "aspeed-ast2600-obmc.dtb"
 ```
 
-3. Change u-boot default config from `evb-ast2600-obmc-emmc_defconfig` to `evb-ast2600-emmc_defconfig` in meta-ast2600-sdk/conf/machine/${MACHINE}.conf` file for boot from eMMC, e.g.,
-
-```
-# ASPEED ast2600 evb config file if build aspeed-image-sdk
-UBOOT_MACHINE_df-ast-img-sdk = "evb-ast2600-emmc_defconfig"
-UBOOT_MACHINE = "evb-ast2600-obmc-emmc_defconfig"
-```
-
-4. Remove `phosphor-mmc` DISTRO_FEATURES and DISTROOVERRIDES in `meta-ast2600-sdk/conf/machine/${MACHINE}.conf` file for boot from eMMC, e.g.,
+3. Remove `phosphor-mmc` DISTRO_FEATURES and DISTROOVERRIDES in `meta-ast2600-sdk/conf/machine/${MACHINE}.conf` file for boot from eMMC, e.g.,
 
 ```
 # remove phosphor-mmc distro feature if build aspeed-image-sdk
@@ -143,12 +136,12 @@ After you successfully built the image, the image file can be found in: `[build_
 
 ### Boot from SPI with secure boot image
 - `image-bmc`: whole flash image
-- `image-u-boot`: s_u-boot-spl.bin(RoT) + s_u-boot.bin (CoT1)
-- `image-kernel`: Linux Kernel FIT Image the same as s_fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE (CoT2)
+- `image-u-boot`: s_u-boot-spl.bin(RoT) + u-boot.bin (CoT1)
+- `image-kernel`: Linux Kernel FIT Image the same as fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE (CoT2)
 - `image-rofs`: read-only root file system
 - `s_u-boot-spl`: u-boot-spl.bin processed with socsec tool signing for RoT image
-- `s_u-boot`: u-boot.bin processed with socsec tool siging for CoT1 image
-- `s_fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE}`: fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE} with processed socsec tool signing for CoT2 image
+- `u-boot`: u-boot.bin processed with verified boot signing for CoT1 image
+- `fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE}`: fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE} processed with verified boot signing for CoT2 image
 - `otp_image`: OTP image
 
 ### Boot from eMMC image
@@ -156,11 +149,11 @@ After you successfully built the image, the image file can be found in: `[build_
 - `obmc-phosphor-image-${MACHINE}.wic.xz`: compressed emmc flash image for user data partition
 
 ### Boot from eMMC with secure boot image
-- `s_emmc_image-u-boot`: s_u-boot-spl.bin(RoT) + s_u-boot.bin(CoT1) for boot partition
+- `s_emmc_image-u-boot`: s_u-boot-spl.bin(RoT) + u-boot.bin(CoT1) for boot partition
 - `obmc-phosphor-image-${MACHINE}.wic.xz`: compressed emmc flash image for user data partition
 - `s_u-boot_spl`: u-boot-spl.bin processed with socsec tool signing for RoT image
-- `s_u-boot`: u-boot.bin processed with socsec tool siging for CoT1 image
-- `s_fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE}`: fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE} with processed socsec tool signing for CoT2 image
+- `u-boot`: u-boot.bin processed with verified boot signing for CoT1 image
+- `fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE}`: fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE} processed with verified boot signing for CoT2 image
 - `otp_image`: OTP image
 
 ## SDK Image
@@ -174,9 +167,9 @@ After you successfully built the image, the image file can be found in: `[build_
 
 ### Boot from eMMC with secure boot image
 - `s_u-boot-spl`: u-boot-spl.bin processed with socsec tool signing for boot partition
-- `all.bin`: image consists of s_u-boot and s_fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE} for user data partition
-- `s_u-boot`: u-boot.bin processed with socsec tool siging for CoT1 image
-- `s_fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE}`: fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE} with processed socsec tool signing for CoT2 image
+- `all.bin`: image consists of u-boot and fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE} for user data partition
+- `u-boot`: u-boot.bin processed with verified boot signing for CoT1 image
+- `fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE}`: fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE} with verified boot signing for CoT2 image
 - `otp_image`: OTP image
 
 ## Recovery Image via UART
