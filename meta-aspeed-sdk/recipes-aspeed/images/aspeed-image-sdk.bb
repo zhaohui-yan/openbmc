@@ -3,7 +3,7 @@ HOMEPAGE = "https://github.com/openbmc/meta-aspeed"
 LICENSE = "MIT"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-inherit deploy
+inherit ${@bb.utils.contains('MACHINE_FEATURES', 'ast-mmc', 'image', 'deploy', d)}
 
 UBOOT_SUFFIX ?= "bin"
 ASPEED_IMAGE_UBOOT_SPL_IMAGE ?= "u-boot-spl"
@@ -16,6 +16,8 @@ ASPEED_IMAGE_KERNEL_IMAGE ?= "fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE}"
 ASPEED_IMAGE_NAME ?= "all.bin"
 ASPEED_BOOT_EMMC ?= "${@bb.utils.contains('MACHINE_FEATURES', 'ast-mmc', 'yes', 'no', d)}"
 
+IMAGE_FSTYPES_ast-mmc += "wic.xz mmc-ext4-tar"
+
 do_compile() {
     uboot_offset=${ASPEED_IMAGE_UBOOT_OFFSET_KB}
 
@@ -27,6 +29,11 @@ do_compile() {
             if=${DEPLOY_DIR_IMAGE}/${ASPEED_IMAGE_UBOOT_SPL_IMAGE}.${UBOOT_SUFFIX} \
             of=${B}/aspeed-sdk.bin
         uboot_offset=${ASPEED_IMAGE_UBOOT_SPL_SIZE_KB}
+    elif [ ! -z ${AST2605_SSP_BINARY} ] ; then
+        dd bs=1k conv=notrunc seek=${ASPEED_IMAGE_UBOOT_OFFSET_KB} \
+            if=${DEPLOY_DIR_IMAGE}/${AST2605_SSP_BINARY} \
+            of=${B}/aspeed-sdk.bin
+        uboot_offset=${FLASH_AST2605_SSP_SIZE}
     fi
 
     dd bs=1k conv=notrunc seek=${uboot_offset} \
@@ -42,9 +49,14 @@ do_deploy() {
     install -m644 -D ${B}/aspeed-sdk.bin ${DEPLOYDIR}/${ASPEED_IMAGE_NAME}
 }
 
+do_deploy_ast-mmc() {
+    echo dummy
+}
+
 do_compile[depends] = " \
     virtual/kernel:do_deploy \
     u-boot:do_deploy \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'ast2605-ssp', 'aspeed-image-ast2605-ssp:do_deploy', '', d)} \
     ${@bb.utils.contains('MACHINE_FEATURES', 'ast-secure', 'aspeed-image-secureboot:do_deploy', '', d)} \
     "
 do_fetch[noexec] = "1"

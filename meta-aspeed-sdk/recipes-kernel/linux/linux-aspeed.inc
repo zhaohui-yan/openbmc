@@ -10,6 +10,7 @@ KERNEL_VERSION_SANITY_SKIP="1"
 KSRC = "git://192.168.10.13:29418/linux.git;protocol=ssh;branch=${KBRANCH}"
 
 SRC_URI = "${KSRC}"
+SRC_URI_append_ast-abr = " file://0001-abr-alternate-flash-layout.patch "
 
 LINUX_VERSION_EXTENSION ?= "-${SRCREV}"
 

@@ -27,8 +27,6 @@ do_install() {
         ${D}${datadir}/aspeed-secure-config
     install -m 0644 ${S}/configs/ast2600/*.cfg \
         ${D}${datadir}/aspeed-secure-config/ast2600
-    install -m 0644 ${S}/configs/ast2600/security/*.json \
-        ${D}${datadir}/aspeed-secure-config/ast2600/security
     install -m 0644 ${S}/configs/ast2600/security/otp/* \
         ${D}${datadir}/aspeed-secure-config/ast2600/security/otp
     install -m 0644 ${S}/configs/ast2600/security/key/* \

@@ -1,0 +1,13 @@
+diff --git a/src/meson.build b/src/meson.build
+index 283995a..4edbfdb 100644
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -17,7 +17,7 @@ executable(
+     phosphor_dbus_interfaces_dep,
+     phosphor_logging_dep,
+   ],
+-  install: true,
++  install: false,
+   install_dir: get_option('bindir'))
+ 
+ json_dep = declare_dependency()

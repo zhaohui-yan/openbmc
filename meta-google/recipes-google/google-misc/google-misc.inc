@@ -6,7 +6,7 @@ LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://../../LICENSE;md5=34400b68072d710fecd0a2940a0d1658"
 
 SRC_URI += "git://github.com/openbmc/google-misc"
-SRCREV = "4c68ffb8b08fa4484824586ef4a981bcfabd38bb"
+SRCREV = "548f3ad151678fc3ee87b7bef25b6601611af978"
 
 S = "${WORKDIR}/git/subprojects/${GOOGLE_MISC_PROJ}"
 inherit meson

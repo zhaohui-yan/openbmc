@@ -13,7 +13,7 @@ KERNEL_CLASSES ?= "kernel-fitimage"
 INITRAMFS_IMAGE ?= "aspeed-image-initramfs"
 INITRAMFS_FSTYPES ?= "cpio.xz"
 
-WKS_FILE ?= "emmc-aspeed.wks.in"
+WKS_FILE ?= "ast2600-emmc.wks.in"
 WKS_FILE_DEPENDS ?= " \
     phosphor-hostfw-image \
     virtual/bootloader \
@@ -40,3 +40,4 @@ UBOOT_LOADADDRESS_aspeed-g5 ?= "0x80001000"
 UBOOT_LOADADDRESS_aspeed-g6 ?= "0x80001000"
 
 PREFERRED_VERSION_iperf3 ?= "3.1.4"
+PREFERRED_VERSION_safec ?= "3.4"
