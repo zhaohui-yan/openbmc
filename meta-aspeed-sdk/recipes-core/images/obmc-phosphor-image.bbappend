@@ -15,6 +15,7 @@ IMAGE_INSTALL_append = " \
 	packagegroup-aspeed-obmc-inband \
         ${@bb.utils.contains('MACHINE_FEATURES', 'ast-ssp', 'packagegroup-aspeed-ssp', '', d)} \
         packagegroup-aspeed-mtdtest \
+        packagegroup-aspeed-ktools \
         "
 
 EXTRA_IMAGE_FEATURES_append = " \
