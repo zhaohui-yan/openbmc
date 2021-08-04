@@ -12,11 +12,15 @@ IMAGE_INSTALL_append = " \
         packagegroup-aspeed-apps \
         packagegroup-aspeed-crypto \
         packagegroup-aspeed-ssif \
-	packagegroup-aspeed-obmc-inband \
+        packagegroup-aspeed-obmc-inband \
         ${@bb.utils.contains('MACHINE_FEATURES', 'ast-ssp', 'packagegroup-aspeed-ssp', '', d)} \
         packagegroup-aspeed-mtdtest \
-        packagegroup-aspeed-ktools \
         "
+
+# Only install in AST26xx series rofs as the free space of AST2500 rofs is not enough.
+IMAGE_INSTALL_append_aspeed-g6 = " \
+        packagegroup-aspeed-ktools \
+       "
 
 EXTRA_IMAGE_FEATURES_append = " \
         nfs-client \
