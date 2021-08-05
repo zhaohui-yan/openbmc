@@ -60,6 +60,14 @@ do_deploy() {
         exit 1
     fi
 
+    sdk_image_size="$(wc -c ${B}/aspeed-sdk.bin | awk '{print $1}')"
+    let sdk_image_size/=1024
+
+    if [ ${sdk_image_size} -gt ${ASPEED_IMAGE_SIZE_KB} ] ; then
+        echo "Actual SDK image size (${sdk_image_size}kb) is larger than allowed size ${ASPEED_IMAGE_SIZE_KB}kb"
+        exit 1
+    fi
+
     install -m644 -D ${B}/aspeed-sdk.bin ${DEPLOYDIR}/${ASPEED_IMAGE_NAME}
 }
 
