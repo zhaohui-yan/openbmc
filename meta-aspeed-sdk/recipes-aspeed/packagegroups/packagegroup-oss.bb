@@ -9,6 +9,7 @@ PROVIDES = "${PACKAGES}"
 PACKAGES = " \
     ${PN}-apps \
     ${PN}-libs \
+    ${PN}-obmc-apps \
     "
 
 SUMMARY_${PN}-apps = "Open Source Applications"
@@ -25,7 +26,18 @@ RDEPENDS_${PN}-apps = " \
     xdma-test \
     libpeci \
     dhrystone \
+    nbd-client \
+    iozone3 \
+    ncsi-netlink \
+    hdparm \
+    stressapptest \
+    e2fsprogs-mke2fs \
+    nvme-cli \
     ${@d.getVar('PREFERRED_PROVIDER_u-boot-fw-utils', True) or 'u-boot-fw-utils'} \
+    "
+
+RDEPENDS_${PN}-apps_append_aspeed-g6 = " \
+    fio \
     "
 
 SUMMARY_${PN}-libs = "Open Source Library"
@@ -34,3 +46,8 @@ RDEPENDS_${PN}-libs = " \
     libgpiod-tools \
     "
 
+SUMMARY_${PN}-obmc-apps = "Open Source Applications for OpenBMC Image"
+RDEPENDS_${PN}-obmc-apps = " \
+    ipmitool \
+    at-scale-debug \
+    "

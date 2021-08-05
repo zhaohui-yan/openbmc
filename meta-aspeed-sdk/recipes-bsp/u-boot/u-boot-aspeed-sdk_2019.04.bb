@@ -6,15 +6,12 @@ require u-boot-aspeed.inc
 
 PROVIDES += "u-boot"
 DEPENDS += "bc-native dtc-native"
+DEPENDS += "${@bb.utils.contains('MACHINE_FEATURES', 'ast-secure', 'aspeed-secure-config-native', '', d)}"
 
 UBOOT_ENV_SIZE_ast-mmc = "0x10000"
 UBOOT_ENV_ast-mmc = "u-boot-env"
 UBOOT_ENV_SUFFIX_ast-mmc = "bin"
-UBOOT_ENV_FILE_ast-mmc = "${@bb.utils.contains('IMAGE_BOOT_FILES',  \
-    's_fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE};s_fitImage', \
-    's_u-boot-env-ast2600.txt', \
-    'u-boot-env-ast2600.txt', \
-    d)}"
+UBOOT_ENV_FILE_ast-mmc = "u-boot-env-ast2600.txt"
 
 do_compile_append() {
     if [ -n "${UBOOT_ENV}" ]

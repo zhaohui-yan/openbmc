@@ -1,8 +1,6 @@
 FILESEXTRAPATHS_prepend_gbs := "${THISDIR}/${PN}:"
 
-SRC_URI_append_gbs = " file://0001-lev-add-poweron-monitor-feature.patch \
-                       file://0002-lev-add-sensors-slow-readings.patch \
-                     "
+DEPENDS += "boost"
 
 GBS_NAMES = " \
         i2c@82000/sbtsi@4c \
@@ -32,4 +30,4 @@ FENVS = "obmc/hwmon/ahb/apb/{0}"
 SYSTEMD_ENVIRONMENT_FILE_${PN}_append_gbs = " ${@compose_list(d, 'FENVS', 'FITEMS')}"
 
 
-EXTRA_OEMESON_append_gbs = " -Dupdate-functional-on-fail=true"
+EXTRA_OEMESON_append_gbs = " -Dupdate-functional-on-fail=true -Dnegative-errno-on-fail=false"
