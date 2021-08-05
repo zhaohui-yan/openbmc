@@ -12,7 +12,7 @@ KCS_DEVICE = " \
     ipmi-kcs9 \
 "
 
-SYSTEMD_SERVICE_${PN}_append = " \
+SYSTEMD_SERVICE_${PN} = " \
     ${PN}@ipmi-kcs1.service \
     ${PN}@ipmi-kcs2.service \
     ${PN}@ipmi-kcs3.service \
