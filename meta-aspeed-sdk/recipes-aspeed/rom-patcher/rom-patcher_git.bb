@@ -12,7 +12,7 @@ PV = "1.0+git${SRCPV}"
 
 # Tag for v00.01.00
 SRCREV = "52ce86d617b77234e84d11873ab85136f63ca529"
-BRANCH = "master"
+BRANCH = "main"
 
 S = "${WORKDIR}/git"
 
