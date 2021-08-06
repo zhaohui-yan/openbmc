@@ -17,6 +17,7 @@ ASPEED_IMAGE_NAME ?= "all.bin"
 ASPEED_BOOT_EMMC ?= "${@bb.utils.contains('MACHINE_FEATURES', 'ast-mmc', 'yes', 'no', d)}"
 
 IMAGE_FSTYPES_ast-mmc += "wic.xz mmc-ext4-tar"
+IMAGE_FEATURES_ast-mmc += "read-only-rootfs-delayed-postinsts"
 
 do_compile() {
     if [ ${ASPEED_BOOT_EMMC} == "yes" ] ; then
