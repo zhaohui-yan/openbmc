@@ -8,8 +8,8 @@ PE = "1"
 
 BRANCH="aspeed-master-v2019.04"
 SRC_URI = "git://192.168.10.13:29418/u-boot.git;protocol=ssh;branch=${BRANCH}"
-# Tag for v00.04.04
-SRCREV = "5772ab22f641cf2a0ed2dd9ce52eded16198c553"
+# Tag for v00.04.05
+SRCREV = "57141c156279cb85733239b028e6c09589beec4b"
 SRC_URI_append_ast-abr = " file://0001-u-boot-disable-wdt2-for-abr.patch "
 
 S = "${WORKDIR}/git"
