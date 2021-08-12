@@ -28,6 +28,7 @@ ast2600-default
 ast2600-ecc
 ast2600-emmc
 ast2600-emmc-secure
+ast2600-ncsi
 ast2600-secure-rsa2048-sha256
 ast2600-secure-rsa2048-sha256-ncot
 ast2600-secure-rsa2048-sha256-o1

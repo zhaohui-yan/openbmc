@@ -24,12 +24,9 @@ IMAGE_INSTALL_append_aspeed-g6 = " \
 
 EXTRA_IMAGE_FEATURES_append = " \
         nfs-client \
+        ${@bb.utils.contains('DISTRO_FEATURES', 'obmc-ubi-fs', 'read-only-rootfs-delayed-postinsts', '', d)} \
+        ${@bb.utils.contains('DISTRO_FEATURES', 'phosphor-mmc', 'read-only-rootfs-delayed-postinsts', '', d)} \
         "
-
-IMAGE_FEATURES += " \
-    ${@bb.utils.contains('DISTRO_FEATURES', 'obmc-ubi-fs', 'read-only-rootfs-delayed-postinsts', '', d)} \
-    ${@bb.utils.contains('DISTRO_FEATURES', 'phosphor-mmc', 'read-only-rootfs-delayed-postinsts', '', d)} \
-    "
 
 ### Workaround
 inherit image_types_phosphor_aspeed
