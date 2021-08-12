@@ -12,9 +12,11 @@ DEPENDS = "sdbusplus openssl libpam libgpiod safec"
 
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
-SRC_URI = "git://github.com/Intel-BMC/asd;protocol=git"
-SRC_URI += "file://0001-Fix-build-error-in-kernel-v5.10.patch"
-SRCREV = "1.4.4"
+SRC_URI = "git://github.com/Intel-BMC/asd;protocol=https;branch=${BRANCH} \
+           file://0001-Fix-build-error-in-kernel-v5.10.patch"
+
+SRCREV = "f31661d92e80b3f097d37055f590595898cef6b6"
+BRANCH = "master"
 
 inherit useradd
 
