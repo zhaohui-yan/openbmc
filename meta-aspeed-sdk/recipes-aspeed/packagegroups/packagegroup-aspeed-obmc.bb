@@ -56,5 +56,5 @@ RDEPENDS_${PN}-inband = " \
     phosphor-ipmi-ssif \
     phosphor-ipmi-bt \
     phosphor-ipmi-kcs \
-    netusb \
+    usb-gadget \
     "
