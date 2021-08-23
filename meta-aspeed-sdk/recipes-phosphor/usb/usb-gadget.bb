@@ -1,9 +1,14 @@
-SUMMARY = "Turn On Network USB gadget"
-DESCRIPTION = "Script to turn on network usb gadget after BMC is ready"
+SUMMARY = "Turn On USB gadget"
+DESCRIPTION = "Script to turn on usb gadget after BMC is ready"
 
 S = "${WORKDIR}"
 SRC_URI = "file://netusb.sh \
            file://netusb.service \
+           file://uart.sh \
+           file://ms.sh \
+           file://keyboard.sh \
+           file://mouse.sh \
+	   file://hid_gadget_app \
           "
 
 LICENSE = "Apache-2.0"
@@ -16,6 +21,11 @@ do_install() {
     install -m 0644 ${WORKDIR}/netusb.service ${D}${systemd_system_unitdir}
     install -d ${D}${bindir}
     install -m 0755 ${S}/netusb.sh ${D}/${bindir}/netusb.sh
+    install -m 0755 ${S}/uart.sh ${D}/${bindir}/uart.sh
+    install -m 0755 ${S}/ms.sh ${D}/${bindir}/ms.sh
+    install -m 0755 ${S}/keyboard.sh ${D}/${bindir}/keyboard.sh
+    install -m 0755 ${S}/mouse.sh ${D}/${bindir}/mouse.sh
+    install -m 0755 ${S}/hid_gadget_app ${D}/${bindir}/hid_gadget_app
 }
 
 SYSTEMD_SERVICE_${PN} += " netusb.service"
