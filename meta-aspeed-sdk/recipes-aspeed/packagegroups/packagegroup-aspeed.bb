@@ -36,6 +36,7 @@ RDEPENDS_${PN}-crypto = " \
     openssl \
     openssl-bin \
     openssl-conf \
+    openssl-engines \
     openssl-misc \
     "
 RRECOMMENDS_${PN}-crypto = " \

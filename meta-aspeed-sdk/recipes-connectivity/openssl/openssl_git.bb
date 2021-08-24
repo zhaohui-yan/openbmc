@@ -32,10 +32,17 @@ inherit lib_package multilib_header multilib_script ptest
 MULTILIB_SCRIPTS = "${PN}-bin:${bindir}/c_rehash"
 
 PACKAGECONFIG ?= ""
+PACKAGECONFIG_class-target = "cryptodev-linux"
 PACKAGECONFIG_class-native = ""
 PACKAGECONFIG_class-nativesdk = ""
 
-PACKAGECONFIG[cryptodev-linux] = "enable-devcryptoeng,disable-devcryptoeng,cryptodev-linux,,cryptodev-module"
+# Change to use cryptodev with ASPEED changes
+# PACKAGECONFIG[cryptodev-linux] = "enable-devcryptoeng,disable-devcryptoeng,cryptodev-linux,,cryptodev-module"
+PACKAGECONFIG[cryptodev-linux] = "enable-devcryptoeng,disable-devcryptoeng,cryptodev,,kernel-module-cryptodev"
+# The following bbappend disable openssl hardware engine support, so remove it to support ASPEED hardware
+# crypto engine.
+# meta-phosphor/recipes-connectivity/openssl/openssl_%.bbappend
+EXTRA_OECONF_remove_class-target = "no-hw"
 
 B = "${WORKDIR}/build"
 do_configure[cleandirs] = "${B}"
