@@ -14,6 +14,7 @@ PACKAGES_append = " \
     ${PN}-flash \
     ${PN}-system \
     ${PN}-inband \
+    ${PN}-apps \
     "
 
 PROVIDES_append = " virtual/obmc-chassis-mgmt"
@@ -57,4 +58,10 @@ RDEPENDS_${PN}-inband = " \
     phosphor-ipmi-bt \
     phosphor-ipmi-kcs \
     usb-gadget \
+    "
+
+SUMMARY_${PN}-apps = "Open Source Applications for OpenBMC Image"
+RDEPENDS_${PN}-apps = " \
+    ipmitool \
+    at-scale-debug \
     "

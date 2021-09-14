@@ -8,7 +8,7 @@ IMAGE_INSTALL_append = " \
 
 IMAGE_INSTALL_append = " \
         packagegroup-oss-apps \
-        packagegroup-oss-obmc-apps \
+        packagegroup-aspeed-obmc-apps \
         packagegroup-aspeed-apps \
         packagegroup-aspeed-crypto \
         packagegroup-aspeed-ssif \

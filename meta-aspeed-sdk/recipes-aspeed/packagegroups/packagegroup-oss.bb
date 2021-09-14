@@ -9,7 +9,6 @@ PROVIDES = "${PACKAGES}"
 PACKAGES = " \
     ${PN}-apps \
     ${PN}-libs \
-    ${PN}-obmc-apps \
     "
 
 SUMMARY_${PN}-apps = "Open Source Applications"
@@ -44,10 +43,4 @@ SUMMARY_${PN}-libs = "Open Source Library"
 RDEPENDS_${PN}-libs = " \
     libgpiod \
     libgpiod-tools \
-    "
-
-SUMMARY_${PN}-obmc-apps = "Open Source Applications for OpenBMC Image"
-RDEPENDS_${PN}-obmc-apps = " \
-    ipmitool \
-    at-scale-debug \
     "
