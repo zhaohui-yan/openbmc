@@ -37,7 +37,6 @@ RDEPENDS_${PN}-crypto = " \
     openssl-bin \
     openssl-conf \
     openssl-engines \
-    openssl-misc \
     "
 RRECOMMENDS_${PN}-crypto = " \
     kernel-module-cryptodev \
