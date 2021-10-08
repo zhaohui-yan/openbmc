@@ -33,9 +33,9 @@ SRCREV = "${AUTOREV}"
 BRANCH = "develop"
 inherit meson
 
-do_configure_prepend() {
+do_configure:prepend() {
   cp ${WORKDIR}/meson.build ${S}
   cp ${WORKDIR}/video_ioctl.h ${S}/ast_rvas/rvas_lib
 }
 
-FILES_${PN}_append = " /usr/share/* "
+FILES:${PN}:append = " /usr/share/* "

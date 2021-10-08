@@ -13,12 +13,12 @@ S = "${WORKDIR}/git"
 
 inherit python3native setuptools3
 
-RDEPENDS_${PN} += "python3-bitarray"
-RDEPENDS_${PN} += "python3-core"
-RDEPENDS_${PN} += "python3-hexdump"
-RDEPENDS_${PN} += "python3-jsonschema"
-RDEPENDS_${PN} += "python3-jstyleson"
-RDEPENDS_${PN} += "python3-pycryptodome"
-RDEPENDS_${PN} += "python3-ecdsa"
+RDEPENDS:${PN} += "python3-bitarray"
+RDEPENDS:${PN} += "python3-core"
+RDEPENDS:${PN} += "python3-hexdump"
+RDEPENDS:${PN} += "python3-jsonschema"
+RDEPENDS:${PN} += "python3-jstyleson"
+RDEPENDS:${PN} += "python3-pycryptodome"
+RDEPENDS:${PN} += "python3-ecdsa"
 
 BBCLASSEXTEND = "native nativesdk"

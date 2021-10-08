@@ -5,9 +5,9 @@ PR = "r2"
 inherit packagegroup
 
 PROVIDES = "${PACKAGES}"
-RPROVIDES_${PN} = "${PACKAGES}"
+RPROVIDES:${PN} = "${PACKAGES}"
 
-PACKAGES_append = " \
+PACKAGES:append = " \
     ${PN}-apps \
     ${PN}-ssp \
     ${PN}-crypto \
@@ -16,21 +16,21 @@ PACKAGES_append = " \
     ${PN}-ktools \
     "
 
-SUMMARY_${PN}-apps = "AspeedTech Test App"
-RDEPENDS_${PN}-apps = " \
+SUMMARY:${PN}-apps = "AspeedTech Test App"
+RDEPENDS:${PN}-apps = " \
     aspeed-app \
     "
 
-SUMMARY_${PN}-ssp = "AspeedTech Secondary Service Processor"
-RDEPENDS_${PN}-ssp = " \
+SUMMARY:${PN}-ssp = "AspeedTech Secondary Service Processor"
+RDEPENDS:${PN}-ssp = " \
     ssp \
     "
-RRECOMMENDS_${PN}-ssp= " \
+RRECOMMENDS:${PN}-ssp= " \
     kernel-module-aspeed-ssp \
     "
 
-SUMMARY_${PN}-crypto = "AspeedTech Crypto"
-RDEPENDS_${PN}-crypto = " \
+SUMMARY:${PN}-crypto = "AspeedTech Crypto"
+RDEPENDS:${PN}-crypto = " \
     libcrypto \
     libssl \
     openssl \
@@ -38,31 +38,31 @@ RDEPENDS_${PN}-crypto = " \
     openssl-conf \
     openssl-engines \
     "
-RRECOMMENDS_${PN}-crypto = " \
+RRECOMMENDS:${PN}-crypto = " \
     kernel-module-cryptodev \
     "
 
-SUMMARY_${PN}-ssif = "IPMI SMBus System Interface"
-RDEPENDS_${PN}-ssif = " \
+SUMMARY:${PN}-ssif = "IPMI SMBus System Interface"
+RDEPENDS:${PN}-ssif = " \
     "
-RRECOMMENDS_${PN}-ssif= " \
+RRECOMMENDS:${PN}-ssif= " \
     kernel-module-ipmi-msghandler \
     kernel-module-ipmi-ssif \
     kernel-module-ipmi-si \
     kernel-module-ipmi-devintf \
     "
 
-SUMMARY_${PN}-mtdtest = "MTD test utility"
-RDEPENDS_${PN}-mtdtest = " \
+SUMMARY:${PN}-mtdtest = "MTD test utility"
+RDEPENDS:${PN}-mtdtest = " \
     "
-RRECOMMENDS_${PN}-mtdtest= " \
+RRECOMMENDS:${PN}-mtdtest= " \
     kernel-module-mtd-speedtest \
     kernel-module-mtd-stresstest \
     "
 
-SUMMARY_${PN}-ktools = "kernel tools"
-RDEPENDS_${PN}-ktools = " \
+SUMMARY:${PN}-ktools = "kernel tools"
+RDEPENDS:${PN}-ktools = " \
     "
-RRECOMMENDS_${PN}-ktools= " \
+RRECOMMENDS:${PN}-ktools= " \
     perf \
     "

@@ -11,9 +11,9 @@ SRC_URI = "file://gen_emmc_boot_image.py \
 
 inherit python3native
 
-RDEPENDS_${PN} += "python3-core"
-RDEPENDS_${PN} += "python3-hexdump"
-RDEPENDS_${PN} += "vim"
+RDEPENDS:${PN} += "python3-core"
+RDEPENDS:${PN} += "python3-hexdump"
+RDEPENDS:${PN} += "vim"
 
 BBCLASSEXTEND = "native nativesdk"
 
@@ -23,4 +23,4 @@ do_install() {
     install -m 0755 ${WORKDIR}/gen_uart_booting_image.sh ${D}/${bindir}
 }
 
-FILES_${PN} += "${bindir}"
+FILES:${PN} += "${bindir}"

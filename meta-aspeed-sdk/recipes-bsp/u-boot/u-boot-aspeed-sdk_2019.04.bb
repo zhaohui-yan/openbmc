@@ -13,7 +13,7 @@ UBOOT_ENV_ast-mmc = "u-boot-env"
 UBOOT_ENV_SUFFIX_ast-mmc = "bin"
 UBOOT_ENV_FILE_ast-mmc = "u-boot-env-ast2600.txt"
 
-do_compile_append() {
+do_compile:append() {
     if [ -n "${UBOOT_ENV}" ]
     then
         # Generate redundant environment image

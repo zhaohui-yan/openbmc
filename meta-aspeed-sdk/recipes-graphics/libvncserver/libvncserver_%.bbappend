@@ -1,1 +1,1 @@
-PACKAGECONFIG_append = " pthread "
+PACKAGECONFIG:append = " pthread "

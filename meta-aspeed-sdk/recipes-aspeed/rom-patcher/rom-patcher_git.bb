@@ -15,11 +15,11 @@ S = "${WORKDIR}/git"
 
 inherit meson
 
-do_configure_prepend() {
+do_configure:prepend() {
     cp ${WORKDIR}/meson.build ${S}
 }
 
-do_install_append() {
+do_install:append() {
     install -d ${DEPLOY_DIR_IMAGE}
     install -m 644 ${S}/zephyr.bin ${DEPLOY_DIR_IMAGE}
 }

@@ -1,2 +1,2 @@
-MACHINE_FEATURES_append = " ast2605-ssp"
+MACHINE_FEATURES:append = " ast2605-ssp"
 

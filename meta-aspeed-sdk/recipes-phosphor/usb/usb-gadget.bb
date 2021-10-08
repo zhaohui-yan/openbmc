@@ -28,5 +28,5 @@ do_install() {
     install -m 0755 ${S}/hid_gadget_app ${D}/${bindir}/hid_gadget_app
 }
 
-SYSTEMD_SERVICE_${PN} += " netusb.service"
-SYSTEMD_AUTO_ENABLE_${PN} = "disable"
+SYSTEMD_SERVICE:${PN} += " netusb.service"
+SYSTEMD_AUTO_ENABLE:${PN} = "disable"

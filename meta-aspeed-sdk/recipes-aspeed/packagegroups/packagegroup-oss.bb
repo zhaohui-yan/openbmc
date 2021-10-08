@@ -11,8 +11,8 @@ PACKAGES = " \
     ${PN}-libs \
     "
 
-SUMMARY_${PN}-apps = "Open Source Applications"
-RDEPENDS_${PN}-apps = " \
+SUMMARY:${PN}-apps = "Open Source Applications"
+RDEPENDS:${PN}-apps = " \
     mdio-tool \
     gperf \
     iperf3 \
@@ -35,12 +35,12 @@ RDEPENDS_${PN}-apps = " \
     ${@d.getVar('PREFERRED_PROVIDER_u-boot-fw-utils', True) or 'u-boot-fw-utils'} \
     "
 
-RDEPENDS_${PN}-apps_append_aspeed-g6 = " \
+RDEPENDS:${PN}-apps:append_aspeed-g6 = " \
     fio \
     "
 
-SUMMARY_${PN}-libs = "Open Source Library"
-RDEPENDS_${PN}-libs = " \
+SUMMARY:${PN}-libs = "Open Source Library"
+RDEPENDS:${PN}-libs = " \
     libgpiod \
     libgpiod-tools \
     "
