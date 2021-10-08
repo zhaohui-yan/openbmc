@@ -35,7 +35,7 @@ RDEPENDS:${PN}-apps = " \
     ${@d.getVar('PREFERRED_PROVIDER_u-boot-fw-utils', True) or 'u-boot-fw-utils'} \
     "
 
-RDEPENDS:${PN}-apps:append_aspeed-g6 = " \
+RDEPENDS:${PN}-apps:append:aspeed-g6 = " \
     fio \
     "
 
