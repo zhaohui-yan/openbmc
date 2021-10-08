@@ -292,7 +292,7 @@ download directory. If that location fails, Poky tries
 :term:`MIRRORS` in that order.
 
 Assuming your distribution is "poky", the OpenEmbedded build system uses
-the Yocto Project source ``PREMIRRORS`` by default for SCM-based
+the Yocto Project source :term:`PREMIRRORS` by default for SCM-based
 sources, upstreams for normal tarballs, and then falls back to a number
 of other mirrors including the Yocto Project source mirror if those
 fail.
@@ -301,7 +301,7 @@ As an example, you could add a specific server for the build system to
 attempt before any others by adding something like the following to the
 ``local.conf`` configuration file::
 
-   PREMIRRORS_prepend = "\
+   PREMIRRORS:prepend = "\
        git://.*/.* http://www.yoctoproject.org/sources/ \n \
        ftp://.*/.* http://www.yoctoproject.org/sources/ \n \
        http://.*/.* http://www.yoctoproject.org/sources/ \n \
@@ -341,7 +341,7 @@ Finally, consider an example where you are behind an HTTP-only firewall.
 You could make the following changes to the ``local.conf`` configuration
 file as long as the :term:`PREMIRRORS` server is current::
 
-   PREMIRRORS_prepend = "\
+   PREMIRRORS:prepend = "\
        ftp://.*/.* http://www.yoctoproject.org/sources/ \n \
        http://.*/.* http://www.yoctoproject.org/sources/ \n \
        https://.*/.* http://www.yoctoproject.org/sources/ \n"

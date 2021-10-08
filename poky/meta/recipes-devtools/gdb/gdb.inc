@@ -1,11 +1,11 @@
 require gdb-common.inc
 
-inherit gettext
+inherit gettext pkgconfig
 
-#LDFLAGS_append = " -s"
-#export CFLAGS_append=" -L${STAGING_LIBDIR}"
+#LDFLAGS:append = " -s"
+#export CFLAGS:append=" -L${STAGING_LIBDIR}"
 
 # cross-canadian must not see this
 PACKAGES =+ "gdbserver"
-FILES_gdbserver = "${bindir}/gdbserver"
+FILES:gdbserver = "${bindir}/gdbserver"
 

@@ -38,9 +38,9 @@ system and gives an overview of their function and contents.
       Like all package-controlling variables, you must always use them in
       conjunction with a package name override, as in::
 
-         ALLOW_EMPTY_${PN} = "1"
-         ALLOW_EMPTY_${PN}-dev = "1"
-         ALLOW_EMPTY_${PN}-staticdev = "1"
+         ALLOW_EMPTY:${PN} = "1"
+         ALLOW_EMPTY:${PN}-dev = "1"
+         ALLOW_EMPTY:${PN}-staticdev = "1"
 
    :term:`ALTERNATIVE`
       Lists commands in a package that need an alternative binary naming
@@ -53,7 +53,7 @@ system and gives an overview of their function and contents.
       provided by another package. For example, if the ``busybox`` package
       has four such commands, you identify them as follows::
 
-         ALTERNATIVE_busybox = "sh sed test bracket"
+         ALTERNATIVE:busybox = "sh sed test bracket"
 
       For more information on the alternatives system, see the
       ":ref:`update-alternatives.bbclass <ref-classes-update-alternatives>`"
@@ -256,7 +256,7 @@ system and gives an overview of their function and contents.
       To add a tune to the list, be sure to append it with spaces using the
       "+=" BitBake operator. Do not simply replace the list by using the
       "=" operator. See the
-      ":ref:`Basic Syntax <bitbake:bitbake-user-manual/bitbake-user-manual-metadata:basic syntax>`" section in the BitBake
+      ":ref:`bitbake:bitbake-user-manual/bitbake-user-manual-metadata:basic syntax`" section in the BitBake
       User Manual for more information.
 
    :term:`AZ_SAS`
@@ -280,7 +280,7 @@ system and gives an overview of their function and contents.
          S = "${WORKDIR}/${BP}"
 
       You can separate the (:term:`S`) directory and the directory pointed to
-      by the ``B`` variable. Most Autotools-based recipes support
+      by the :term:`B` variable. Most Autotools-based recipes support
       separating these directories. The build system defaults to using
       separate directories for ``gcc`` and some kernel recipes.
 
@@ -297,7 +297,7 @@ system and gives an overview of their function and contents.
       can attach it to a specific image recipe by using the recipe name
       override::
 
-         BAD_RECOMMENDATIONS_pn-target_image = "package_name"
+         BAD_RECOMMENDATIONS:pn-target_image = "package_name"
 
       It is important to realize that if you choose to not install packages
       using this variable and some other packages are dependent on them
@@ -553,7 +553,7 @@ system and gives an overview of their function and contents.
          BB_SERVER_TIMEOUT = "20"
 
       If you want the server to never be unloaded,
-      set ``BB_SERVER_TIMEOUT`` to "-1".
+      set :term:`BB_SERVER_TIMEOUT` to "-1".
 
    :term:`BBCLASSEXTEND`
       Allows you to extend a recipe so that it builds variants of the
@@ -575,9 +575,9 @@ system and gives an overview of their function and contents.
 
          Internally, the :term:`BBCLASSEXTEND` mechanism generates recipe
          variants by rewriting variable values and applying overrides such
-         as ``_class-native``. For example, to generate a native version of
+         as ``:class-native``. For example, to generate a native version of
          a recipe, a :term:`DEPENDS` on "foo" is rewritten
-         to a ``DEPENDS`` on "foo-native".
+         to a :term:`DEPENDS` on "foo-native".
 
          Even when using :term:`BBCLASSEXTEND`, the recipe is only parsed once.
          Parsing once adds some limitations. For example, it is not
@@ -762,8 +762,7 @@ system and gives an overview of their function and contents.
 
          export BBSERVER=localhost:$port
 
-      By default, :term:`BBSERVER` also appears in
-      :term:`bitbake:BB_HASHBASE_WHITELIST`.
+      By default, :term:`BBSERVER` also appears in :term:`BB_HASHBASE_WHITELIST`.
       Consequently, :term:`BBSERVER` is excluded from checksum and dependency
       data.
 
@@ -892,13 +891,13 @@ system and gives an overview of their function and contents.
       the :term:`BUILD_CFLAGS` and
       :term:`BUILDSDK_CFLAGS` default values.
 
-      The default value of the ``BUILD_OPTIMIZATION`` variable is "-O2
+      The default value of the :term:`BUILD_OPTIMIZATION` variable is "-O2
       -pipe".
 
    :term:`BUILD_OS`
       Specifies the operating system in use on the build host (e.g.
       "linux"). The OpenEmbedded build system sets the value of
-      ``BUILD_OS`` from the OS reported by the ``uname`` command - the
+      :term:`BUILD_OS` from the OS reported by the ``uname`` command - the
       first word, converted to lower-case characters.
 
    :term:`BUILD_PREFIX`
@@ -1021,6 +1020,20 @@ system and gives an overview of their function and contents.
 
          BUILDHISTORY_IMAGE_FILES ?= "/etc/passwd /etc/group"
 
+   :term:`BUILDHISTORY_PATH_PREFIX_STRIP`
+      When inheriting the :ref:`buildhistory <ref-classes-buildhistory>`
+      class, this variable specifies a common path prefix that should be
+      stripped off the beginning of paths in the task signature list when the
+      ``task`` feature is active in :term:`BUILDHISTORY_FEATURES`. This can be
+      useful when build history is populated from multiple sources that may not
+      all use the same top level directory.
+
+      By default, the ``buildhistory`` class sets the variable as follows::
+
+         BUILDHISTORY_PATH_PREFIX_STRIP ?= ""
+
+      In this case, no prefixes will be stripped.
+
    :term:`BUILDHISTORY_PUSH_REPO`
       When inheriting the :ref:`buildhistory <ref-classes-buildhistory>`
       class, this variable optionally specifies a remote repository to
@@ -1114,13 +1127,13 @@ system and gives an overview of their function and contents.
 
       .. note::
 
-         ``CLASSOVERRIDE`` gets its default "class-target" value from the
+         :term:`CLASSOVERRIDE` gets its default "class-target" value from the
          ``bitbake.conf`` file.
 
       As an example, the following override allows you to install extra
       files, but only when building for the target::
 
-         do_install_append_class-target() {
+         do_install:append:class-target() {
              install my-extra-file ${D}${sysconfdir}
          }
 
@@ -1128,7 +1141,7 @@ system and gives an overview of their function and contents.
       "native" when building for the build host, and to "other" when not
       building for the build host::
 
-         FOO_class-native = "native"
+         FOO:class-native = "native"
          FOO = "other"
 
       The underlying mechanism behind :term:`CLASSOVERRIDE` is simply
@@ -1205,7 +1218,7 @@ system and gives an overview of their function and contents.
 
    :term:`COMPONENTS_DIR`
       Stores sysroot components for each recipe. The OpenEmbedded build
-      system uses ``COMPONENTS_DIR`` when constructing recipe-specific
+      system uses :term:`COMPONENTS_DIR` when constructing recipe-specific
       sysroots for other recipes.
 
       The default is
@@ -1233,7 +1246,7 @@ system and gives an overview of their function and contents.
       that identifies the resulting package. Then, provide a
       space-separated list of files. Here is an example::
 
-         CONFFILES_${PN} += "${sysconfdir}/file1 \
+         CONFFILES:${PN} += "${sysconfdir}/file1 \
              ${sysconfdir}/file2 ${sysconfdir}/file3"
 
       There is a relationship between the :term:`CONFFILES` and :term:`FILES`
@@ -1458,6 +1471,29 @@ system and gives an overview of their function and contents.
          variable only in certain contexts (e.g. when building for kernel
          and kernel module recipes).
 
+   :term:`CVE_CHECK_PN_WHITELIST`
+      The list of package names (:term:`PN`) for which
+      CVEs (Common Vulnerabilities and Exposures) are ignored.
+
+   :term:`CVE_CHECK_WHITELIST`
+      The list of CVE IDs which are ignored. Here is
+      an example from the :oe_layerindex:`Python3 recipe</layerindex/recipe/23823>`::
+
+         # This is windows only issue.
+         CVE_CHECK_WHITELIST += "CVE-2020-15523"
+
+   :term:`CVE_PRODUCT`
+      In a recipe, defines the name used to match the recipe name
+      against the name in the upstream `NIST CVE database <https://nvd.nist.gov/>`__.
+
+      The default is ${:term:`BPN`}. If it does not match the name in the NIST CVE
+      database or matches with multiple entries in the database, the default
+      value needs to be changed.
+
+      Here is an example from the :oe_layerindex:`Berkeley DB recipe </layerindex/recipe/544>`::
+
+         CVE_PRODUCT = "oracle_berkeley_db berkeley_db"
+
    :term:`CVSDIR`
       The directory in which files checked out under the CVS system are
       stored.
@@ -1510,7 +1546,7 @@ system and gives an overview of their function and contents.
       package naming. You must use the package name as an override when you
       set this variable. Here is an example from the ``fontconfig`` recipe::
 
-         DEBIAN_NOAUTONAME_fontconfig-utils = "1"
+         DEBIAN_NOAUTONAME:fontconfig-utils = "1"
 
    :term:`DEBIANNAME`
       When the :ref:`debian <ref-classes-debian>` class is inherited,
@@ -1520,7 +1556,7 @@ system and gives an overview of their function and contents.
       override when you set this variable. Here is an example from the
       ``dbus`` recipe::
 
-         DEBIANNAME_${PN} = "dbus-1"
+         DEBIANNAME:${PN} = "dbus-1"
 
    :term:`DEBUG_BUILD`
       Specifies to build packages with debugging information. This
@@ -1611,7 +1647,7 @@ system and gives an overview of their function and contents.
             ":ref:`overview-manual/concepts:automatically added runtime dependencies`"
             section in the Yocto Project Overview and Concepts Manual,
             runtime dependencies will often be added automatically, meaning
-            ``DEPENDS`` alone is sufficient for most recipes.
+            :term:`DEPENDS` alone is sufficient for most recipes.
 
          -  Counterintuitively, :term:`DEPENDS` is often necessary even for
             recipes that install precompiled components. For example, if
@@ -1624,8 +1660,8 @@ system and gives an overview of their function and contents.
 
       For information on runtime dependencies, see the
       :term:`RDEPENDS` variable. You can also see the
-      ":ref:`Tasks <bitbake:bitbake-user-manual/bitbake-user-manual-metadata:tasks>`" and
-      ":ref:`Dependencies <bitbake:bitbake-user-manual/bitbake-user-manual-execution:dependencies>`" sections in the
+      ":ref:`bitbake:bitbake-user-manual/bitbake-user-manual-metadata:tasks`" and
+      ":ref:`bitbake:bitbake-user-manual/bitbake-user-manual-execution:dependencies`" sections in the
       BitBake User Manual for additional information on tasks and
       dependencies.
 
@@ -1652,7 +1688,7 @@ system and gives an overview of their function and contents.
       "package_deb".
 
       The BitBake configuration file initially defines the
-      ``DEPLOY_DIR_DEB`` variable as a sub-folder of
+      :term:`DEPLOY_DIR_DEB` variable as a sub-folder of
       :term:`DEPLOY_DIR`::
 
          DEPLOY_DIR_DEB = "${DEPLOY_DIR}/deb"
@@ -2079,7 +2115,7 @@ system and gives an overview of their function and contents.
       to fix a runtime dependency to the exact same version of another
       package in the same recipe::
 
-         RDEPENDS_${PN}-additional-module = "${PN} (= ${EXTENDPKGV})"
+         RDEPENDS:${PN}-additional-module = "${PN} (= ${EXTENDPKGV})"
 
       The dependency relationships are intended to force the package
       manager to upgrade these types of packages in lock-step.
@@ -2179,7 +2215,7 @@ system and gives an overview of their function and contents.
       this variable, use an override for the associated image type. Here is
       an example::
 
-         EXTRA_IMAGECMD_ext3 ?= "-i 4096"
+         EXTRA_IMAGECMD:ext3 ?= "-i 4096"
 
    :term:`EXTRA_IMAGEDEPENDS`
       A list of recipes to build that do not provide packages for
@@ -2306,7 +2342,7 @@ system and gives an overview of their function and contents.
       list of files or paths that identify the files you want included as
       part of the resulting package. Here is an example::
 
-         FILES_${PN} += "${bindir}/mydir1 ${bindir}/mydir2/myfile"
+         FILES:${PN} += "${bindir}/mydir1 ${bindir}/mydir2/myfile"
 
       .. note::
 
@@ -2322,7 +2358,7 @@ system and gives an overview of their function and contents.
             rather than ``/usr/bin``. You can find a list of these
             variables at the top of the ``meta/conf/bitbake.conf`` file in
             the :term:`Source Directory`. You will also
-            find the default values of the various ``FILES_*`` variables in
+            find the default values of the various ``FILES:*`` variables in
             this file.
 
       If some of the files you provide with the :term:`FILES` variable are
@@ -2355,7 +2391,7 @@ system and gives an overview of their function and contents.
       :term:`FILESEXTRAPATHS` from within a ``.bbappend`` file and that you
       prepend paths as follows::
 
-         FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+         FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
       In the above example, the build system first
       looks for files in a directory that has the same name as the
@@ -2377,7 +2413,7 @@ system and gives an overview of their function and contents.
 
       Here is another common use::
 
-         FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
+         FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
       In this example, the build system extends the
       :term:`FILESPATH` variable to include a directory named ``files`` that is
@@ -2385,13 +2421,13 @@ system and gives an overview of their function and contents.
 
       This next example specifically adds three paths::
 
-         FILESEXTRAPATHS_prepend := "path_1:path_2:path_3:"
+         FILESEXTRAPATHS:prepend := "path_1:path_2:path_3:"
 
       A final example shows how you can extend the search path and include
       a :term:`MACHINE`-specific override, which is useful
       in a BSP layer::
 
-          FILESEXTRAPATHS_prepend_intel-x86-common := "${THISDIR}/${PN}:"
+          FILESEXTRAPATHS:prepend:intel-x86-common := "${THISDIR}/${PN}:"
 
       The previous statement appears in the
       ``linux-yocto-dev.bbappend`` file, which is found in the
@@ -2568,7 +2604,7 @@ system and gives an overview of their function and contents.
    :term:`FONT_EXTRA_RDEPENDS`
       When inheriting the :ref:`fontcache <ref-classes-fontcache>` class,
       this variable specifies the runtime dependencies for font packages.
-      By default, the ``FONT_EXTRA_RDEPENDS`` is set to "fontconfig-utils".
+      By default, the :term:`FONT_EXTRA_RDEPENDS` is set to "fontconfig-utils".
 
    :term:`FONT_PACKAGES`
       When inheriting the :ref:`fontcache <ref-classes-fontcache>` class,
@@ -2639,7 +2675,7 @@ system and gives an overview of their function and contents.
 
       Here is an example from the ``dbus`` recipe::
 
-         GROUPADD_PARAM_${PN} = "-r netdev"
+         GROUPADD_PARAM:${PN} = "-r netdev"
 
       For information on the standard Linux shell command
       ``groupadd``, see https://linux.die.net/man/8/groupadd.
@@ -2952,7 +2988,7 @@ system and gives an overview of their function and contents.
       ``btrfs``, and so forth). When setting this variable, you should use
       an override for the associated type. Here is an example::
 
-         IMAGE_CMD_jffs2 = "mkfs.jffs2 --root=${IMAGE_ROOTFS} --faketime \
+         IMAGE_CMD:jffs2 = "mkfs.jffs2 --root=${IMAGE_ROOTFS} --faketime \
              --output=${IMGDEPLOYDIR}/${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.jffs2 \
              ${EXTRA_IMAGECMD}"
 
@@ -3005,11 +3041,11 @@ system and gives an overview of their function and contents.
 
          -  If an image recipe uses the "inherit image" line and you are
             setting :term:`IMAGE_FSTYPES` inside the recipe, you must set
-            ``IMAGE_FSTYPES`` prior to using the "inherit image" line.
+            :term:`IMAGE_FSTYPES` prior to using the "inherit image" line.
 
          -  Due to the way the OpenEmbedded build system processes this
-            variable, you cannot update its contents by using ``_append``
-            or ``_prepend``. You must use the ``+=`` operator to add one or
+            variable, you cannot update its contents by using ``:append``
+            or ``:prepend``. You must use the ``+=`` operator to add one or
             more options to the :term:`IMAGE_FSTYPES` variable.
 
    :term:`IMAGE_INSTALL`
@@ -3027,7 +3063,7 @@ system and gives an overview of their function and contents.
 
       When you use this variable, it is best to use it as follows::
 
-         IMAGE_INSTALL_append = " package-name"
+         IMAGE_INSTALL:append = " package-name"
 
       Be sure to include the space
       between the quotation character and the start of the package name or
@@ -3119,7 +3155,7 @@ system and gives an overview of their function and contents.
          IMAGE_NAME ?= "${IMAGE_BASENAME}-${MACHINE}${IMAGE_VERSION_SUFFIX}"
 
    :term:`IMAGE_NAME_SUFFIX`
-      Suffix used for the image output file name - defaults to ``".rootfs"``
+      Suffix used for the image output filename - defaults to ``".rootfs"``
       to distinguish the image file from other files created during image
       building; however if this suffix is redundant or not desired you can
       clear the value of this variable (set the value to ""). For example,
@@ -3267,7 +3303,7 @@ system and gives an overview of their function and contents.
       Specifies a dependency from one image type on another. Here is an
       example from the :ref:`image-live <ref-classes-image-live>` class::
 
-         IMAGE_TYPEDEP_live = "ext3"
+         IMAGE_TYPEDEP:live = "ext3"
 
       In the previous example, the variable ensures that when "live" is
       listed with the :term:`IMAGE_FSTYPES` variable,
@@ -3334,13 +3370,13 @@ system and gives an overview of their function and contents.
    :term:`IMGDEPLOYDIR`
       When inheriting the :ref:`image <ref-classes-image>` class directly or
       through the :ref:`core-image <ref-classes-core-image>` class, the
-      ``IMGDEPLOYDIR`` points to a temporary work area for deployed files
+      :term:`IMGDEPLOYDIR` points to a temporary work area for deployed files
       that is set in the ``image`` class as follows::
 
          IMGDEPLOYDIR = "${WORKDIR}/deploy-${PN}-image-complete"
 
       Recipes inheriting the ``image`` class should copy files to be
-      deployed into ``IMGDEPLOYDIR``, and the class will take care of
+      deployed into :term:`IMGDEPLOYDIR`, and the class will take care of
       copying them into :term:`DEPLOY_DIR_IMAGE` afterwards.
 
    :term:`INC_PR`
@@ -3553,6 +3589,12 @@ system and gives an overview of their function and contents.
 
       .. note::
 
+         Bundling the initramfs with the kernel conflates the code in the
+         initramfs with the GPLv2 licensed Linux kernel binary. Thus only GPLv2
+         compatible software may be part of a bundled initramfs.
+
+      .. note::
+
          Using an extra compilation pass to bundle the initramfs avoids a
          circular dependency between the kernel recipe and the initramfs
          recipe should the initramfs include kernel modules. Should that be
@@ -3670,7 +3712,7 @@ system and gives an overview of their function and contents.
       recipe. The package name override must be used, which in this example
       is ``${PN}``::
 
-         INSANE_SKIP_${PN} += "dev-so"
+         INSANE_SKIP:${PN} += "dev-so"
 
       See the ":ref:`insane.bbclass <ref-classes-insane>`" section for a
       list of the valid QA checks you can specify using this variable.
@@ -3698,7 +3740,7 @@ system and gives an overview of their function and contents.
       - qemu
       - mips
 
-      You define the ``KARCH`` variable in the :ref:`kernel-dev/advanced:bsp descriptions`.
+      You define the :term:`KARCH` variable in the :ref:`kernel-dev/advanced:bsp descriptions`.
 
    :term:`KBRANCH`
       A regular expression used by the build process to explicitly identify
@@ -3724,10 +3766,10 @@ system and gives an overview of their function and contents.
       ``meta-yocto-bsp/recipes-kernel/linux/linux-yocto_4.12.bbappend``.
       Here are the related statements from that append file::
 
-         KBRANCH_genericx86 = "standard/base"
-         KBRANCH_genericx86-64 = "standard/base"
-         KBRANCH_edgerouter = "standard/edgerouter"
-         KBRANCH_beaglebone = "standard/beaglebone"
+         KBRANCH:genericx86 = "standard/base"
+         KBRANCH:genericx86-64 = "standard/base"
+         KBRANCH:edgerouter = "standard/edgerouter"
+         KBRANCH:beaglebone = "standard/beaglebone"
 
       The :term:`KBRANCH` statements
       identify the kernel branch to use when building for each supported
@@ -3755,11 +3797,11 @@ system and gives an overview of their function and contents.
       Here is an example from a "raspberrypi2" :term:`KMACHINE` build that uses
       a ``defconfig`` file named "bcm2709_defconfig"::
 
-         KBUILD_DEFCONFIG_raspberrypi2 = "bcm2709_defconfig"
+         KBUILD_DEFCONFIG:raspberrypi2 = "bcm2709_defconfig"
 
       As an alternative, you can use the following within your append file::
 
-         KBUILD_DEFCONFIG_pn-linux-yocto ?= defconfig_file
+         KBUILD_DEFCONFIG:pn-linux-yocto ?= "defconfig_file"
 
       For more
       information on how to use the :term:`KBUILD_DEFCONFIG` variable, see the
@@ -3907,10 +3949,10 @@ system and gives an overview of their function and contents.
       statements add specific configurations to targeted machine types::
 
          KERNEL_EXTRA_FEATURES ?= "features/netfilter/netfilter.scc features/taskstats/taskstats.scc"
-         KERNEL_FEATURES_append = "${KERNEL_EXTRA_FEATURES}"
-         KERNEL_FEATURES_append_qemuall = "cfg/virtio.scc"
-         KERNEL_FEATURES_append_qemux86 = " cfg/sound.scc cfg/paravirt_kvm.scc"
-         KERNEL_FEATURES_append_qemux86-64 = "cfg/sound.scc"
+         KERNEL_FEATURES:append = "${KERNEL_EXTRA_FEATURES}"
+         KERNEL_FEATURES:append:qemuall = "cfg/virtio.scc"
+         KERNEL_FEATURES:append:qemux86 = " cfg/sound.scc cfg/paravirt_kvm.scc"
+         KERNEL_FEATURES:append:qemux86-64 = "cfg/sound.scc"
 
    :term:`KERNEL_FIT_LINK_NAME`
       The link name of the kernel flattened image tree (FIT) image. This
@@ -4092,13 +4134,13 @@ system and gives an overview of their function and contents.
       Kernel's ``meta`` branch. As an example take a look in the
       ``common/recipes-kernel/linux/linux-yocto_3.19.bbappend`` file::
 
-         LINUX_VERSION_core2-32-intel-common = "3.19.0"
-         COMPATIBLE_MACHINE_core2-32-intel-common = "${MACHINE}"
-         SRCREV_meta_core2-32-intel-common = "8897ef68b30e7426bc1d39895e71fb155d694974"
-         SRCREV_machine_core2-32-intel-common = "43b9eced9ba8a57add36af07736344dcc383f711"
-         KMACHINE_core2-32-intel-common = "intel-core2-32"
-         KBRANCH_core2-32-intel-common = "standard/base"
-         KERNEL_FEATURES_append_core2-32-intel-common = "${KERNEL_FEATURES_INTEL_COMMON}"
+         LINUX_VERSION:core2-32-intel-common = "3.19.0"
+         COMPATIBLE_MACHINE:core2-32-intel-common = "${MACHINE}"
+         SRCREV_meta:core2-32-intel-common = "8897ef68b30e7426bc1d39895e71fb155d694974"
+         SRCREV_machine:core2-32-intel-common = "43b9eced9ba8a57add36af07736344dcc383f711"
+         KMACHINE:core2-32-intel-common = "intel-core2-32"
+         KBRANCH:core2-32-intel-common = "standard/base"
+         KERNEL_FEATURES:append:core2-32-intel-common = "${KERNEL_FEATURES_INTEL_COMMON}"
 
       The :term:`KMACHINE` statement says
       that the kernel understands the machine name as "intel-core2-32".
@@ -4278,15 +4320,15 @@ system and gives an overview of their function and contents.
       Documentation License 1.2 could be specified as follows::
 
          LICENSE = "GFDL-1.2 & GPLv2"
-         LICENSE_${PN} = "GPLv2"
-         LICENSE_${PN}-doc = "GFDL-1.2"
+         LICENSE:${PN} = "GPLv2"
+         LICENSE:${PN}-doc = "GFDL-1.2"
 
    :term:`LICENSE_CREATE_PACKAGE`
       Setting :term:`LICENSE_CREATE_PACKAGE` to "1" causes the OpenEmbedded
       build system to create an extra package (i.e.
       ``${``\ :term:`PN`\ ``}-lic``) for each recipe and to add
       those packages to the
-      :term:`RRECOMMENDS`\ ``_${PN}``.
+      :term:`RRECOMMENDS`\ ``:${PN}``.
 
       The ``${PN}-lic`` package installs a directory in
       ``/usr/share/licenses`` named ``${PN}``, which is the recipe's base
@@ -4590,7 +4632,7 @@ system and gives an overview of their function and contents.
       in QEMU, like in the following example from the ``connman-conf``
       recipe::
 
-         SRC_URI_append_qemuall = " file://wired.config \
+         SRC_URI:append:qemuall = " file://wired.config \
              file://wired-setup \
              "
 
@@ -4653,7 +4695,7 @@ system and gives an overview of their function and contents.
 
    :term:`module_autoload`
       This variable has been replaced by the :term:`KERNEL_MODULE_AUTOLOAD`
-      variable. You should replace all occurrences of ``module_autoload``
+      variable. You should replace all occurrences of :term:`module_autoload`
       with additions to :term:`KERNEL_MODULE_AUTOLOAD`, for example::
 
          module_autoload_rfcomm = "rfcomm"
@@ -4684,9 +4726,9 @@ system and gives an overview of their function and contents.
       You must use the kernel module name override.
 
       Run ``man modprobe.d`` in the shell to find out more information on
-      the exact syntax you want to provide with ``module_conf``.
+      the exact syntax you want to provide with :term:`module_conf`.
 
-      Including ``module_conf`` causes the OpenEmbedded build system to
+      Including :term:`module_conf` causes the OpenEmbedded build system to
       populate the ``/etc/modprobe.d/modname.conf`` file with
       ``modprobe.d`` syntax lines. Here is an example that adds the options
       ``arg1`` and ``arg2`` to a module named ``mymodule``::
@@ -4793,7 +4835,7 @@ system and gives an overview of their function and contents.
       can attach it to a specific image recipe by using the recipe name
       override::
 
-         NO_RECOMMENDATIONS_pn-target_image = "1"
+         NO_RECOMMENDATIONS:pn-target_image = "1"
 
       It is important to realize that if you choose to not install packages
       using this variable and some other packages are dependent on them
@@ -4816,14 +4858,14 @@ system and gives an overview of their function and contents.
 
    :term:`NOAUTOPACKAGEDEBUG`
       Disables auto package from splitting ``.debug`` files. If a recipe
-      requires ``FILES_${PN}-dbg`` to be set manually, the
+      requires ``FILES:${PN}-dbg`` to be set manually, the
       :term:`NOAUTOPACKAGEDEBUG` can be defined allowing you to define the
       content of the debug package. For example::
 
          NOAUTOPACKAGEDEBUG = "1"
-         FILES_${PN}-dev = "${includedir}/${QT_DIR_NAME}/Qt/*"
-         FILES_${PN}-dbg = "/usr/src/debug/"
-         FILES_${QT_BASE_NAME}-demos-doc = "${docdir}/${QT_DIR_NAME}/qch/qt.qch"
+         FILES:${PN}-dev = "${includedir}/${QT_DIR_NAME}/Qt/*"
+         FILES:${PN}-dbg = "/usr/src/debug/"
+         FILES:${QT_BASE_NAME}-demos-doc = "${docdir}/${QT_DIR_NAME}/qch/qt.qch"
 
    :term:`NON_MULTILIB_RECIPES`
       A list of recipes that should not be built for multilib. OE-Core's
@@ -4876,7 +4918,7 @@ system and gives an overview of their function and contents.
       information, see the ":ref:`dev-manual/common-tasks:using a development shell`" section in
       the Yocto Project Development Tasks Manual.
 
-      You can use the following values for the ``OE_TERMINAL`` variable:
+      You can use the following values for the :term:`OE_TERMINAL` variable:
 
       - auto
       - gnome
@@ -4919,7 +4961,7 @@ system and gives an overview of their function and contents.
       assignment will override ``FOO`` with the value "overridden" at the
       end of parsing::
 
-         FOO_an-override = "overridden"
+         FOO:an-override = "overridden"
 
       See the
       ":ref:`bitbake:bitbake-user-manual/bitbake-user-manual-metadata:conditional syntax (overrides)`"
@@ -4934,7 +4976,7 @@ system and gives an overview of their function and contents.
       allows variables to be set for a single recipe within configuration
       (``.conf``) files. Here is an example::
 
-         FOO_pn-myrecipe = "myrecipe-specific value"
+         FOO:pn-myrecipe = "myrecipe-specific value"
 
       .. note::
 
@@ -5028,33 +5070,44 @@ system and gives an overview of their function and contents.
       ":ref:`package.bbclass <ref-classes-package>`" section.
 
    :term:`PACKAGE_DEBUG_SPLIT_STYLE`
-      Determines how to split up the binary and debug information when
-      creating ``*-dbg`` packages to be used with the GNU Project Debugger
-      (GDB).
+      Determines how to split up and package debug and source information
+      when creating debugging packages to be used with the GNU Project
+      Debugger (GDB). In general, based on the value of this variable,
+      you can combine the source and debug info in a single package,
+      you can break out the source into a separate package that can be
+      installed independently, or you can choose to not have the source
+      packaged at all.
 
-      With the :term:`PACKAGE_DEBUG_SPLIT_STYLE` variable, you can control
-      where debug information, which can include or exclude source files,
-      is stored:
+      The possible values of :term:`PACKAGE_DEBUG_SPLIT_STYLE` variable:
 
-      -  ".debug": Debug symbol files are placed next to the binary in a
-         ``.debug`` directory on the target. For example, if a binary is
-         installed into ``/bin``, the corresponding debug symbol files are
-         installed in ``/bin/.debug``. Source files are placed in
-         ``/usr/src/debug``.
+      -  "``.debug``": All debugging and source info is placed in a single
+         ``*-dbg`` package; debug symbol files are placed next to the
+         binary in a ``.debug`` directory so that, if a binary is installed
+         into ``/bin``, the corresponding debug symbol file is installed
+         in ``/bin/.debug``. Source files are installed in the same ``*-dbg``
+         package under ``/usr/src/debug``.
 
-      -  "debug-file-directory": Debug symbol files are placed under
-         ``/usr/lib/debug`` on the target, and separated by the path from
-         where the binary is installed. For example, if a binary is
-         installed in ``/bin``, the corresponding debug symbols are
-         installed in ``/usr/lib/debug/bin``. Source files are placed in
-         ``/usr/src/debug``.
+      -  "``debug-file-directory``": As above, all debugging and source info
+         is placed in a single ``*-dbg`` package; debug symbol files are
+         placed entirely under the directory ``/usr/lib/debug`` and separated
+         by the path from where the binary is installed, so that if a binary
+         is installed in ``/bin``, the corresponding debug symbols are installed
+         in ``/usr/lib/debug/bin``, and so on. As above, source is installed
+         in the same package under ``/usr/src/debug``.
 
-      -  "debug-without-src": The same behavior as ".debug" previously
-         described with the exception that no source files are installed.
+      -  "``debug-with-srcpkg``": Debugging info is placed in the standard
+         ``*-dbg`` package as with the ``.debug`` value, while source is
+         placed in a separate ``*-src`` package, which can be installed
+         independently.  This is the default setting for this variable,
+         as defined in Poky's ``bitbake.conf`` file.
 
-      -  "debug-with-srcpkg": The same behavior as ".debug" previously
-         described with the exception that all source files are placed in a
-         separate ``*-src`` pkg. This is the default behavior.
+      -  "``debug-without-src``": The same behavior as with the ``.debug``
+         setting, but no source is packaged at all.
+
+      .. note::
+
+         Much of the above package splitting can be overridden via
+         use of the :term:`INHIBIT_PACKAGE_DEBUG_SPLIT` variable.
 
       You can find out more about debugging using GDB by reading the
       ":ref:`dev-manual/common-tasks:debugging with the gnu project debugger (gdb) remotely`" section
@@ -5082,7 +5135,7 @@ system and gives an overview of their function and contents.
       can attach it to a specific image recipe by using the recipe name
       override::
 
-         PACKAGE_EXCLUDE_pn-target_image = "package_name"
+         PACKAGE_EXCLUDE:pn-target_image = "package_name"
 
       If you choose to not install a package using this variable and some
       other package is dependent on it (i.e. listed in a recipe's
@@ -5260,7 +5313,7 @@ system and gives an overview of their function and contents.
          PACKAGECONFIG[f2] = "\
               ... and so on and so on ...
 
-      The ``PACKAGECONFIG`` variable itself specifies a space-separated
+      The :term:`PACKAGECONFIG` variable itself specifies a space-separated
       list of the features to enable. Following the features, you can
       determine the behavior of each feature by providing up to six
       order-dependent arguments, which are separated by commas. You can
@@ -5319,18 +5372,18 @@ system and gives an overview of their function and contents.
 
          Or, you can just append the variable::
 
-            PACKAGECONFIG_append = " f4"
+            PACKAGECONFIG:append = " f4"
 
       -  *Configuration file:* This method is identical to changing the
          block through an append file except you edit your ``local.conf``
          or ``mydistro.conf`` file. As with append files previously
          described, you can either completely override the variable::
 
-            PACKAGECONFIG_pn-recipename = "f4 f5"
+            PACKAGECONFIG:pn-recipename = "f4 f5"
 
          Or, you can just amend the variable::
 
-            PACKAGECONFIG_append_pn-recipename = " f4"
+            PACKAGECONFIG:append:pn-recipename = " f4"
 
    :term:`PACKAGECONFIG_CONFARGS`
       A space-separated list of configuration options generated from the
@@ -5355,7 +5408,7 @@ system and gives an overview of their function and contents.
       The list of packages the recipe creates. The default value is the
       following::
 
-         ${PN}-dbg ${PN}-staticdev ${PN}-dev ${PN}-doc ${PN}-locale ${PACKAGE_BEFORE_PN} ${PN}
+         ${PN}-src ${PN}-dbg ${PN}-staticdev ${PN}-dev ${PN}-doc ${PN}-locale ${PACKAGE_BEFORE_PN} ${PN}
 
       During packaging, the :ref:`ref-tasks-package` task
       goes through :term:`PACKAGES` and uses the :term:`FILES`
@@ -5365,7 +5418,7 @@ system and gives an overview of their function and contents.
       (leftmost) package.
 
       Packages in the variable's list that are empty (i.e. where none of
-      the patterns in ``FILES_``\ pkg match any files installed by the
+      the patterns in ``FILES:``\ pkg match any files installed by the
       :ref:`ref-tasks-install` task) are not generated,
       unless generation is forced through the
       :term:`ALLOW_EMPTY` variable.
@@ -5516,7 +5569,7 @@ system and gives an overview of their function and contents.
 
       For example, when the :ref:`debian <ref-classes-debian>` class
       renames the output package, it does so by setting
-      ``PKG_packagename``.
+      ``PKG:packagename``.
 
    :term:`PKG_CONFIG_PATH`
       The path to ``pkg-config`` files for the current build context.
@@ -5600,7 +5653,7 @@ system and gives an overview of their function and contents.
 
       If applicable, the :term:`PN` variable also contains any special suffix
       or prefix. For example, using ``bash`` to build packages for the
-      native machine, ``PN`` is ``bash-native``. Using ``bash`` to build
+      native machine, :term:`PN` is ``bash-native``. Using ``bash`` to build
       packages for the target and for Multilib, :term:`PN` would be ``bash``
       and ``lib64-bash``, respectively.
 
@@ -5670,7 +5723,7 @@ system and gives an overview of their function and contents.
          :term:`PR` does not need to be increased for changes that do not change the
          package contents or metadata.
 
-      Because manually managing ``PR`` can be cumbersome and error-prone,
+      Because manually managing :term:`PR` can be cumbersome and error-prone,
       an automated solution exists. See the
       ":ref:`dev-manual/common-tasks:working with a pr service`" section
       in the Yocto Project Development Tasks Manual for more information.
@@ -5750,17 +5803,17 @@ system and gives an overview of their function and contents.
       :term:`OVERRIDES` to set a machine-specific
       override. Here is an example::
 
-         PREFERRED_VERSION_linux-yocto_qemux86 = "5.0%"
+         PREFERRED_VERSION_linux-yocto:qemux86 = "5.0%"
 
       Although not recommended, worst case, you can also use the
       "forcevariable" override, which is the strongest override possible.
       Here is an example::
 
-         PREFERRED_VERSION_linux-yocto_forcevariable = "5.0%"
+         PREFERRED_VERSION_linux-yocto:forcevariable = "5.0%"
 
       .. note::
 
-         The ``\_forcevariable`` override is not handled specially. This override
+         The ``:forcevariable`` override is not handled specially. This override
          only works because the default value of :term:`OVERRIDES` includes "forcevariable".
 
       If a recipe with the specified version is not available, a warning
@@ -5784,7 +5837,7 @@ system and gives an overview of their function and contents.
       the ``local.conf`` configuration file in the
       :term:`Build Directory`::
 
-         PREMIRRORS_prepend = "\
+         PREMIRRORS:prepend = "\
              git://.*/.* http://www.yoctoproject.org/sources/ \n \
              ftp://.*/.* http://www.yoctoproject.org/sources/ \n \
              http://.*/.* http://www.yoctoproject.org/sources/ \n \
@@ -5967,7 +6020,7 @@ system and gives an overview of their function and contents.
       Like all package-controlling variables, you must always use them in
       conjunction with a package name override. Here is an example::
 
-         RCONFLICTS_${PN} = "another_conflicting_package_name"
+         RCONFLICTS:${PN} = "another_conflicting_package_name"
 
       BitBake, which the OpenEmbedded build system uses, supports
       specifying versioned dependencies. Although the syntax varies
@@ -5975,7 +6028,7 @@ system and gives an overview of their function and contents.
       from you. Here is the general syntax to specify versions with the
       :term:`RCONFLICTS` variable::
 
-         RCONFLICTS_${PN} = "package (operator version)"
+         RCONFLICTS:${PN} = "package (operator version)"
 
       For ``operator``, you can specify the following:
 
@@ -5988,7 +6041,7 @@ system and gives an overview of their function and contents.
       For example, the following sets up a dependency on version 1.2 or
       greater of the package ``foo``::
 
-         RCONFLICTS_${PN} = "foo (>= 1.2)"
+         RCONFLICTS:${PN} = "foo (>= 1.2)"
 
    :term:`RDEPENDS`
       Lists runtime dependencies of a package. These dependencies are other
@@ -5997,7 +6050,7 @@ system and gives an overview of their function and contents.
       package ``foo`` needs the packages ``bar`` and ``baz`` to be
       installed::
 
-         RDEPENDS_foo = "bar baz"
+         RDEPENDS:foo = "bar baz"
 
       The most common types of package
       runtime dependencies are automatically detected and added. Therefore,
@@ -6038,19 +6091,19 @@ system and gives an overview of their function and contents.
       on the ``perl`` package. In this case, you would use the following
       :term:`RDEPENDS` statement::
 
-         RDEPENDS_${PN}-dev += "perl"
+         RDEPENDS:${PN}-dev += "perl"
 
       In the example,
       the development package depends on the ``perl`` package. Thus, the
-      ``RDEPENDS`` variable has the ``${PN}-dev`` package name as part of
+      :term:`RDEPENDS` variable has the ``${PN}-dev`` package name as part of
       the variable.
 
       .. note::
 
-         ``RDEPENDS_${PN}-dev`` includes ``${``\ :term:`PN`\ ``}``
+         ``RDEPENDS:${PN}-dev`` includes ``${``\ :term:`PN`\ ``}``
          by default. This default is set in the BitBake configuration file
          (``meta/conf/bitbake.conf``). Be careful not to accidentally remove
-         ``${PN}`` when modifying ``RDEPENDS_${PN}-dev``. Use the "+=" operator
+         ``${PN}`` when modifying ``RDEPENDS:${PN}-dev``. Use the "+=" operator
          rather than the "=" operator.
 
       The package names you use with :term:`RDEPENDS` must appear as they would
@@ -6067,7 +6120,7 @@ system and gives an overview of their function and contents.
       from you. Here is the general syntax to specify versions with the
       :term:`RDEPENDS` variable::
 
-         RDEPENDS_${PN} = "package (operator version)"
+         RDEPENDS:${PN} = "package (operator version)"
 
       For ``operator``, you can specify the following:
 
@@ -6087,14 +6140,21 @@ system and gives an overview of their function and contents.
       For example, the following sets up a dependency on version 1.2 or
       greater of the package ``foo``::
 
-         RDEPENDS_${PN} = "foo (>= 1.2)"
+         RDEPENDS:${PN} = "foo (>= 1.2)"
 
       For information on build-time dependencies, see the
       :term:`DEPENDS` variable. You can also see the
-      ":ref:`Tasks <bitbake:bitbake-user-manual/bitbake-user-manual-metadata:tasks>`" and
-      ":ref:`Dependencies <bitbake:bitbake-user-manual/bitbake-user-manual-execution:dependencies>`" sections in the
+      ":ref:`bitbake:bitbake-user-manual/bitbake-user-manual-metadata:tasks`" and
+      ":ref:`bitbake:bitbake-user-manual/bitbake-user-manual-execution:dependencies`" sections in the
       BitBake User Manual for additional information on tasks and
       dependencies.
+
+   :term:`RECIPE_NO_UPDATE_REASON`
+      If a recipe should not be replaced by a more recent upstream version,
+      putting the reason why in this variable in a recipe allows
+      ``devtool check-upgrade-status`` command to display it, as explained
+      in the ":ref:`ref-manual/devtool-reference:checking on the upgrade status of a recipe`"
+      section.
 
    :term:`REQUIRED_DISTRO_FEATURES`
       When inheriting the
@@ -6222,7 +6282,7 @@ system and gives an overview of their function and contents.
       variable in conjunction with a package name override. Here is an
       example::
 
-         RPROVIDES_${PN} = "widget-abi-2"
+         RPROVIDES:${PN} = "widget-abi-2"
 
    :term:`RRECOMMENDS`
       A list of packages that extends the usability of a package being
@@ -6253,7 +6313,7 @@ system and gives an overview of their function and contents.
       support wireless functionality. In this case, you would use the
       following::
 
-         RRECOMMENDS_${PN}-dev += "wireless_package_name"
+         RRECOMMENDS:${PN}-dev += "wireless_package_name"
 
       In the
       example, the package name (``${PN}-dev``) must appear as it would in
@@ -6266,7 +6326,7 @@ system and gives an overview of their function and contents.
       Here is the general syntax to specify versions with the
       :term:`RRECOMMENDS` variable::
 
-         RRECOMMENDS_${PN} = "package (operator version)"
+         RRECOMMENDS:${PN} = "package (operator version)"
 
       For ``operator``, you can specify the following:
 
@@ -6279,7 +6339,7 @@ system and gives an overview of their function and contents.
       For example, the following sets up a recommend on version 1.2 or
       greater of the package ``foo``::
 
-         RRECOMMENDS_${PN} = "foo (>= 1.2)"
+         RRECOMMENDS:${PN} = "foo (>= 1.2)"
 
    :term:`RREPLACES`
       A list of packages replaced by a package. The package manager uses
@@ -6291,7 +6351,7 @@ system and gives an overview of their function and contents.
       As with all package-controlling variables, you must use this variable
       in conjunction with a package name override. Here is an example::
 
-         RREPLACES_${PN} = "other_package_being_replaced"
+         RREPLACES:${PN} = "other_package_being_replaced"
 
       BitBake, which the OpenEmbedded build system uses, supports
       specifying versioned replacements. Although the syntax varies
@@ -6299,7 +6359,7 @@ system and gives an overview of their function and contents.
       from you. Here is the general syntax to specify versions with the
       :term:`RREPLACES` variable::
 
-         RREPLACES_${PN} = "package (operator version)"
+         RREPLACES:${PN} = "package (operator version)"
 
       For ``operator``, you can specify the following:
 
@@ -6312,7 +6372,7 @@ system and gives an overview of their function and contents.
       For example, the following sets up a replacement using version 1.2
       or greater of the package ``foo``::
 
-          RREPLACES_${PN} = "foo (>= 1.2)"
+          RREPLACES:${PN} = "foo (>= 1.2)"
 
    :term:`RSUGGESTS`
       A list of additional packages that you can suggest for installation
@@ -6323,7 +6383,7 @@ system and gives an overview of their function and contents.
       variable in conjunction with a package name override. Here is an
       example::
 
-         RSUGGESTS_${PN} = "useful_package another_package"
+         RSUGGESTS:${PN} = "useful_package another_package"
 
    :term:`S`
       The location in the :term:`Build Directory` where
@@ -6486,7 +6546,7 @@ system and gives an overview of their function and contents.
 
       - :term:`CONF_VERSION`
       - :term:`BB_NUMBER_THREADS`
-      - :term:`bitbake:BB_NUMBER_PARSE_THREADS`
+      - :term:`BB_NUMBER_PARSE_THREADS`
       - :term:`PARALLEL_MAKE`
       - :term:`PRSERV_HOST`
       - :term:`SSTATE_MIRRORS` :term:`DL_DIR`
@@ -6837,7 +6897,7 @@ system and gives an overview of their function and contents.
       defined in the ``meta/conf/bitbake.conf`` configuration file.
 
       You will see this variable referenced in the default values of
-      ``FILES_${PN}``.
+      ``FILES:${PN}``.
 
    :term:`SOLIBSDEV`
       Defines the suffix for the development symbolic link (symlink) for
@@ -6846,7 +6906,7 @@ system and gives an overview of their function and contents.
       ``meta/conf/bitbake.conf`` configuration file.
 
       You will see this variable referenced in the default values of
-      ``FILES_${PN}-dev``.
+      ``FILES:${PN}-dev``.
 
    :term:`SOURCE_MIRROR_FETCH`
       When you are fetching files to create a mirror of sources (i.e.
@@ -6937,7 +6997,7 @@ system and gives an overview of their function and contents.
       protocols are highly dependent on particular BitBake Fetcher
       submodules. Depending on the fetcher BitBake uses, various URL
       parameters are employed. For specifics on the supported Fetchers, see
-      the ":ref:`Fetchers <bitbake:bitbake-user-manual/bitbake-user-manual-fetching:fetchers>`" section in the
+      the ":ref:`bitbake:bitbake-user-manual/bitbake-user-manual-fetching:fetchers`" section in the
       BitBake User Manual.
 
       -  ``file://`` - Fetches files, which are usually files shipped
@@ -7079,7 +7139,7 @@ system and gives an overview of their function and contents.
 
    :term:`SRC_URI_OVERRIDES_PACKAGE_ARCH`
       By default, the OpenEmbedded build system automatically detects
-      whether ``SRC_URI`` contains files that are machine-specific. If so,
+      whether :term:`SRC_URI` contains files that are machine-specific. If so,
       the build system automatically changes :term:`PACKAGE_ARCH`. Setting this
       variable to "0" disables this behavior.
 
@@ -7292,7 +7352,7 @@ system and gives an overview of their function and contents.
 
             ``-native`` recipes are not installed into host paths like such
             as ``/usr``. Rather, these recipes are installed into
-            ``STAGING_DIR_NATIVE``. When compiling ``-native`` recipes,
+            :term:`STAGING_DIR_NATIVE`. When compiling ``-native`` recipes,
             standard build environment variables such as
             :term:`CPPFLAGS` and
             :term:`CFLAGS` are set up so that both host paths
@@ -7467,6 +7527,7 @@ system and gives an overview of their function and contents.
              ${base_libdir} \
              ${nonarch_base_libdir} \
              ${datadir} \
+             /sysroot-only \
              "
 
    :term:`SYSROOT_DIRS_BLACKLIST`
@@ -7480,10 +7541,16 @@ system and gives an overview of their function and contents.
              ${mandir} \
              ${docdir} \
              ${infodir} \
-             ${datadir}/locale \
+             ${datadir}/X11/locale \
              ${datadir}/applications \
+             ${datadir}/bash-completion \
              ${datadir}/fonts \
+             ${datadir}/gtk-doc/html \
+             ${datadir}/installed-tests \
+             ${datadir}/locale \
              ${datadir}/pixmaps \
+             ${datadir}/terminfo \
+             ${libdir}/${BPN}/ptest \
              "
 
    :term:`SYSROOT_DIRS_NATIVE`
@@ -7584,7 +7651,7 @@ system and gives an overview of their function and contents.
       override to indicate the package to which the value applies. Here is
       an example from the connman recipe::
 
-         SYSTEMD_SERVICE_${PN} = "connman.service"
+         SYSTEMD_SERVICE:${PN} = "connman.service"
 
    :term:`SYSVINIT_ENABLED_GETTYS`
       When using
@@ -7726,13 +7793,13 @@ system and gives an overview of their function and contents.
       Specifies the prefix used for the toolchain binary target tools.
 
       Depending on the type of recipe and the build target,
-      ``TARGET_PREFIX`` is set as follows:
+      :term:`TARGET_PREFIX` is set as follows:
 
       -  For recipes building for the target machine, the value is
          "${:term:`TARGET_SYS`}-".
 
       -  For native recipes, the build system sets the variable to the
-         value of ``BUILD_PREFIX``.
+         value of :term:`BUILD_PREFIX`.
 
       -  For native SDK recipes (``nativesdk``), the build system sets the
          variable to the value of :term:`SDK_PREFIX`.
@@ -7778,7 +7845,7 @@ system and gives an overview of their function and contents.
       separate to avoid potential conflicts.
 
       In the ``defaultsetup.conf`` file, the default value of
-      ``TCLIBCAPPEND`` is "-${TCLIBC}". However, distros such as poky,
+      :term:`TCLIBCAPPEND` is "-${TCLIBC}". However, distros such as poky,
       which normally only support one ``libc`` variant, set
       :term:`TCLIBCAPPEND` to "" in their distro configuration file resulting
       in no suffix being applied.
@@ -7922,14 +7989,14 @@ system and gives an overview of their function and contents.
       your own tests to the list of tests by appending :term:`TEST_SUITES` as
       follows::
 
-         TEST_SUITES_append = " mytest"
+         TEST_SUITES:append = " mytest"
 
       Alternatively, you can
       provide the "auto" option to have all applicable tests run against
       the image.
       ::
 
-         TEST_SUITES_append = " auto"
+         TEST_SUITES:append = " auto"
 
       Using this option causes the
       build system to automatically run tests that are applicable to the
@@ -7960,7 +8027,7 @@ system and gives an overview of their function and contents.
       ``BaseTarget`` class, which is an abstract class that cannot be used
       as a value of :term:`TEST_TARGET`.
 
-      You can provide the following arguments with ``TEST_TARGET``:
+      You can provide the following arguments with :term:`TEST_TARGET`:
 
       -  *"qemu":* Boots a QEMU image and runs the tests. See the
          ":ref:`dev-manual/common-tasks:enabling runtime tests on qemu`" section
@@ -8190,7 +8257,7 @@ system and gives an overview of their function and contents.
       The BitBake configuration file (``meta/conf/bitbake.conf``) defines
       :term:`TUNE_FEATURES` as follows::
 
-         TUNE_FEATURES ??= "${TUNE_FEATURES_tune-${DEFAULTTUNE}}"
+         TUNE_FEATURES ??= "${TUNE_FEATURES:tune-${DEFAULTTUNE}}"
 
       See the :term:`DEFAULTTUNE` variable for more information.
 
@@ -8216,13 +8283,13 @@ system and gives an overview of their function and contents.
       the architecture, ABI, and tuning of output packages. The specific
       tune is defined using the "_tune" override as follows::
 
-         TUNE_PKGARCH_tune-tune = "tune"
+         TUNE_PKGARCH:tune-tune = "tune"
 
       These tune-specific package architectures are defined in the machine
       include files. Here is an example of the "core2-32" tuning as used in
-      the ``meta/conf/machine/include/tune-core2.inc`` file::
+      the ``meta/conf/machine/include/x86/tune-core2.inc`` file::
 
-         TUNE_PKGARCH_tune-core2-32 = "core2-32"
+         TUNE_PKGARCH:tune-core2-32 = "core2-32"
 
    :term:`TUNEABI`
       An underlying Application Binary Interface (ABI) used by a particular
@@ -8298,7 +8365,7 @@ system and gives an overview of their function and contents.
       In this example, "sd" is selected as the configuration of the possible four for the
       :term:`UBOOT_MACHINE`. The "sd" configuration defines
       "mx6qsabreauto_config" as the value for :term:`UBOOT_MACHINE`, while the
-      "sdcard" specifies the ``IMAGE_FSTYPES`` to use for the U-Boot image.
+      "sdcard" specifies the :term:`IMAGE_FSTYPES` to use for the U-Boot image.
 
       For more information on how the :term:`UBOOT_CONFIG` is handled, see the
       :ref:`uboot-config <ref-classes-uboot-config>`
@@ -8357,7 +8424,7 @@ system and gives an overview of their function and contents.
    :term:`UBOOT_MKIMAGE_DTCOPTS`
       Options for the device tree compiler passed to mkimage '-D'
       feature while creating FIT image in :ref:`kernel-fitimage <ref-classes-kernel-fitimage>` class.
-      If ``UBOOT_MKIMAGE_DTCOPTS`` is not set then kernel-fitimage will not
+      If :term:`UBOOT_MKIMAGE_DTCOPTS` is not set then kernel-fitimage will not
       pass the ``-D`` option to mkimage.
 
    :term:`UBOOT_MKIMAGE_SIGN`
@@ -8440,9 +8507,21 @@ system and gives an overview of their function and contents.
       install initscripts package them in the main package for the recipe,
       you rarely need to set this variable in individual recipes.
 
+   :term:`UPSTREAM_CHECK_COMMITS`
+      You can perform a per-recipe check for what the latest upstream
+      source code version is by calling ``devtool latest-version recipe``. If
+      the recipe source code is provided from Git repositories, but
+      releases are not identified by Git tags, set :term:`UPSTREAM_CHECK_COMMITS`
+      to ``1`` in the recipe, and the OpenEmbedded build system
+      will compare the latest commit with the one currently specified
+      by the recipe (:term:`SRCREV`).
+      ::
+
+         UPSTREAM_CHECK_COMMITS = "1"
+
    :term:`UPSTREAM_CHECK_GITTAGREGEX`
       You can perform a per-recipe check for what the latest upstream
-      source code version is by calling ``bitbake -c checkpkg`` recipe. If
+      source code version is by calling ``devtool latest-version recipe``. If
       the recipe source code is provided from Git repositories, the
       OpenEmbedded build system determines the latest upstream version by
       picking the latest tag from the list of all repository tags.
@@ -8465,7 +8544,7 @@ system and gives an overview of their function and contents.
 
    :term:`UPSTREAM_CHECK_URI`
       You can perform a per-recipe check for what the latest upstream
-      source code version is by calling ``bitbake -c checkpkg`` recipe. If
+      source code version is by calling ``devtool latest-version recipe``. If
       the source code is provided from tarballs, the latest version is
       determined by fetching the directory listing where the tarball is and
       attempting to find a later tarball. When this approach does not work,
@@ -8474,6 +8553,18 @@ system and gives an overview of their function and contents.
       ::
 
          UPSTREAM_CHECK_URI = "recipe_url"
+
+   :term:`UPSTREAM_VERSION_UNKNOWN`
+      You can perform a per-recipe check for what the latest upstream
+      source code version is by calling ``devtool latest-version recipe``.
+      If no combination of the :term:`UPSTREAM_CHECK_URI`, :term:`UPSTREAM_CHECK_REGEX`,
+      :term:`UPSTREAM_CHECK_GITTAGREGEX` and :term:`UPSTREAM_CHECK_COMMITS` variables in
+      the recipe allows to determine what the latest upstream version is,
+      you can set :term:`UPSTREAM_VERSION_UNKNOWN` to ``1`` in the recipe
+      to acknowledge that the check cannot be performed.
+      ::
+
+         UPSTREAM_VERSION_UNKNOWN = "1"
 
    :term:`USE_DEVFS`
       Determines if ``devtmpfs`` is used for ``/dev`` population. The
@@ -8502,11 +8593,11 @@ system and gives an overview of their function and contents.
    :term:`USER_CLASSES`
       A list of classes to globally inherit. These classes are used by the
       OpenEmbedded build system to enable extra features (e.g.
-      ``buildstats``, ``image-mklibs``, and so forth).
+      ``buildstats``, ``image-prelink``, and so forth).
 
       The default list is set in your ``local.conf`` file::
 
-         USER_CLASSES ?= "buildstats image-mklibs image-prelink"
+         USER_CLASSES ?= "buildstats image-prelink"
 
       For more information, see
       ``meta-poky/conf/local.conf.sample`` in the :term:`Source Directory`.
@@ -8589,7 +8680,7 @@ system and gives an overview of their function and contents.
 
       Here is an example from the ``dbus`` recipe::
 
-         USERADD_PARAM_${PN} = "--system --home ${localstatedir}/lib/dbus \
+         USERADD_PARAM:${PN} = "--system --home ${localstatedir}/lib/dbus \
                                 --no-create-home --shell /bin/false \
                                 --user-group messagebus"
 

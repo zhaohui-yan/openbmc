@@ -9,8 +9,8 @@ LICENSE = "MIT & BSD-3-Clause & BSD-2-Clause & PD"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=25cf44512b7bc8966a48b6b1a9b7605f"
 
 DEPENDS = "zlib virtual/crypt"
-RPROVIDES_${PN} = "ssh sshd"
-RCONFLICTS_${PN} = "openssh-sshd openssh"
+RPROVIDES:${PN} = "ssh sshd"
+RCONFLICTS:${PN} = "openssh-sshd openssh"
 
 DEPENDS += "${@bb.utils.contains('DISTRO_FEATURES', 'pam', 'libpam', '', d)}"
 
@@ -33,7 +33,7 @@ PAM_PLUGINS = "libpam-runtime \
 	pam-plugin-permit \
 	pam-plugin-unix \
 	"
-RDEPENDS_${PN} += "${@bb.utils.contains('DISTRO_FEATURES', 'pam', '${PAM_PLUGINS}', '', d)}"
+RDEPENDS:${PN} += "${@bb.utils.contains('DISTRO_FEATURES', 'pam', '${PAM_PLUGINS}', '', d)}"
 
 inherit autotools update-rc.d systemd
 
@@ -42,7 +42,7 @@ CVE_PRODUCT = "dropbear_ssh"
 INITSCRIPT_NAME = "dropbear"
 INITSCRIPT_PARAMS = "defaults 10"
 
-SYSTEMD_SERVICE_${PN} = "dropbear.socket"
+SYSTEMD_SERVICE:${PN} = "dropbear.socket"
 
 SBINCOMMANDS = "dropbear dropbearkey dropbearconvert"
 BINCOMMANDS = "dbclient ssh scp"
@@ -60,7 +60,7 @@ EXTRA_OECONF += "\
 EXTRA_OECONF += "--disable-harden"
 
 # musl does not implement wtmp/logwtmp APIs
-EXTRA_OECONF_append_libc-musl = " --disable-wtmp --disable-lastlog"
+EXTRA_OECONF:append:libc-musl = " --disable-wtmp --disable-lastlog"
 
 do_install() {
 	install -d ${D}${sysconfdir} \
@@ -97,24 +97,24 @@ do_install() {
 	fi
 
 	# deal with systemd unit files
-	install -d ${D}${systemd_unitdir}/system
-	install -m 0644 ${WORKDIR}/dropbearkey.service ${D}${systemd_unitdir}/system
-	install -m 0644 ${WORKDIR}/dropbear@.service ${D}${systemd_unitdir}/system
-	install -m 0644 ${WORKDIR}/dropbear.socket ${D}${systemd_unitdir}/system
+	install -d ${D}${systemd_system_unitdir}
+	install -m 0644 ${WORKDIR}/dropbearkey.service ${D}${systemd_system_unitdir}
+	install -m 0644 ${WORKDIR}/dropbear@.service ${D}${systemd_system_unitdir}
+	install -m 0644 ${WORKDIR}/dropbear.socket ${D}${systemd_system_unitdir}
 	sed -i -e 's,@BASE_BINDIR@,${base_bindir},g' \
 		-e 's,@BINDIR@,${bindir},g' \
 		-e 's,@SBINDIR@,${sbindir},g' \
-		${D}${systemd_unitdir}/system/dropbear.socket ${D}${systemd_unitdir}/system/*.service
+		${D}${systemd_system_unitdir}/dropbear.socket ${D}${systemd_system_unitdir}/*.service
 }
 
 inherit update-alternatives
 
 ALTERNATIVE_PRIORITY = "20"
-ALTERNATIVE_${PN} = "${@bb.utils.filter('BINCOMMANDS', 'scp ssh', d)}"
+ALTERNATIVE:${PN} = "${@bb.utils.filter('BINCOMMANDS', 'scp ssh', d)}"
 
 ALTERNATIVE_TARGET = "${sbindir}/dropbearmulti"
 
-pkg_postrm_append_${PN} () {
+pkg_postrm:${PN} () {
   if [ -f "${sysconfdir}/dropbear/dropbear_rsa_host_key" ]; then
         rm ${sysconfdir}/dropbear/dropbear_rsa_host_key
   fi
@@ -123,4 +123,4 @@ pkg_postrm_append_${PN} () {
   fi
 }
 
-FILES_${PN} += "${bindir}"
+FILES:${PN} += "${bindir}"

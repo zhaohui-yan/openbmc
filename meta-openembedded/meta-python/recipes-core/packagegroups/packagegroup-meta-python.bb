@@ -9,8 +9,8 @@ PACKAGES = ' \
 
 # Note that python3-cvxopt requires Fortran support. To enable this,
 # add the following to your local.conf:
-# FORTRAN_forcevariable = ",fortran"
-RDEPENDS_packagegroup-meta-python3 = "\
+# FORTRAN:forcevariable = ",fortran"
+RDEPENDS:packagegroup-meta-python3 = "\
     ${@bb.utils.contains("DISTRO_FEATURES", "systemd", "python3-systemd", "", d)} \
     ${@bb.utils.contains("DISTRO_FEATURES", "x11", "python3-blivetgui", "", d)} \
     gyp \
@@ -34,6 +34,7 @@ RDEPENDS_packagegroup-meta-python3 = "\
     python3-arpeggio \
     python3-asciitree \
     python3-asn1crypto \
+    python3-aspectlib \
     python3-astor \
     python3-astroid \
     python3-asttokens \
@@ -58,6 +59,7 @@ RDEPENDS_packagegroup-meta-python3 = "\
     python3-blivet \
     python3-booleanpy \
     python3-cachecontrol \
+    python3-cached-property \
     python3-cachetools \
     python3-can \
     python3-cantools \
@@ -114,10 +116,13 @@ RDEPENDS_packagegroup-meta-python3 = "\
     python3-engineio \
     python3-et-xmlfile \
     python3-evdev \
+    python3-execnet \
     python3-fann2 \
     python3-fasteners \
+    python3-fastjsonschema \
     python3-fastnumbers \
     python3-feedformatter \
+    python3-fields \
     python3-flask \
     python3-flask-babel \
     python3-flask-bootstrap \
@@ -141,6 +146,7 @@ RDEPENDS_packagegroup-meta-python3 = "\
     python3-future \
     python3-gast \
     python3-geojson \
+    python3-geomet \
     python3-gevent \
     python3-gmpy2 \
     python3-gmqtt \
@@ -192,6 +198,7 @@ RDEPENDS_packagegroup-meta-python3 = "\
     python3-jdcal \
     python3-jedi \
     python3-jmespath \
+    python3-joblib \
     python3-jsmin \
     python3-jsonpatch \
     python3-jsonpath-rw \
@@ -203,6 +210,7 @@ RDEPENDS_packagegroup-meta-python3 = "\
     python3-kconfiglib \
     python3-keras-applications \
     python3-keras-preprocessing \
+    ${@bb.utils.contains("DISTRO_FEATURES", "x11 opengl", "python3-kivy", "", d)} \
     python3-kiwisolver \
     python3-langtable \
     python3-lazy-object-proxy \
@@ -265,21 +273,25 @@ RDEPENDS_packagegroup-meta-python3 = "\
     python3-pika \
     python3-pillow \
     python3-pint \
+    python3-pkcs11 \
     python3-pkgconfig \
     python3-ply \
     python3-pocketsphinx \
     python3-polyline \
+    python3-portalocker \
     python3-prctl \
     python3-precise-runner \
     python3-pretend \
     python3-prettytable \
     python3-priority \
+    python3-process-tests \
     python3-progress \
     python3-prompt-toolkit \
     python3-protobuf \
     python3-psutil \
     python3-ptyprocess \
     python3-pulsectl \
+    python3-py-cpuinfo \
     python3-py-ubjson \
     python3-pyalsaaudio \
     python3-pyasn1 \
@@ -332,10 +344,13 @@ RDEPENDS_packagegroup-meta-python3 = "\
     python3-pystache \
     python3-pystemd \
     python3-pytest-asyncio \
+    python3-pytest-benchmark \
+    python3-pytest-cache \
     python3-pytest-helpers-namespace \
     python3-pytest-html \
     python3-pytest-metadata \
     python3-pytest-runner \
+    python3-pytest-subtests \
     python3-pytest-tempdir \
     python3-pytest-timeout \
     python3-pythonping \
@@ -455,9 +470,9 @@ RDEPENDS_packagegroup-meta-python3 = "\
     python3-zopeinterface \
     telepathy-python3 \
 "
-RDEPENDS_packagegroup-meta-python3_remove_libc-musl_powerpc64le = "python3-grpcio python3-grpcio-tools"
+RDEPENDS:packagegroup-meta-python3:remove:libc-musl:powerpc64le = "python3-grpcio python3-grpcio-tools"
 
-RDEPENDS_packagegroup-meta-python3-ptest = "\
+RDEPENDS:packagegroup-meta-python3-ptest = "\
     python3-cryptography-ptest \
     python3-jinja2-ptest \
     python3-markupsafe-ptest \

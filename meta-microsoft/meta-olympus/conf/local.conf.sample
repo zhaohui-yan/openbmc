@@ -103,8 +103,8 @@ DISTRO ?= "openbmc-phosphor"
 #  - 'package_ipk' for ipk files are used by opkg (a debian style embedded package manager)
 #  - 'package_rpm' for rpm style packages
 # E.g.: PACKAGE_CLASSES ?= "package_rpm package_deb package_ipk"
-# We default to rpm:
-PACKAGE_CLASSES ?= "package_rpm"
+# We default to ipk:
+PACKAGE_CLASSES ?= "package_ipk"
 
 #
 # SDK/ADT target architecture
@@ -237,8 +237,4 @@ PACKAGECONFIG_append_pn-nativesdk-qemu = " sdl"
 CONF_VERSION = "1"
 
 # Set the root password to '0penBmc'
-INHERIT += "extrausers"
-
-EXTRA_USERS_PARAMS = " \
-  usermod -p '\$1\$UGMqyqdG\$FZiylVFmRRfl9Z0Ue8G7e/' root; \
-  "
+# Defaults from meta-phosphor/conf/distro/include/phosphor-defaults.inc

@@ -1,2 +1,2 @@
-# Enable threshold monitoring
-EXTRA_OECMAKE_append_kudo = " -DSEL_LOGGER_MONITOR_THRESHOLD_EVENTS=ON"
+# Enable threshold, pulse, and watchdog monitoring
+PACKAGECONFIG:append:kudo = " log-threshold log-pulse log-watchdog clears-sel"

@@ -16,15 +16,15 @@ SRC_URI = "git://github.com/kronosnet/kronosnet;protocol=https;branch=stable1"
 
 UPSTREAM_CHECK_URI = "https://github.com/kronosnet/kronosnet/releases"
 
-inherit autotools
+inherit autotools pkgconfig
 
 S = "${WORKDIR}/git"
 
 # libknet/transport_udp.c:326:48: error: comparison of integers of different signs: 'unsigned long' and 'int' [-Werror,-Wsign-compare]
 # for (cmsg = CMSG_FIRSTHDR(&msg);cmsg; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
 #                                                             ^~~~~~~~~~~~~~~~~~~~~~~
-CFLAGS_append_toolchain-clang = " -Wno-sign-compare"
+CFLAGS:append:toolchain-clang = " -Wno-sign-compare"
 
 PACKAGECONFIG[man] = "enable_man="yes", --disable-man, "
 
-PACKAGECONFIG_remove = "man"
+PACKAGECONFIG:remove = "man"

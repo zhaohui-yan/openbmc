@@ -1,4 +1,4 @@
-pkg_postinst_${PN}-obmc-targets_append() {
+pkg_postinst:${PN}-obmc-targets:append() {
 
     mkdir -p $D$systemd_system_unitdir/multi-user.target.requires
     LINK="$D$systemd_system_unitdir/multi-user.target.requires/obmc-host-reset@0.target"
@@ -7,6 +7,11 @@ pkg_postinst_${PN}-obmc-targets_append() {
 
     LINK="$D$systemd_system_unitdir/multi-user.target.requires/phosphor-discover-system-state@0.service"
     TARGET="../phosphor-discover-system-state@.service"
+    ln -s $TARGET $LINK
+
+    mkdir -p $D$systemd_system_unitdir/obmc-chassis-poweron@0.target.wants
+    LINK="$D$systemd_system_unitdir/obmc-chassis-poweron@0.target.wants/phosphor-reset-host-recovery@0.service"
+    TARGET="../phosphor-reset-host-recovery@.service"
     ln -s $TARGET $LINK
 
     mkdir -p $D$systemd_system_unitdir/obmc-host-start@0.target.requires
@@ -29,14 +34,6 @@ pkg_postinst_${PN}-obmc-targets_append() {
     ln -s $TARGET $LINK
 
     mkdir -p $D$systemd_system_unitdir/obmc-host-reset@0.target.requires
-    LINK="$D$systemd_system_unitdir/obmc-host-reset@0.target.requires/phosphor-reset-host-check@0.service"
-    TARGET="../phosphor-reset-host-check@.service"
-    ln -s $TARGET $LINK
-
-    LINK="$D$systemd_system_unitdir/obmc-host-reset@0.target.requires/phosphor-reset-sensor-states@0.service"
-    TARGET="../phosphor-reset-sensor-states@.service"
-    ln -s $TARGET $LINK
-
     LINK="$D$systemd_system_unitdir/obmc-host-reset@0.target.requires/phosphor-reset-host-running@0.service"
     TARGET="../phosphor-reset-host-running@.service"
     ln -s $TARGET $LINK
@@ -89,12 +86,15 @@ pkg_postinst_${PN}-obmc-targets_append() {
     ln -s $TARGET $LINK
 }
 
-pkg_prerm_${PN}-obmc-targets_append() {
+pkg_prerm:${PN}-obmc-targets:append() {
 
     LINK="$D$systemd_system_unitdir/multi-user.target.requires/obmc-host-reset@0.target"
     rm $LINK
 
     LINK="$D$systemd_system_unitdir/multi-user.target.requires/phosphor-discover-system-state@0.service"
+    rm $LINK
+
+    LINK="$D$systemd_system_unitdir/obmc-chassis-poweron@0.target.wants/phosphor-reset-host-recovery@0.service"
     rm $LINK
 
     LINK="$D$systemd_system_unitdir/obmc-host-start@0.target.requires/obmc-host-startmin@0.target"
@@ -107,12 +107,6 @@ pkg_prerm_${PN}-obmc-targets_append() {
     rm $LINK
 
     LINK="$D$systemd_system_unitdir/obmc-host-stop@0.target.wants/phosphor-set-host-transition-to-off@0.service"
-    rm $LINK
-
-    LINK="$D$systemd_system_unitdir/obmc-host-reset@0.target.requires/phosphor-reset-host-check@0.service"
-    rm $LINK
-
-    LINK="$D$systemd_system_unitdir/obmc-host-reset@0.target.requires/phosphor-reset-sensor-states@0.service"
     rm $LINK
 
     LINK="$D$systemd_system_unitdir/obmc-host-stop@0.target.wants/phosphor-reset-sensor-states@0.service"

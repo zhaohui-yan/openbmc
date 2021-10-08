@@ -6,20 +6,24 @@ LICENSE = "MIT"
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=9e2ce3b3c4c0f2670883a23bbd7c37a9"
 
-SRC_URI = "${SOURCEFORGE_MIRROR}/expat/expat-${PV}.tar.bz2 \
+VERSION_TAG = "${@d.getVar('PV').replace('.', '_')}"
+
+SRC_URI = "https://github.com/libexpat/libexpat/releases/download/R_${VERSION_TAG}/expat-${PV}.tar.bz2  \
            file://libtool-tag.patch \
            file://run-ptest \
            "
 
+UPSTREAM_CHECK_URI = "https://github.com/libexpat/libexpat/releases/"
+
 SRC_URI[sha256sum] = "2f9b6a580b94577b150a7d5617ad4643a4301a6616ff459307df3e225bcfbf40"
 
-EXTRA_OECMAKE_class-native += "-DEXPAT_BUILD_DOCS=OFF"
+EXTRA_OECMAKE:class-native += "-DEXPAT_BUILD_DOCS=OFF"
 
-RDEPENDS_${PN}-ptest += "bash"
+RDEPENDS:${PN}-ptest += "bash"
 
 inherit cmake lib_package ptest
 
-do_install_ptest_class-target() {
+do_install_ptest:class-target() {
 	install -m 755 ${B}/tests/* ${D}${PTEST_PATH}
 }
 

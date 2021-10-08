@@ -13,9 +13,9 @@ S = "${WORKDIR}/git"
 
 DEPENDS += "virtual/libx11 virtual/libgl libxcb xcb-util-keysyms vim-native"
 
-RDEPENDS_${PN} = "libxcb xcb-util-keysyms"
+RDEPENDS:${PN} = "libxcb xcb-util-keysyms"
 
-inherit cmake python3native features_check
+inherit cmake pkgconfig python3native features_check
 
 REQUIRED_DISTRO_FEATURES = "x11 opengl"
 
@@ -34,5 +34,5 @@ EXTRA_OECMAKE += "\
     -DCMAKE_BUILD_TYPE=Release \
 "
 
-FILES_${PN} += "${libdir}"
-FILES_${PN}-dev = "${includedir}"
+FILES:${PN} += "${libdir}"
+FILES:${PN}-dev = "${includedir}"

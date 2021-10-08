@@ -116,7 +116,7 @@ It's useful to have some idea of how the tasks defined by the
 
 -  :ref:`ref-tasks-compile` - Runs ``make`` with
    arguments that specify the compiler and linker. You can pass
-   additional arguments through the ``EXTRA_OEMAKE`` variable.
+   additional arguments through the :term:`EXTRA_OEMAKE` variable.
 
 -  :ref:`ref-tasks-install` - Runs ``make install`` and
    passes in ``${``\ :term:`D`\ ``}`` as ``DESTDIR``.
@@ -404,6 +404,22 @@ cross-compilation tools used for building SDKs. See the
 section in the Yocto Project Overview and Concepts Manual for more
 discussion on these cross-compilation tools.
 
+.. _ref-classes-cve-check:
+
+``cve-check.bbclass``
+=====================
+
+The ``cve-check`` class looks for known CVEs (Common Vulnerabilities
+and Exposures) while building an image. This class is meant to be
+inherited globally from a configuration file::
+
+   INHERIT += "cve-check"
+
+You can also look for vulnerabilities in specific packages by passing
+``-c cve_check`` to BitBake. You will find details in the
+":ref:`dev-manual/common-tasks:checking for vulnerabilities`"
+section in the Development Tasks Manual.
+
 .. _ref-classes-debian:
 
 ``debian.bbclass``
@@ -456,8 +472,8 @@ recipe that fetches from an alternative URI (e.g. Git) instead of a
 tarball. Following is an example::
 
    BBCLASSEXTEND = "devupstream:target"
-   SRC_URI_class-devupstream = "git://git.example.com/example"
-   SRCREV_class-devupstream = "abcd1234"
+   SRC_URI:class-devupstream = "git://git.example.com/example"
+   SRCREV:class-devupstream = "abcd1234"
 
 Adding the above statements to your recipe creates a variant that has
 :term:`DEFAULT_PREFERENCE` set to "-1".
@@ -465,8 +481,8 @@ Consequently, you need to select the variant of the recipe to use it.
 Any development-specific adjustments can be done by using the
 ``class-devupstream`` override. Here is an example::
 
-   DEPENDS_append_class-devupstream = " gperf-native"
-   do_configure_prepend_class-devupstream() {
+   DEPENDS:append:class-devupstream = " gperf-native"
+   do_configure:prepend:class-devupstream() {
        touch ${S}/README
    }
 
@@ -527,7 +543,7 @@ which the OpenEmbedded build system places the generated objects built
 from the recipes. By default, the :term:`B` directory is set to the
 following, which is separate from the source directory (:term:`S`)::
 
-   ${WORKDIR}/${BPN}/{PV}/
+   ${WORKDIR}/${BPN}-{PV}/
 
 See these variables for more information:
 :term:`WORKDIR`, :term:`BPN`, and
@@ -846,7 +862,7 @@ sure that all builders start with the same sstate signatures. After
 inheriting the class, you can then disable the feature by setting the
 :term:`ICECC_DISABLED` variable to "1" as follows::
 
-   INHERIT_DISTRO_append = " icecc"
+   INHERIT_DISTRO:append = " icecc"
    ICECC_DISABLED ??= "1"
 
 This practice
@@ -932,20 +948,6 @@ specified by :term:`EFI_PROVIDER` if
 Normally, you do not use this class directly. Instead, you add "live" to
 :term:`IMAGE_FSTYPES`.
 
-.. _ref-classes-image-mklibs:
-
-``image-mklibs.bbclass``
-========================
-
-The ``image-mklibs`` class enables the use of the ``mklibs`` utility
-during the :ref:`ref-tasks-rootfs` task, which optimizes
-the size of libraries contained in the image.
-
-By default, the class is enabled in the ``local.conf.template`` using
-the :term:`USER_CLASSES` variable as follows::
-
-   USER_CLASSES ?= "buildstats image-mklibs image-prelink"
-
 .. _ref-classes-image-prelink:
 
 ``image-prelink.bbclass``
@@ -959,7 +961,7 @@ time.
 By default, the class is enabled in the ``local.conf.template`` using
 the :term:`USER_CLASSES` variable as follows::
 
-   USER_CLASSES ?= "buildstats image-mklibs image-prelink"
+   USER_CLASSES ?= "buildstats image-prelink"
 
 .. _ref-classes-insane:
 
@@ -988,14 +990,14 @@ the check for symbolic link ``.so`` files in the main package of a
 recipe, add the following to the recipe. You need to realize that the
 package name override, in this example ``${PN}``, must be used::
 
-   INSANE_SKIP_${PN} += "dev-so"
+   INSANE_SKIP:${PN} += "dev-so"
 
 Please keep in mind that the QA checks
 are meant to detect real or potential problems in the packaged
 output. So exercise caution when disabling these checks.
 
 Here are the tests you can list with the :term:`WARN_QA` and
-``ERROR_QA`` variables:
+:term:`ERROR_QA` variables:
 
 -  ``already-stripped:`` Checks that produced binaries have not
    already been stripped prior to the build system extracting debug
@@ -1030,7 +1032,7 @@ Here are the tests you can list with the :term:`WARN_QA` and
    adds a dependency on the ``initscripts-functions`` package to
    packages that install an initscript that refers to
    ``/etc/init.d/functions``. The recipe should really have an explicit
-   ``RDEPENDS`` for the package in question on ``initscripts-functions``
+   :term:`RDEPENDS` for the package in question on ``initscripts-functions``
    so that the OpenEmbedded build system is able to ensure that the
    ``initscripts`` recipe is actually built and thus the
    ``initscripts-functions`` package is made available.
@@ -1196,11 +1198,11 @@ Here are the tests you can list with the :term:`WARN_QA` and
    its :term:`PN` value matches something already in :term:`OVERRIDES` (e.g.
    :term:`PN` happens to be the same as :term:`MACHINE` or
    :term:`DISTRO`), it can have unexpected consequences.
-   For example, assignments such as ``FILES_${PN} = "xyz"`` effectively
+   For example, assignments such as ``FILES:${PN} = "xyz"`` effectively
    turn into ``FILES = "xyz"``.
 
 -  ``rpaths:`` Checks for rpaths in the binaries that contain build
-   system paths such as ``TMPDIR``. If this test fails, bad ``-rpath``
+   system paths such as :term:`TMPDIR`. If this test fails, bad ``-rpath``
    options are being passed to the linker commands and your binaries
    have potential security issues.
 
@@ -1222,7 +1224,7 @@ Here are the tests you can list with the :term:`WARN_QA` and
 
 -  ``unlisted-pkg-lics:`` Checks that all declared licenses applying
    for a package are also declared on the recipe level (i.e. any license
-   in ``LICENSE_*`` should appear in :term:`LICENSE`).
+   in ``LICENSE:*`` should appear in :term:`LICENSE`).
 
 -  ``useless-rpaths:`` Checks for dynamic library load paths (rpaths)
    in the binaries that by default on a standard system are searched by
@@ -1273,7 +1275,7 @@ themselves.
 
 The ``kernel`` class handles building Linux kernels. The class contains
 code to build all kernel trees. All needed headers are staged into the
-``STAGING_KERNEL_DIR`` directory to allow out-of-tree module builds
+:term:`STAGING_KERNEL_DIR` directory to allow out-of-tree module builds
 using the :ref:`module <ref-classes-module>` class.
 
 This means that each built kernel module is packaged separately and
@@ -1619,7 +1621,7 @@ a couple different ways:
       BBCLASSEXTEND = "native"
 
    Inside the
-   recipe, use ``_class-native`` and ``_class-target`` overrides to
+   recipe, use ``:class-native`` and ``:class-target`` overrides to
    specify any functionality specific to the respective native or target
    case.
 
@@ -1650,7 +1652,7 @@ couple different ways:
        BBCLASSEXTEND = "nativesdk"
 
    Inside the
-   recipe, use ``_class-nativesdk`` and ``_class-target`` overrides to
+   recipe, use ``:class-nativesdk`` and ``:class-target`` overrides to
    specify any functionality specific to the respective SDK machine or
    target case.
 
@@ -1707,6 +1709,55 @@ are never actually used within OE-Core itself. The ``oelint`` class is
 one such example. However, being aware of this class can reduce the
 proliferation of different versions of similar classes across multiple
 layers.
+
+.. _ref-classes-overlayfs:
+
+``overlayfs.bbclass``
+=======================
+
+It's often desired in Embedded System design to have a read-only rootfs.
+But a lot of different applications might want to have read-write access to
+some parts of a filesystem. It can be especially useful when your update mechanism
+overwrites the whole rootfs, but you may want your application data to be preserved
+between updates. The :ref:`overlayfs <ref-classes-overlayfs>` class provides a way
+to achieve that by means of ``overlayfs`` and at the same time keeping the base
+rootfs read-only.
+
+To use this class, set a mount point for a partition ``overlayfs`` is going to use as upper
+layer in your machine configuration. The underlying file system can be anything that
+is supported by ``overlayfs``. This has to be done in your machine configuration::
+
+  OVERLAYFS_MOUNT_POINT[data] = "/data"
+
+.. note::
+
+  * QA checks fail to catch file existence if you redefine this variable in your recipe!
+  * Only the existence of the systemd mount unit file is checked, not its contents.
+  * To get more details on ``overlayfs``, its internals and supported operations, please refer
+    to the official documentation of the `Linux kernel <https://www.kernel.org/doc/html/latest/filesystems/overlayfs.html>`_.
+
+The class assumes you have a ``data.mount`` systemd unit defined elsewhere in your BSP
+(e.g. in ``systemd-machine-units`` recipe) and it's installed into the image.
+
+Then you can specify writable directories on a recipe basis (e.g. in my-application.bb)::
+
+  OVERLAYFS_WRITABLE_PATHS[data] = "/usr/share/my-custom-application"
+
+To support several mount points you can use a different variable flag. Assuming we
+want to have a writable location on the file system, but do not need that the data
+survives a reboot, then we could have a ``mnt-overlay.mount`` unit for a ``tmpfs`` file system.
+
+In your machine configuration::
+
+  OVERLAYFS_MOUNT_POINT[mnt-overlay] = "/mnt/overlay"
+
+and then in your recipe::
+
+  OVERLAYFS_WRITABLE_PATHS[mnt-overlay] = "/usr/share/another-application"
+
+.. note::
+
+   The class does not support the ``/etc`` directory itself, because ``systemd`` depends on it.
 
 .. _ref-classes-own-mirrors:
 
@@ -2495,7 +2546,7 @@ indicate the package to which the value applies. If the value applies to
 the recipe's main package, use ``${``\ :term:`PN`\ ``}``. Here
 is an example from the connman recipe::
 
-   SYSTEMD_SERVICE_${PN} = "connman.service"
+   SYSTEMD_SERVICE:${PN} = "connman.service"
 
 Services are set up to start on boot automatically
 unless you have set

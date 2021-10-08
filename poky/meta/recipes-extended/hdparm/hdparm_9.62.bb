@@ -4,10 +4,11 @@ DESCRIPTION = "hdparm is a Linux shell utility for viewing \
 and manipulating various IDE drive and driver parameters."
 SECTION = "console/utils"
 
-LICENSE = "BSD & GPLv2"
-LICENSE_${PN} = "BSD"
-LICENSE_${PN}-dbg = "BSD"
-LICENSE_wiper = "GPLv2"
+LICENSE = "BSD-2-Clause & GPLv2 & hdparm"
+LICENSE:${PN} = "BSD-2-Clause & hdparm"
+LICENSE:${PN}-dbg = "BSD-2-Clause & hdparm"
+LICENSE:wiper = "GPLv2"
+NO_GENERIC_LICENSE[hdparm] = "LICENSE.TXT"
 
 LIC_FILES_CHKSUM = "file://LICENSE.TXT;md5=495d03e50dc6c89d6a30107ab0df5b03 \
                     file://debian/copyright;md5=a82d7ba3ade9e8ec902749db98c592f3 \
@@ -17,9 +18,9 @@ LIC_FILES_CHKSUM = "file://LICENSE.TXT;md5=495d03e50dc6c89d6a30107ab0df5b03 \
 
 PACKAGES =+ "wiper"
 
-FILES_wiper = "${bindir}/wiper.sh"
+FILES:wiper = "${bindir}/wiper.sh"
 
-RDEPENDS_wiper = "bash gawk coreutils"
+RDEPENDS:wiper = "bash gawk coreutils"
 
 SRC_URI = "${SOURCEFORGE_MIRROR}/hdparm/${BP}.tar.gz \
            file://wiper.sh-fix-stat-path.patch \
@@ -31,7 +32,7 @@ EXTRA_OEMAKE = 'STRIP="echo" LDFLAGS="${LDFLAGS}"'
 
 inherit update-alternatives
 
-ALTERNATIVE_${PN} = "hdparm"
+ALTERNATIVE:${PN} = "hdparm"
 ALTERNATIVE_LINK_NAME[hdparm] = "${base_sbindir}/hdparm"
 ALTERNATIVE_PRIORITY = "100"
 

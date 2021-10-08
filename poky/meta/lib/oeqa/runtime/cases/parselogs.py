@@ -59,6 +59,7 @@ common_errors = [
     "Failed to process device, ignoring: Device or resource busy",
     "Cannot find a map file",
     "[rdrand]: Initialization Failed",
+    "[rndr  ]: Initialization Failed",
     "[pulseaudio] authkey.c: Failed to open cookie file",
     "[pulseaudio] authkey.c: Failed to load authentication key",
     ]
@@ -90,6 +91,7 @@ qemux86_common = [
     "glamor initialization failed",
     "blk_update_request: I/O error, dev fd0, sector 0 op 0x0:(READ)",
     "floppy: error",
+    'failed to IDENTIFY (I/O error, err_mask=0x4)',
 ] + common_errors
 
 ignore_errors = {
@@ -121,7 +123,7 @@ ignore_errors = {
         'synth uevent: /devices/vio: failed to send uevent',
         'PCI 0000:00 Cannot reserve Legacy IO [io  0x10000-0x10fff]',
         ] + common_errors,
-    'qemuarm' : [
+    'qemuarmv5' : [
         'mmci-pl18x: probe of fpga:05 failed with error -22',
         'mmci-pl18x: probe of fpga:0b failed with error -22',
         'Failed to load module "glx"',
@@ -135,6 +137,7 @@ ignore_errors = {
         'OF: amba_device_add() failed (-19) for /amba/fpga/sci@a000',
         'Failed to initialize \'/amba/timer@101e3000\': -22',
         'jitterentropy: Initialization failed with host not compliant with requirements: 2',
+        'clcd-pl11x: probe of 10120000.display failed with error -2',
         ] + common_errors,
     'qemuarm64' : [
         'Fatal server error:',

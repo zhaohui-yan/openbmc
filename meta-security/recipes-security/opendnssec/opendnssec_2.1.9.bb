@@ -1,6 +1,6 @@
 SUMMARY = "OpenDNSSEC is a policy-based zone signer that automates the process of keeping track of DNSSEC keys and the signing of zones"
 
-LICENSE = "BSD"
+LICENSE = "BSD-2-Clause"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=b041dbe2da80d4efd951393fbba90937"
 
 DEPENDS = "libxml2 openssl ldns libmicrohttpd jansson libyaml "
@@ -27,8 +27,8 @@ PACKAGECONFIG[mysql] = "--with-mysql=yes, , mariadb, mariadb"
 PACKAGECONFIG[readline]  = "--with-readline, --without-readline, readline"
 PACKAGECONFIG[unwind] = "--with-libunwind, --without-libunwind"
 
-do_install_append () {
+do_install:append () {
     rm -rf ${D}${localstatedir}/run
 }
 
-RDEPENDS_${PN} = "softhsm"
+RDEPENDS:${PN} = "softhsm"

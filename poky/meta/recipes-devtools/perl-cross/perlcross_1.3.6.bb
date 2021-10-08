@@ -17,6 +17,7 @@ SRC_URI = "https://github.com/arsv/perl-cross/releases/download/${PV}/perl-cross
            file://0001-configure_path.sh-do-not-hardcode-prefix-lib-as-libr.patch \
            file://determinism.patch \
            file://0001-cnf-configure_func_sel.sh-disable-thread_safe_nl_lan.patch \
+           file://0001-Makefile-check-the-file-if-patched-or-not.patch \
            "
 UPSTREAM_CHECK_URI = "https://github.com/arsv/perl-cross/releases/"
 
@@ -30,7 +31,7 @@ do_configure () {
 do_compile () {
 }
 
-do_install_class-native() {
+do_install:class-native() {
     mkdir -p ${D}/${datadir}/perl-cross/
     cp -rf ${S}/* ${D}/${datadir}/perl-cross/
 }

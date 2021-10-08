@@ -14,8 +14,8 @@ Normal Recipe Build Tasks
 
 The following sections describe normal tasks associated with building a
 recipe. For more information on tasks and dependencies, see the
-":ref:`Tasks <bitbake:bitbake-user-manual/bitbake-user-manual-metadata:tasks>`" and
-":ref:`Dependencies <bitbake:bitbake-user-manual/bitbake-user-manual-execution:dependencies>`" sections in the
+":ref:`bitbake:bitbake-user-manual/bitbake-user-manual-metadata:tasks`" and
+":ref:`bitbake:bitbake-user-manual/bitbake-user-manual-execution:dependencies`" sections in the
 BitBake User Manual.
 
 .. _ref-tasks-build:
@@ -437,37 +437,6 @@ Manually Called Tasks
 
 These tasks are typically manually triggered (e.g. by using the
 ``bitbake -c`` command-line option):
-
-.. _ref-tasks-checkpkg:
-
-``do_checkpkg``
----------------
-
-Provides information about the recipe including its upstream version and
-status. The upstream version and status reveals whether or not a version
-of the recipe exists upstream and a status of not updated, updated, or
-unknown.
-
-To check the upstream version and status of a recipe, use the following
-devtool commands::
-
-   $ devtool latest-version
-   $ devtool check-upgrade-status
-
-See the ":ref:`ref-manual/devtool-reference:\`\`devtool\`\` quick reference`"
-chapter for more information on
-``devtool``. See the ":ref:`devtool-checking-on-the-upgrade-status-of-a-recipe`"
-section for information on checking the upgrade status of a recipe.
-
-To build the ``checkpkg`` task, use the ``bitbake`` command with the
-"-c" option and task name::
-
-   $ bitbake core-image-minimal -c checkpkg
-
-By default, the results are stored in :term:`$LOG_DIR <LOG_DIR>` (e.g.
-``$BUILD_DIR/tmp/log``).
-
-.. _ref-tasks-checkuri:
 
 ``do_checkuri``
 ---------------

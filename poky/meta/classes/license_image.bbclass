@@ -1,5 +1,15 @@
 ROOTFS_LICENSE_DIR = "${IMAGE_ROOTFS}/usr/share/common-licenses"
 
+# This requires LICENSE_CREATE_PACKAGE=1 to work too
+COMPLEMENTARY_GLOB[lic-pkgs] = "*-lic"
+
+python() {
+    if not oe.data.typed_value('LICENSE_CREATE_PACKAGE', d):
+        features = set(oe.data.typed_value('IMAGE_FEATURES', d))
+        if 'lic-pkgs' in features:
+            bb.error("'lic-pkgs' in IMAGE_FEATURES but LICENSE_CREATE_PACKAGE not enabled to generate -lic packages")
+}
+
 python write_package_manifest() {
     # Get list of installed packages
     license_image_dir = d.expand('${LICENSE_DIRECTORY}/${IMAGE_NAME}')
@@ -29,7 +39,7 @@ python license_create_manifest() {
 
         pkg_dic[pkg_name] = oe.packagedata.read_pkgdatafile(pkg_info)
         if not "LICENSE" in pkg_dic[pkg_name].keys():
-            pkg_lic_name = "LICENSE_" + pkg_name
+            pkg_lic_name = "LICENSE:" + pkg_name
             pkg_dic[pkg_name]["LICENSE"] = pkg_dic[pkg_name][pkg_lic_name]
 
     rootfs_license_manifest = os.path.join(d.getVar('LICENSE_DIRECTORY'),
@@ -77,7 +87,7 @@ def write_license_files(d, license_manifest, pkg_dic, rootfs=True):
                 # If the package doesn't contain any file, that is, its size is 0, the license
                 # isn't relevant as far as the final image is concerned. So doing license check
                 # doesn't make much sense, skip it.
-                if pkg_dic[pkg]["PKGSIZE_%s" % pkg] == "0":
+                if pkg_dic[pkg]["PKGSIZE:%s" % pkg] == "0":
                     continue
             else:
                 # Image manifest
@@ -259,7 +269,7 @@ def get_deployed_files(man_file):
             dep_files.append(os.path.basename(f))
     return dep_files
 
-ROOTFS_POSTPROCESS_COMMAND_prepend = "write_package_manifest; license_create_manifest; "
+ROOTFS_POSTPROCESS_COMMAND:prepend = "write_package_manifest; license_create_manifest; "
 do_rootfs[recrdeptask] += "do_populate_lic"
 
 python do_populate_lic_deploy() {

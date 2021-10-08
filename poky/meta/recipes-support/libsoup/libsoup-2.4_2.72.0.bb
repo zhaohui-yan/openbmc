@@ -7,7 +7,7 @@ SECTION = "x11/gnome/libs"
 LICENSE = "LGPLv2"
 LIC_FILES_CHKSUM = "file://COPYING;md5=5f30f0716dfdd0d91eb439ebec522ec2"
 
-DEPENDS = "glib-2.0 glib-2.0-native libxml2 sqlite3 intltool-native libpsl"
+DEPENDS = "glib-2.0 glib-2.0-native libxml2 sqlite3 libpsl"
 
 SHRT_VER = "${@d.getVar('PV').split('.')[0]}.${@d.getVar('PV').split('.')[1]}"
 
@@ -28,7 +28,7 @@ PACKAGECONFIG ??= ""
 PACKAGECONFIG[gnome] = "-Dgnome=true,-Dgnome=false"
 PACKAGECONFIG[gssapi] = "-Dgssapi=enabled,-Dgssapi=disabled,krb5"
 
-EXTRA_OEMESON_append = " -Dvapi=disabled -Dtls_check=false"
+EXTRA_OEMESON:append = " -Dvapi=disabled -Dtls_check=false"
 
 GTKDOC_MESON_OPTION = "gtk_doc"
 
@@ -36,9 +36,9 @@ GTKDOC_MESON_OPTION = "gtk_doc"
 # and will therefore become subject to renaming by debian.bbclass. Prevent
 # renaming in order to keep the package name consistent regardless of whether
 # gnome support is enabled or disabled.
-DEBIAN_NOAUTONAME_${PN} = "1"
+DEBIAN_NOAUTONAME:${PN} = "1"
 
 # glib-networking is needed for SSL, proxies, etc.
-RRECOMMENDS_${PN} = "glib-networking"
+RRECOMMENDS:${PN} = "glib-networking"
 
 BBCLASSEXTEND = "native nativesdk"

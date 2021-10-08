@@ -17,6 +17,8 @@ SRC_URI = "git://github.com/facebook/zstd.git;branch=release \
 SRCREV = "a488ba114ec17ea1054b9057c26a046fc122b3b6"
 UPSTREAM_CHECK_GITTAGREGEX = "v(?P<pver>\d+(\.\d+)+)"
 
+CVE_PRODUCT = "zstandard"
+
 S = "${WORKDIR}/git"
 
 PACKAGECONFIG ??= ""
@@ -29,10 +31,12 @@ ZSTD_LEGACY_SUPPORT ??= "4"
 
 do_compile () {
     oe_runmake ${PACKAGECONFIG_CONFARGS} ZSTD_LEGACY_SUPPORT=${ZSTD_LEGACY_SUPPORT}
+    oe_runmake ${PACKAGECONFIG_CONFARGS} ZSTD_LEGACY_SUPPORT=${ZSTD_LEGACY_SUPPORT} -C contrib/pzstd
 }
 
 do_install () {
     oe_runmake install 'DESTDIR=${D}'
+    oe_runmake install 'DESTDIR=${D}' PREFIX=${prefix} -C contrib/pzstd
 }
 
 BBCLASSEXTEND = "native nativesdk"
