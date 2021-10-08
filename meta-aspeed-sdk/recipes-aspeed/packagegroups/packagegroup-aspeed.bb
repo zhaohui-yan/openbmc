@@ -38,9 +38,6 @@ RDEPENDS:${PN}-crypto = " \
     openssl-conf \
     openssl-engines \
     "
-RRECOMMENDS:${PN}-crypto = " \
-    kernel-module-cryptodev \
-    "
 
 SUMMARY:${PN}-ssif = "IPMI SMBus System Interface"
 RDEPENDS:${PN}-ssif = " \

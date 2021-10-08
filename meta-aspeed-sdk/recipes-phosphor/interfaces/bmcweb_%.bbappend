@@ -1,6 +1,6 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
-EXTRA_OEMESON:append_ast-mmc = " \
+EXTRA_OEMESON:append:ast-mmc = " \
     -Dredfish-dbus-log=enabled \
     -Dhttp-body-limit=128 \
     "

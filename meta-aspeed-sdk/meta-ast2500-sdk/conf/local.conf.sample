@@ -28,7 +28,7 @@ require conf/machine/include/obmc-bsp-common.inc
 # ASPEED initramfs if build aspeed-image-sdk
 #require conf/distro/include/ast-img-sdk.inc
 
-INITRAMFS_IMAGE_df-ast-img-sdk = "aspeed-image-initramfs"
+INITRAMFS_IMAGE:df-ast-img-sdk = "aspeed-image-initramfs"
 
 # Free Open Source Software (FOSS) Creation
 # INHERIT += "archiver"

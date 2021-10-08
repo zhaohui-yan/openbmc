@@ -8,10 +8,10 @@ PROVIDES += "u-boot"
 DEPENDS += "bc-native dtc-native"
 DEPENDS += "${@bb.utils.contains('MACHINE_FEATURES', 'ast-secure', 'aspeed-secure-config-native', '', d)}"
 
-UBOOT_ENV_SIZE_ast-mmc = "0x10000"
-UBOOT_ENV_ast-mmc = "u-boot-env"
-UBOOT_ENV_SUFFIX_ast-mmc = "bin"
-UBOOT_ENV_FILE_ast-mmc = "u-boot-env-ast2600.txt"
+UBOOT_ENV_SIZE:ast-mmc = "0x10000"
+UBOOT_ENV:ast-mmc = "u-boot-env"
+UBOOT_ENV_SUFFIX:ast-mmc = "bin"
+UBOOT_ENV_FILE:ast-mmc = "u-boot-env-ast2600.txt"
 
 do_compile:append() {
     if [ -n "${UBOOT_ENV}" ]
