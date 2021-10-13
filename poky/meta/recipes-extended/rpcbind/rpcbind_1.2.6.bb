@@ -26,23 +26,23 @@ PACKAGECONFIG[tcp-wrappers] = "--enable-libwrap,--disable-libwrap,tcp-wrappers"
 INITSCRIPT_NAME = "rpcbind"
 INITSCRIPT_PARAMS = "start 12 2 3 4 5 . stop 60 0 1 6 ."
 
-SYSTEMD_SERVICE_${PN} = "rpcbind.service rpcbind.socket"
+SYSTEMD_SERVICE:${PN} = "rpcbind.service rpcbind.socket"
 
 inherit useradd
 
 USERADD_PACKAGES = "${PN}"
-USERADD_PARAM_${PN} = "--system --no-create-home --home-dir / \
+USERADD_PARAM:${PN} = "--system --no-create-home --home-dir / \
                        --shell /bin/false --user-group rpc"
 
 PACKAGECONFIG ??= "${@bb.utils.filter('DISTRO_FEATURES', 'systemd', d)}"
-PACKAGECONFIG[systemd] = "--with-systemdsystemunitdir=${systemd_unitdir}/system/, \
+PACKAGECONFIG[systemd] = "--with-systemdsystemunitdir=${systemd_system_unitdir}/, \
                           --without-systemdsystemunitdir, \
                           systemd \
 "
 
 EXTRA_OECONF += " --enable-warmstarts --with-rpcuser=rpc"
 
-do_install_append () {
+do_install:append () {
 	install -d ${D}${sysconfdir}/init.d
 	sed -e 's,/etc/,${sysconfdir}/,g' \
 		-e 's,/sbin/,${sbindir}/,g' \
@@ -50,5 +50,5 @@ do_install_append () {
 	chmod 0755 ${D}${sysconfdir}/init.d/rpcbind
 }
 
-ALTERNATIVE_${PN} = "rpcinfo"
+ALTERNATIVE:${PN} = "rpcinfo"
 ALTERNATIVE_LINK_NAME[rpcinfo] = "${bindir}/rpcinfo"

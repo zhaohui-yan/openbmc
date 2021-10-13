@@ -10,9 +10,14 @@ BRANCH="aspeed-master-v2019.04"
 SRC_URI = "git://192.168.10.13:29418/u-boot.git;protocol=ssh;branch=${BRANCH}"
 # Tag for v00.04.06
 SRCREV = "504c7831b5161408a5ddbdc746071f0b6e96d818"
-SRC_URI_append_ast-abr = " file://0001-u-boot-disable-wdt2-for-abr.patch "
+SRC_URI:append:ast-abr = " file://0001-u-boot-disable-wdt2-for-abr.patch "
 
 S = "${WORKDIR}/git"
+B = "${WORKDIR}/build"
+do_configure[cleandirs] = "${B}"
+
+# We don't have 'u-boot-initial-env' target in our u-boot version
+UBOOT_INITIAL_ENV=""
 
 PV = "v2019.04+git${SRCPV}"
 

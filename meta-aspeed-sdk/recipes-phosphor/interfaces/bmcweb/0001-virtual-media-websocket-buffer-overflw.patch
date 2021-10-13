@@ -1,5 +1,14 @@
+From 65882703517e2f8f50744c30690a14350135753c Mon Sep 17 00:00:00 2001
+From: Troy Lee <troy_lee@aspeedtech.com>
+Date: Thu, 6 May 2021 14:23:41 +0800
+Subject: [PATCH] bmcweb: fixes virtual media buffer overflow
+
+---
+ include/vm_websocket.hpp | 23 ++++++++++++++++++++---
+ 1 file changed, 20 insertions(+), 3 deletions(-)
+
 diff --git a/include/vm_websocket.hpp b/include/vm_websocket.hpp
-index a175f0a..5ee6f84 100644
+index 02f958a..878fa52 100644
 --- a/include/vm_websocket.hpp
 +++ b/include/vm_websocket.hpp
 @@ -17,7 +17,7 @@ static crow::websocket::Connection* session = nullptr;

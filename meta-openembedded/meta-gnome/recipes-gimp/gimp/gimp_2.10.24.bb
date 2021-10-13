@@ -35,7 +35,7 @@ DEPENDS = " \
     libmng \
     ${@bb.utils.contains('DISTRO_FEATURES', 'x11', 'libxmu libxpm', '', d)} \
 "
-DEPENDS_append_libc-musl = " libexecinfo"
+DEPENDS:append:libc-musl = " libexecinfo"
 
 inherit features_check gnomebase gtk-icon-cache gtk-doc mime-xdg
 
@@ -51,22 +51,17 @@ EXTRA_OECONF = "--disable-python \
                 --disable-check-update \
                 --without-wmf"
 
-EXTRA_OECONF_append_mipsarch = " --disable-vector-icons"
-EXTRA_OECONF_append_libc-musl_riscv32 = " --disable-vector-icons"
-EXTRA_OECONF_append_libc-musl_x86 = " --disable-vector-icons"
-EXTRA_OECONF_append_toolchain-clang_arm = " --disable-vector-icons"
-
-do_configure_append() {
+do_configure:append() {
     find ${B} -name Makefile | xargs sed -i s:'-I$(includedir)':'-I.':g
     find ${B} -name Makefile | xargs sed -i s:'-I/usr/include':'-I${STAGING_INCDIR}':g
 }
 
-do_compile_prepend() {
+do_compile:prepend() {
     # Let native babl/gegl find their plugins
     export BABL_PATH=`find ${STAGING_LIBDIR_NATIVE} -maxdepth 1 -name 'babl-*'`
     export GEGL_PATH=`find ${STAGING_LIBDIR_NATIVE} -maxdepth 1 -name 'gegl-*'`
 }
 
-FILES_${PN}  += "${datadir}/metainfo"
+FILES:${PN}  += "${datadir}/metainfo"
 
-RDEPENDS_${PN} += "mypaint-brushes-1.0"
+RDEPENDS:${PN} += "mypaint-brushes-1.0"

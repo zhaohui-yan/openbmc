@@ -6,7 +6,6 @@ DEPENDS = " \
     intltool-native \
     babl \
     glib-2.0 \
-    pango \
     cairo \
     expat \
     zlib \
@@ -28,8 +27,8 @@ SRC_URI = " \
 "
 SRC_URI[sha256sum] = "c112782cf4096969e23217ccdfabe42284e35d5435ff0c43d40e4c70faeca8dd"
 
-PACKAGECONFIG ??= "gexiv2 jpeg libpng libraw librsvg poppler sdl2"
-PACKAGECONFIG_class-native = "libpng librsvg"
+PACKAGECONFIG ??= "gexiv2 jpeg libpng libraw librsvg pango poppler sdl2"
+PACKAGECONFIG:class-native = "libpng librsvg"
 
 PACKAGECONFIG[jasper] = "-Djasper=enabled,-Djasper=disabled,jasper"
 PACKAGECONFIG[gexiv2] = "-Dgexiv2=enabled,-Dgexiv2=disabled,gexiv2"
@@ -40,6 +39,7 @@ PACKAGECONFIG[libav] = "-Dlibav=enabled,-Dlibav=disabled,libav"
 PACKAGECONFIG[libpng] = "-Dlibpng=enabled,-Dlibpng=disabled,libpng"
 PACKAGECONFIG[libraw] = "-Dlibraw=enabled,-Dlibraw=disabled,libraw"
 PACKAGECONFIG[librsvg] = "-Dlibrsvg=enabled,-Dlibrsvg=disabled,librsvg"
+PACKAGECONFIG[pango] = "-Dpango=enabled -Dpangocairo=enabled,-Dpango=disabled -Dpangocairo=disabled,pango"
 PACKAGECONFIG[poppler] = "-Dpoppler=enabled,-Dpoppler=disabled,poppler"
 PACKAGECONFIG[sdl] = "-Dsdl1=enabled,-Dsdl1=disabled,virtual/libsdl"
 PACKAGECONFIG[sdl2] = "-Dsdl2=enabled,-Dsdl2=disabled,virtual/libsdl2"
@@ -47,7 +47,7 @@ PACKAGECONFIG[tiff] = "-Dlibtiff=enabled,-Dlibtiff=disabled,tiff"
 PACKAGECONFIG[webp] = "-Dwebp=enabled,-Dwebp=disabled,webp"
 
 # There are a couple of non-symlink .so files installed into libdir, which need to go into main package
-FILES_${PN} += " \
+FILES:${PN} += " \
     ${libdir}/*.so \
     ${libdir}/gegl-${SHPV}/*.json \
     ${libdir}/gegl-${SHPV}/*.so \

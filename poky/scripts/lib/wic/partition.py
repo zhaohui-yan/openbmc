@@ -54,6 +54,7 @@ class Partition():
         self.uuid = args.uuid
         self.fsuuid = args.fsuuid
         self.type = args.type
+        self.no_fstab_update = args.no_fstab_update
         self.updated_fstab_path = None
         self.has_fstab = False
         self.update_fstab_in_rootfs = False
@@ -104,7 +105,7 @@ class Partition():
                 extra_blocks = self.extra_space
 
             rootfs_size = actual_rootfs_size + extra_blocks
-            rootfs_size *= self.overhead_factor
+            rootfs_size = int(rootfs_size * self.overhead_factor)
 
             logger.debug("Added %d extra blocks to %s to get to %d total blocks",
                          extra_blocks, self.mountpoint, rootfs_size)
@@ -286,7 +287,7 @@ class Partition():
             (self.fstype, extraopts, rootfs, label_str, self.fsuuid, rootfs_dir)
         exec_native_cmd(mkfs_cmd, native_sysroot, pseudo=pseudo)
 
-        if self.updated_fstab_path and self.has_fstab:
+        if self.updated_fstab_path and self.has_fstab and not self.no_fstab_update:
             debugfs_script_path = os.path.join(cr_workdir, "debugfs_script")
             with open(debugfs_script_path, "w") as f:
                 f.write("cd etc\n")
@@ -350,7 +351,7 @@ class Partition():
         mcopy_cmd = "mcopy -i %s -s %s/* ::/" % (rootfs, rootfs_dir)
         exec_native_cmd(mcopy_cmd, native_sysroot)
 
-        if self.updated_fstab_path and self.has_fstab:
+        if self.updated_fstab_path and self.has_fstab and not self.no_fstab_update:
             mcopy_cmd = "mcopy -i %s %s ::/etc/fstab" % (rootfs, self.updated_fstab_path)
             exec_native_cmd(mcopy_cmd, native_sysroot)
 

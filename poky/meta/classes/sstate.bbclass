@@ -1,4 +1,4 @@
-SSTATE_VERSION = "3"
+SSTATE_VERSION = "5"
 
 SSTATE_MANIFESTS ?= "${TMPDIR}/sstate-control"
 SSTATE_MANFILEPREFIX = "${SSTATE_MANIFESTS}/manifest-${SSTATE_MANMACH}-${PN}"
@@ -67,6 +67,13 @@ SSTATE_DUPWHITELIST += "${DEPLOY_DIR_IMAGE}/microcode"
 SSTATE_SCAN_FILES ?= "*.la *-config *_config postinst-*"
 SSTATE_SCAN_CMD ??= 'find ${SSTATE_BUILDDIR} \( -name "${@"\" -o -name \"".join(d.getVar("SSTATE_SCAN_FILES").split())}" \) -type f'
 SSTATE_SCAN_CMD_NATIVE ??= 'grep -Irl -e ${RECIPE_SYSROOT} -e ${RECIPE_SYSROOT_NATIVE} -e ${HOSTTOOLS_DIR} ${SSTATE_BUILDDIR}'
+SSTATE_HASHEQUIV_FILEMAP ?= " \
+    populate_sysroot:*/postinst-useradd-*:${TMPDIR} \
+    populate_sysroot:*/postinst-useradd-*:${COREBASE} \
+    populate_sysroot:*/postinst-useradd-*:regex-\s(PATH|PSEUDO_IGNORE_PATHS|HOME|LOGNAME|OMP_NUM_THREADS|USER)=.*\s \
+    populate_sysroot:*/crossscripts/*:${TMPDIR} \
+    populate_sysroot:*/crossscripts/*:${COREBASE} \
+    "
 
 BB_HASHFILENAME = "False ${SSTATE_PKGSPEC} ${SSTATE_SWSPEC}"
 
@@ -123,8 +130,6 @@ SSTATE_HASHEQUIV_REPORT_TASKDATA[doc] = "Report additional useful data to the \
 python () {
     if bb.data.inherits_class('native', d):
         d.setVar('SSTATE_PKGARCH', d.getVar('BUILD_ARCH', False))
-        if d.getVar("PN") == "pseudo-native":
-            d.appendVar('SSTATE_PKGARCH', '_${ORIGNATIVELSBSTRING}')
     elif bb.data.inherits_class('crosssdk', d):
         d.setVar('SSTATE_PKGARCH', d.expand("${BUILD_ARCH}_${SDK_ARCH}_${SDK_OS}"))
     elif bb.data.inherits_class('cross', d):
@@ -483,7 +488,7 @@ def sstate_clean_cachefiles(d):
         ss = sstate_state_fromvars(ld, task)
         sstate_clean_cachefile(ss, ld)
 
-def sstate_clean_manifest(manifest, d, prefix=None):
+def sstate_clean_manifest(manifest, d, canrace=False, prefix=None):
     import oe.path
 
     mfile = open(manifest)
@@ -501,7 +506,9 @@ def sstate_clean_manifest(manifest, d, prefix=None):
             if entry.endswith("/"):
                 if os.path.islink(entry[:-1]):
                     os.remove(entry[:-1])
-                elif os.path.exists(entry) and len(os.listdir(entry)) == 0:
+                elif os.path.exists(entry) and len(os.listdir(entry)) == 0 and not canrace:
+                    # Removing directories whilst builds are in progress exposes a race. Only
+                    # do it in contexts where it is safe to do so.
                     os.rmdir(entry[:-1])
             else:
                 os.remove(entry)
@@ -539,7 +546,7 @@ def sstate_clean(ss, d):
         for lock in ss['lockfiles']:
             locks.append(bb.utils.lockfile(lock))
 
-        sstate_clean_manifest(manifest, d)
+        sstate_clean_manifest(manifest, d, canrace=True)
 
         for lock in locks:
             bb.utils.unlockfile(lock)
@@ -640,10 +647,21 @@ python sstate_hardcode_path () {
 
 def sstate_package(ss, d):
     import oe.path
+    import time
 
     tmpdir = d.getVar('TMPDIR')
 
+    fixtime = False
+    if ss['task'] == "package":
+        fixtime = True
+
+    def fixtimestamp(root, path):
+        f = os.path.join(root, path)
+        if os.lstat(f).st_mtime > sde:
+            os.utime(f, (sde, sde), follow_symlinks=False)
+
     sstatebuild = d.expand("${WORKDIR}/sstate-build-%s/" % ss['task'])
+    sde = int(d.getVar("SOURCE_DATE_EPOCH") or time.time())
     d.setVar("SSTATE_CURRTASK", ss['task'])
     bb.utils.remove(sstatebuild, recurse=True)
     bb.utils.mkdirhier(sstatebuild)
@@ -656,6 +674,8 @@ def sstate_package(ss, d):
         # to sstate tasks but there aren't many of these so better just avoid them entirely.
         for walkroot, dirs, files in os.walk(state[1]):
             for file in files + dirs:
+                if fixtime:
+                    fixtimestamp(walkroot, file)
                 srcpath = os.path.join(walkroot, file)
                 if not os.path.islink(srcpath):
                     continue
@@ -677,6 +697,11 @@ def sstate_package(ss, d):
         bb.utils.mkdirhier(plain)
         bb.utils.mkdirhier(pdir)
         bb.utils.rename(plain, pdir)
+        if fixtime:
+            fixtimestamp(pdir, "")
+            for walkroot, dirs, files in os.walk(pdir):
+                for file in files + dirs:
+                    fixtimestamp(walkroot, file)
 
     d.setVar('SSTATE_BUILDDIR', sstatebuild)
     d.setVar('SSTATE_INSTDIR', sstatebuild)
@@ -703,6 +728,11 @@ def sstate_package(ss, d):
             os.utime(siginfo, None)
         except PermissionError:
             pass
+        except OSError as e:
+            # Handle read-only file systems gracefully
+            import errno
+            if e.errno != errno.EROFS:
+                raise e
 
     return
 
@@ -726,6 +756,7 @@ def pstaging_fetch(sstatefetch, d):
     localdata.setVar('FILESPATH', dldir)
     localdata.setVar('DL_DIR', dldir)
     localdata.setVar('PREMIRRORS', mirrors)
+    localdata.setVar('SRCPV', d.getVar('SRCPV'))
 
     # if BB_NO_NETWORK is set but we also have SSTATE_MIRROR_ALLOW_NETWORK,
     # we'll want to allow network access for the current set of fetches.
@@ -749,6 +780,9 @@ def pstaging_fetch(sstatefetch, d):
 
         except bb.fetch2.BBFetchException:
             pass
+
+pstaging_fetch[vardepsexclude] += "SRCPV"
+
 
 def sstate_setscene(d):
     shared_state = sstate_state_fromvars(d)
@@ -966,12 +1000,11 @@ def sstate_checkhashes(sq_data, d, siginfo=False, currentcount=0, summary=True, 
             tasklist.append((tid, sstatefile))
 
         if tasklist:
+            nproc = min(int(d.getVar("BB_NUMBER_THREADS")), len(tasklist))
+
             if len(tasklist) >= min_tasks:
                 msg = "Checking sstate mirror object availability"
                 bb.event.fire(bb.event.ProcessStarted(msg, len(tasklist)), d)
-
-            import multiprocessing
-            nproc = min(multiprocessing.cpu_count(), len(tasklist))
 
             bb.event.enable_threadlock()
             pool = oe.utils.ThreadedPool(nproc, len(tasklist),
@@ -1014,6 +1047,7 @@ def sstate_checkhashes(sq_data, d, siginfo=False, currentcount=0, summary=True, 
         bb.parse.siggen.checkhashes(sq_data, missed, found, d)
 
     return found
+setscene_depvalid[vardepsexclude] = "SSTATE_EXCLUDEDEPS_SYSROOT"
 
 BB_SETSCENE_DEPVALID = "setscene_depvalid"
 
@@ -1032,15 +1066,13 @@ def setscene_depvalid(task, taskdependees, notneeded, d, log=None):
 
     logit("Considering setscene task: %s" % (str(taskdependees[task])), log)
 
+    directtasks = ["do_populate_lic", "do_deploy_source_date_epoch", "do_shared_workdir", "do_stash_locale", "do_gcc_stash_builddir"]
+
     def isNativeCross(x):
         return x.endswith("-native") or "-cross-" in x or "-crosssdk" in x or x.endswith("-cross")
 
-    # We only need to trigger populate_lic through direct dependencies
-    if taskdependees[task][1] == "do_populate_lic":
-        return True
-
-    # stash_locale and gcc_stash_builddir are never needed as a dependency for built objects
-    if taskdependees[task][1] == "do_stash_locale" or taskdependees[task][1] == "do_gcc_stash_builddir":
+    # We only need to trigger deploy_source_date_epoch through direct dependencies
+    if taskdependees[task][1] in directtasks:
         return True
 
     # We only need to trigger packagedata through direct dependencies
@@ -1063,8 +1095,8 @@ def setscene_depvalid(task, taskdependees, notneeded, d, log=None):
         # do_package_write_* need do_populate_sysroot as they're mainly postinstall dependencies
         if taskdependees[task][1] == "do_populate_sysroot" and taskdependees[dep][1] in ['do_package_write_deb', 'do_package_write_ipk', 'do_package_write_rpm']:
             return False
-        # do_package/packagedata/package_qa don't need do_populate_sysroot
-        if taskdependees[task][1] == "do_populate_sysroot" and taskdependees[dep][1] in ['do_package', 'do_packagedata', 'do_package_qa']:
+        # do_package/packagedata/package_qa/deploy don't need do_populate_sysroot
+        if taskdependees[task][1] == "do_populate_sysroot" and taskdependees[dep][1] in ['do_package', 'do_packagedata', 'do_package_qa', 'do_deploy']:
             continue
         # Native/Cross packages don't exist and are noexec anyway
         if isNativeCross(taskdependees[dep][0]) and taskdependees[dep][1] in ['do_package_write_deb', 'do_package_write_ipk', 'do_package_write_rpm', 'do_packagedata', 'do_package', 'do_package_qa']:
@@ -1112,12 +1144,8 @@ def setscene_depvalid(task, taskdependees, notneeded, d, log=None):
             # Target populate_sysroot need their dependencies
             return False
 
-        if taskdependees[task][1] == 'do_shared_workdir':
+        if taskdependees[dep][1] in directtasks:
             continue
-
-        if taskdependees[dep][1] == "do_populate_lic":
-            continue
-
 
         # Safe fallthrough default
         logit(" Default setscene dependency fall through due to dependency: %s" % (str(taskdependees[dep])), log)
@@ -1145,6 +1173,11 @@ python sstate_eventhandler() {
                 os.utime(siginfo, None)
             except PermissionError:
                 pass
+            except OSError as e:
+                # Handle read-only file systems gracefully
+                import errno
+                if e.errno != errno.EROFS:
+                    raise e
 
 }
 

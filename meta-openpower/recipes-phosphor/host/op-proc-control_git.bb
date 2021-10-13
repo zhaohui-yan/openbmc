@@ -11,7 +11,7 @@ inherit meson obmc-phosphor-utils pkgconfig
 inherit systemd
 
 SRC_URI += "git://github.com/openbmc/openpower-proc-control"
-SRCREV = "f8c14bcfd507e0224fe258d38bdef8d32ebfbf48"
+SRCREV = "9e178b740af10ba6993ac55e59934b71a628dd09"
 
 DEPENDS += " \
         phosphor-logging \
@@ -28,9 +28,9 @@ TEMPLATE = "pcie-poweroff@.service"
 INSTANCE_FORMAT = "pcie-poweroff@{}.service"
 INSTANCES = "${@compose_list(d, 'INSTANCE_FORMAT', 'OBMC_CHASSIS_INSTANCES')}"
 SYSTEMD_PACKAGES = "${PN}"
-SYSTEMD_SERVICE_${PN} = "${TEMPLATE} ${INSTANCES}"
+SYSTEMD_SERVICE:${PN} = "${TEMPLATE} ${INSTANCES}"
 
-SYSTEMD_SERVICE_${PN} +=  " \
+SYSTEMD_SERVICE:${PN} +=  " \
                          xyz.openbmc_project.Control.Host.NMI.service \
                          op-stop-instructions@.service \
                          op-cfam-reset.service \
@@ -39,4 +39,8 @@ SYSTEMD_SERVICE_${PN} +=  " \
                          op-enter-mpreboot@.service \
                          ${@bb.utils.contains('OBMC_MACHINE_FEATURES', 'phal', 'phal-reinit-devtree.service', '', d)} \
                          ${@bb.utils.contains('OBMC_MACHINE_FEATURES', 'phal', 'proc-pre-poweroff@.service', '', d)} \
+                         ${@bb.utils.contains('OBMC_MACHINE_FEATURES', 'phal', 'op-reset-host-check@.service', '', d)} \
+                         ${@bb.utils.contains('OBMC_MACHINE_FEATURES', 'phal', 'op-reset-host-clear.service', '', d)} \
+                         ${@bb.utils.contains('OBMC_MACHINE_FEATURES', 'phal', 'phal-import-devtree@.service', '', d)} \
+                         ${@bb.utils.contains('OBMC_MACHINE_FEATURES', 'phal', 'phal-export-devtree@.service', '', d)} \
                          "

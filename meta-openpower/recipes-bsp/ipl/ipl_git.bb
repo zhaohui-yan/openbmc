@@ -12,12 +12,12 @@ inherit autotools
 S = "${WORKDIR}/git"
 
 SRC_URI = "git://git@github.com/open-power/ipl;branch="main""
-SRCREV = "65b394476c6ec40192b6cc44c6722cee5a5bee20"
+SRCREV = "2af23633e266a6513124fce995e07c121c5cf3df"
 
 DEPENDS = " \
         libekb pdbg autoconf-archive guard \
         "
 
-RDEPENDS_${PN} = "phal-devtree"
+RDEPENDS:${PN} = "phal-devtree"
 
-EXTRA_OECONF = "CHIP=p10"
+EXTRA_OECONF = "CHIP=p10 --enable-libphal"

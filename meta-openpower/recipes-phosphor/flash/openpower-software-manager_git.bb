@@ -44,26 +44,27 @@ EXTRA_OEMESON += " \
 DEPENDS += " \
         cli11 \
         dbus \
+        nlohmann-json \
         openssl \
         phosphor-dbus-interfaces \
         phosphor-logging \
         sdbusplus \
         "
 
-RDEPENDS_${PN} += " \
+RDEPENDS:${PN} += " \
         virtual-obmc-image-manager \
         "
 
-FILES_${PN} += "${datadir}/dbus-1/system.d/org.open_power.Software.Host.Updater.conf"
+FILES:${PN} += "${datadir}/dbus-1/system.d/org.open_power.Software.Host.Updater.conf"
 
 S = "${WORKDIR}/git"
 
 SRC_URI += "git://github.com/openbmc/openpower-pnor-code-mgmt"
 
-SRCREV = "fdc91fa011c28b857220e30320fba65e69907f20"
+SRCREV = "a38f6e652e7da6fc29e71adeeacfa8ae02c46ab8"
 
-DBUS_SERVICE_${PN} += "org.open_power.Software.Host.Updater.service"
+DBUS_SERVICE:${PN} += "org.open_power.Software.Host.Updater.service"
 
-SYSTEMD_SERVICE_${PN} += " \
+SYSTEMD_SERVICE:${PN} += " \
         op-pnor-msl.service \
         "

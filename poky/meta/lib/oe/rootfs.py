@@ -253,7 +253,7 @@ class Rootfs(object, metaclass=ABCMeta):
         # Remove the run-postinsts package if no delayed postinsts are found
         delayed_postinsts = self._get_delayed_postinsts()
         if delayed_postinsts is None:
-            if os.path.exists(self.d.expand("${IMAGE_ROOTFS}${sysconfdir}/init.d/run-postinsts")) or os.path.exists(self.d.expand("${IMAGE_ROOTFS}${systemd_unitdir}/system/run-postinsts.service")):
+            if os.path.exists(self.d.expand("${IMAGE_ROOTFS}${sysconfdir}/init.d/run-postinsts")) or os.path.exists(self.d.expand("${IMAGE_ROOTFS}${systemd_system_unitdir}/run-postinsts.service")):
                 self.pm.remove(["run-postinsts"])
 
         image_rorfs = bb.utils.contains("IMAGE_FEATURES", "read-only-rootfs",
@@ -301,6 +301,16 @@ class Rootfs(object, metaclass=ABCMeta):
             bb.note("Executing: ldconfig -r " + self.image_rootfs + " -c new -v -X")
             self._exec_shell_cmd(['ldconfig', '-r', self.image_rootfs, '-c',
                                   'new', '-v', '-X'])
+
+        image_rorfs = bb.utils.contains("IMAGE_FEATURES", "read-only-rootfs",
+                                        True, False, self.d)
+        ldconfig_in_features = bb.utils.contains("DISTRO_FEATURES", "ldconfig",
+                                                 True, False, self.d)
+        if image_rorfs or not ldconfig_in_features:
+            ldconfig_cache_dir = os.path.join(self.image_rootfs, "var/cache/ldconfig")
+            if os.path.exists(ldconfig_cache_dir):
+                bb.note("Removing ldconfig auxiliary cache...")
+                shutil.rmtree(ldconfig_cache_dir)
 
     def _check_for_kernel_modules(self, modules_dir):
         for root, dirs, files in os.walk(modules_dir, topdown=True):

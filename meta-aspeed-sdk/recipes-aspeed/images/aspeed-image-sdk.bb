@@ -16,8 +16,8 @@ ASPEED_IMAGE_KERNEL_IMAGE ?= "fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE}"
 ASPEED_IMAGE_NAME ?= "all.bin"
 ASPEED_BOOT_EMMC ?= "${@bb.utils.contains('MACHINE_FEATURES', 'ast-mmc', 'yes', 'no', d)}"
 
-IMAGE_FSTYPES_ast-mmc += "wic.xz mmc-ext4-tar"
-IMAGE_FEATURES_ast-mmc += "read-only-rootfs-delayed-postinsts"
+IMAGE_FSTYPES:ast-mmc += "wic.xz mmc-ext4-tar"
+IMAGE_FEATURES:ast-mmc += "read-only-rootfs-delayed-postinsts"
 
 do_compile() {
     if [ ${ASPEED_BOOT_EMMC} == "yes" ] ; then
@@ -51,7 +51,7 @@ do_compile() {
         of=${B}/aspeed-sdk.bin
 }
 
-do_compile_ast-mmc() {
+do_compile:ast-mmc() {
     :
 }
 
@@ -72,7 +72,7 @@ do_deploy() {
     install -m644 -D ${B}/aspeed-sdk.bin ${DEPLOYDIR}/${ASPEED_IMAGE_NAME}
 }
 
-do_deploy_ast-mmc() {
+do_deploy:ast-mmc() {
     :
 }
 

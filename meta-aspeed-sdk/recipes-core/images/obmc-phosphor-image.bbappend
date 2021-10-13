@@ -1,14 +1,14 @@
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
-IMAGE_INSTALL_append = " \
+FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+IMAGE_INSTALL:append = " \
         webui-vue \
-        mctp \
+        libmctp \
         entity-manager \
         dbus-sensors \
         "
 
-IMAGE_INSTALL_append = " \
+IMAGE_INSTALL:append = " \
         packagegroup-oss-apps \
-        packagegroup-oss-obmc-apps \
+        packagegroup-aspeed-obmc-apps \
         packagegroup-aspeed-apps \
         packagegroup-aspeed-crypto \
         packagegroup-aspeed-ssif \
@@ -18,12 +18,22 @@ IMAGE_INSTALL_append = " \
         "
 
 # Only install in AST26xx series rofs as the free space of AST2500 rofs is not enough.
+<<<<<<< HEAD
 IMAGE_INSTALL_append_aspeed-g6 = " \
         packagegroup-aspeed-ktools \
        "
 
 EXTRA_IMAGE_FEATURES_append = " \
+=======
+IMAGE_INSTALL:append:aspeed-g6 = " \
+        packagegroup-aspeed-ktools \
+       "
+
+EXTRA_IMAGE_FEATURES:append = " \
+>>>>>>> origin/aspeed-dev
         nfs-client \
+        ${@bb.utils.contains('DISTRO_FEATURES', 'obmc-ubi-fs', 'read-only-rootfs-delayed-postinsts', '', d)} \
+        ${@bb.utils.contains('DISTRO_FEATURES', 'phosphor-mmc', 'read-only-rootfs-delayed-postinsts', '', d)} \
         "
 
 IMAGE_FEATURES += " \

@@ -7,10 +7,13 @@ PR = "r1"
 
 inherit allarch
 
-RDEPENDS_${PN} += " \
+RDEPENDS:${PN} += " \
+    ${@d.getVar('PREFERRED_PROVIDER_u-boot-fw-utils', True) or 'u-boot-fw-utils'} \
     ${VIRTUAL-RUNTIME_base-utils} \
     e2fsprogs-e2fsck \
+    e2fsprogs-mke2fs \
     gptfdisk \
+    libgpiod-tools \
     parted \
     udev \
 "
@@ -24,4 +27,4 @@ do_install() {
     mknod -m 622 ${D}/dev/console c 5 1
 }
 
-FILES_${PN} += " /init /dev "
+FILES:${PN} += " /init /dev "
