@@ -18,28 +18,15 @@ IMAGE_INSTALL:append = " \
         "
 
 # Only install in AST26xx series rofs as the free space of AST2500 rofs is not enough.
-<<<<<<< HEAD
-IMAGE_INSTALL_append_aspeed-g6 = " \
-        packagegroup-aspeed-ktools \
-       "
-
-EXTRA_IMAGE_FEATURES_append = " \
-=======
 IMAGE_INSTALL:append:aspeed-g6 = " \
         packagegroup-aspeed-ktools \
        "
 
 EXTRA_IMAGE_FEATURES:append = " \
->>>>>>> origin/aspeed-dev
         nfs-client \
         ${@bb.utils.contains('DISTRO_FEATURES', 'obmc-ubi-fs', 'read-only-rootfs-delayed-postinsts', '', d)} \
         ${@bb.utils.contains('DISTRO_FEATURES', 'phosphor-mmc', 'read-only-rootfs-delayed-postinsts', '', d)} \
         "
-
-IMAGE_FEATURES += " \
-    ${@bb.utils.contains('DISTRO_FEATURES', 'obmc-ubi-fs', 'read-only-rootfs-delayed-postinsts', '', d)} \
-    ${@bb.utils.contains('DISTRO_FEATURES', 'phosphor-mmc', 'read-only-rootfs-delayed-postinsts', '', d)} \
-    "
 
 ### Workaround
 inherit image_types_phosphor_aspeed

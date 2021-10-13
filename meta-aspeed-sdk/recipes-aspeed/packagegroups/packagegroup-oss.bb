@@ -44,12 +44,3 @@ RDEPENDS:${PN}-libs = " \
     libgpiod \
     libgpiod-tools \
     "
-<<<<<<< HEAD
-
-SUMMARY_${PN}-obmc-apps = "Open Source Applications for OpenBMC Image"
-RDEPENDS_${PN}-obmc-apps = " \
-    ipmitool \
-    at-scale-debug \
-    "
-=======
->>>>>>> origin/aspeed-dev
