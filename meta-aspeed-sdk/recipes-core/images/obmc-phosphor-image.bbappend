@@ -28,10 +28,5 @@ EXTRA_IMAGE_FEATURES:append = " \
         ${@bb.utils.contains('DISTRO_FEATURES', 'phosphor-mmc', 'read-only-rootfs-delayed-postinsts', '', d)} \
         "
 
-IMAGE_FEATURES += " \
-    ${@bb.utils.contains('DISTRO_FEATURES', 'obmc-ubi-fs', 'read-only-rootfs-delayed-postinsts', '', d)} \
-    ${@bb.utils.contains('DISTRO_FEATURES', 'phosphor-mmc', 'read-only-rootfs-delayed-postinsts', '', d)} \
-    "
-
 ### Workaround
 inherit image_types_phosphor_aspeed
