@@ -12,6 +12,11 @@ SRC_URI:append:ast-abr = " file://0001-u-boot-disable-wdt2-for-abr.patch "
 SRCREV = "${AUTOREV}"
 
 S = "${WORKDIR}/git"
+B = "${WORKDIR}/build"
+do_configure[cleandirs] = "${B}"
+
+# We don't have 'u-boot-initial-env' target in our u-boot version
+UBOOT_INITIAL_ENV=""
 
 PV = "v2019.04+git${SRCPV}"
 
