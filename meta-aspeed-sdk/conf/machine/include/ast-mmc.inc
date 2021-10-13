@@ -1,2 +1,2 @@
-MACHINE_FEATURES_append = " ast-mmc"
+MACHINE_FEATURES:append = " ast-mmc"
 MACHINEOVERRIDES .= ":ast-mmc"

@@ -2,7 +2,7 @@ IMAGE_FSTYPES = "${INITRAMFS_FSTYPES}"
 
 require recipes-core/images/core-image-minimal.bb
 
-IMAGE_INSTALL_append = " \
+IMAGE_INSTALL:append = " \
         packagegroup-oss-apps \
         packagegroup-oss-libs \
         packagegroup-aspeed-apps \
@@ -13,6 +13,6 @@ IMAGE_INSTALL_append = " \
         packagegroup-aspeed-ktools \
         "
 
-EXTRA_IMAGE_FEATURES_append = " \
+EXTRA_IMAGE_FEATURES:append = " \
         nfs-client \
         "

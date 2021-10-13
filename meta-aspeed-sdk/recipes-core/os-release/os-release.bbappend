@@ -1,6 +1,6 @@
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
-python do_compile_prepend() {
+python do_compile:prepend() {
     import re
     work_dir = d.getVar("COREBASE")
     sdk_ver = ""
@@ -22,6 +22,6 @@ python do_compile_prepend() {
     d.setVar("SDK_VERSION", sdk_ver)
 }
 
-OS_RELEASE_FIELDS_append = " SDK_VERSION"
+OS_RELEASE_FIELDS:append = " SDK_VERSION"
 BB_DONT_CACHE = "1"
 

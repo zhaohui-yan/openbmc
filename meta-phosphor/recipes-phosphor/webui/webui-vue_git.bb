@@ -6,10 +6,10 @@ LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=e3fc50a88d0a364313df4b21ef20c29e"
 
 SRC_URI = "git://github.com/openbmc/webui-vue.git"
-SRCREV = "240c056c8989c5e3e0f0ff640f38f3e4cdbc6ac5"
+SRCREV = "c9cb8d433b7ed5f4d37cd8d946c2593d4d886ce1"
 S = "${WORKDIR}/git"
 
-DEPENDS_prepend = "nodejs-native nlf-native "
+DEPENDS:prepend = "nodejs-native nlf-native "
 
 # allarch is required because the files this recipe produces (html and
 # javascript) are valid for any target, regardless of architecture.  The allarch
@@ -28,13 +28,15 @@ export CFLAGS = "${BUILD_CFLAGS}"
 export CPPFLAGS = "${BUILD_CPPFLAGS}"
 export CXXFLAGS = "${BUILD_CXXFLAGS}"
 
-FILES_${PN} += "${datadir}/www/*"
+FILES:${PN} += "${datadir}/www/*"
+
+EXTRA_OENPM ?= ""
 
 do_compile () {
     cd ${S}
     rm -rf node_modules
     npm --loglevel info --proxy=${http_proxy} --https-proxy=${https_proxy} install
-    npm run build
+    npm run build ${EXTRA_OENPM}
 }
 
 do_install () {

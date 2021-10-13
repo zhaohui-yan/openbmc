@@ -1,6 +1,6 @@
 LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263"
-SRCREV = "0eba8a46bc99c66e5dd274a9a4d661fe08ac4b8a"
+SRCREV = "7f6992539fb22c93c21ac30c94508bf655d496a7"
 PV = "4.5"
 
 SRC_URI = "git://sourceware.org/git/systemtap.git \
@@ -10,7 +10,7 @@ SRC_URI = "git://sourceware.org/git/systemtap.git \
            "
 
 COMPATIBLE_HOST = '(x86_64|i.86|powerpc|arm|aarch64|microblazeel|mips).*-linux'
-COMPATIBLE_HOST_libc-musl = 'null'
+COMPATIBLE_HOST:libc-musl = 'null'
 
 S = "${WORKDIR}/git"
 

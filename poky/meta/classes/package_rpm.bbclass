@@ -40,10 +40,10 @@ def write_rpm_perfiledata(srcname, d):
         outfile.write("# Dependency table\n")
         outfile.write('deps = {\n')
         for pkg in packages.split():
-            dependsflist_key = 'FILE' + varname + 'FLIST' + "_" + pkg
+            dependsflist_key = 'FILE' + varname + 'FLIST' + ":" + pkg
             dependsflist = (d.getVar(dependsflist_key) or "")
             for dfile in dependsflist.split():
-                key = "FILE" + varname + "_" + dfile + "_" + pkg
+                key = "FILE" + varname + ":" + dfile + ":" + pkg
                 deps = filter_nativesdk_deps(srcname, d.getVar(key) or "")
                 depends_dict = bb.utils.explode_dep_versions(deps)
                 file = dfile.replace("@underscore@", "_")
@@ -249,10 +249,10 @@ python write_specfile () {
 
     def get_perfile(varname, pkg, d):
         deps = []
-        dependsflist_key = 'FILE' + varname + 'FLIST' + "_" + pkg
+        dependsflist_key = 'FILE' + varname + 'FLIST' + ":" + pkg
         dependsflist = (d.getVar(dependsflist_key) or "")
         for dfile in dependsflist.split():
-            key = "FILE" + varname + "_" + dfile + "_" + pkg
+            key = "FILE" + varname + ":" + dfile + ":" + pkg
             depends = d.getVar(key)
             if depends:
                 deps.append(depends)
@@ -332,7 +332,7 @@ python write_specfile () {
 
         localdata.setVar('ROOT', '')
         localdata.setVar('ROOT_%s' % pkg, root)
-        pkgname = localdata.getVar('PKG_%s' % pkg)
+        pkgname = localdata.getVar('PKG:%s' % pkg)
         if not pkgname:
             pkgname = pkg
         localdata.setVar('PKG', pkgname)
@@ -748,9 +748,8 @@ python do_package_write_rpm () {
 do_package_write_rpm[dirs] = "${PKGWRITEDIRRPM}"
 do_package_write_rpm[cleandirs] = "${PKGWRITEDIRRPM}"
 do_package_write_rpm[depends] += "${@oe.utils.build_depends_string(d.getVar('PACKAGE_WRITE_DEPS'), 'do_populate_sysroot')}"
-addtask package_write_rpm after do_packagedata do_package
+EPOCHTASK ??= ""
+addtask package_write_rpm after do_packagedata do_package ${EPOCHTASK} before do_build
 
 PACKAGEINDEXDEPS += "rpm-native:do_populate_sysroot"
 PACKAGEINDEXDEPS += "createrepo-c-native:do_populate_sysroot"
-
-do_build[recrdeptask] += "do_package_write_rpm"

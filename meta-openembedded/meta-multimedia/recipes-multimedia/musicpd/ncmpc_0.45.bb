@@ -3,7 +3,7 @@ LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING;md5=751419260aa954499f7abaabaa882bbe"
 HOMEPAGE = "https://www.musicpd.org/clients/ncmpc/"
 
-inherit meson
+inherit meson pkgconfig
 
 DEPENDS += " \
     boost \
@@ -11,7 +11,7 @@ DEPENDS += " \
     libmpdclient \
 "
 
-RDEPENDS_${PN} += "python3-core"
+RDEPENDS:${PN} += "python3-core"
 
 PACKAGECONFIG ??= "colors locale mouse nls regex help_screen library_screen search_screen song_screen key_screen lyrics_screen outputs_screen"
 

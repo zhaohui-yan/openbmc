@@ -9,7 +9,7 @@ KERNEL_VERSION_SANITY_SKIP="1"
 
 KSRC = "git://github.com/AspeedTech-BMC/linux.git;protocol=https;branch=${KBRANCH}"
 SRC_URI = "${KSRC}"
-SRC_URI_append_ast-abr = " file://0001-abr-alternate-flash-layout.patch "
+SRC_URI:append:ast-abr = " file://0001-abr-alternate-flash-layout.patch "
 
 LINUX_VERSION_EXTENSION ?= "-${SRCREV}"
 
@@ -21,7 +21,7 @@ require recipes-kernel/linux/linux-yocto.inc
 LIC_FILES_CHKSUM = "file://COPYING;md5=bbea815ee2795b2f4230826c0c6b8814"
 
 # Do not install the kernel image into rootfs at /boot directory
-RDEPENDS_${KERNEL_PACKAGE_NAME}-base = ""
+RDEPENDS:${KERNEL_PACKAGE_NAME}-base = ""
 
 do_set_local_version() {
     is_tag="$(git -C ${S} name-rev --name-only --tags HEAD)"

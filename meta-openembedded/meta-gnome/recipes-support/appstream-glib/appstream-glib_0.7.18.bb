@@ -17,7 +17,7 @@ DEPENDS = " \
     libstemmer \
 "
 
-inherit meson gobject-introspection gettext bash-completion
+inherit meson gobject-introspection gettext bash-completion pkgconfig
 
 SRC_URI = "https://people.freedesktop.org/~hughsient/${BPN}/releases/${BP}.tar.xz"
 SRC_URI[sha256sum] = "ca1ed22e3bde3912cb903aaa7de085d55771da454f1c0573fd9608e1de9c4002"
@@ -26,9 +26,9 @@ EXTRA_OEMESON = " \
     -Drpm=false \
 "
 
-FILES_${PN} += "${libdir}/asb-plugins-5"
+FILES:${PN} += "${libdir}/asb-plugins-5"
 
-FILES_${PN}-dev += " \
+FILES:${PN}-dev += " \
     ${datadir}/installed-tests \
     ${datadir}/gettext \
 "

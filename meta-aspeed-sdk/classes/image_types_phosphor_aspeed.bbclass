@@ -23,7 +23,7 @@ do_generate_image_uboot_file() {
 }
 
 # Include the full u-boot-spl and u-boot in the final static image
-python do_generate_static_append() {
+python do_generate_static:append() {
     uboot_offset = int(d.getVar('FLASH_UBOOT_OFFSET', True))
     spl_binary = d.getVar('SPL_BINARY', True)
     ast2605_ssp_binary = d.getVar('AST2605_SSP_BINARY', True)
@@ -52,7 +52,7 @@ python do_generate_static_append() {
                   int(d.getVar('FLASH_KERNEL_OFFSET', True)))
 }
 
-do_make_ubi_append() {
+do_make_ubi:append() {
     # Concatenate the uboot and ubi partitions
     uboot_offset=${FLASH_UBOOT_OFFSET}
 

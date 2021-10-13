@@ -3,7 +3,7 @@ HOMEPAGE = "https://github.com/eddiejames/xdma-test"
 LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=b234ee4d69f5fce4486a80fdaf4a4263"
 
-INSANE_SKIP_${PN} = "ldflags"
+INSANE_SKIP:${PN} = "ldflags"
 
 SRC_URI = "git://github.com/eddiejames/xdma-test.git"
 
@@ -22,5 +22,5 @@ do_install() {
     install -m 0755 ${B}/xdma-test ${D}${bindir}/xdma-test
 }
 
-FILES_${PN} = "/usr/bin/xdma-test"
+FILES:${PN} = "/usr/bin/xdma-test"
 

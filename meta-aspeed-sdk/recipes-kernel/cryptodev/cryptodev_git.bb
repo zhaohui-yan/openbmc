@@ -27,4 +27,4 @@ CLEANBROKEN = "1"
 # The inherit of module.bbclass will automatically name module packages with
 # "kernel-module-" prefix as required by the oe-core build environment.
 
-RPROVIDES_${PN} += "kernel-module-cryptodev"
+RPROVIDES:${PN} += "kernel-module-cryptodev"

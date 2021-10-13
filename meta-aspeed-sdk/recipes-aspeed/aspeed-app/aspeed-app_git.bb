@@ -20,14 +20,14 @@ SRC_URI = " git://github.com/AspeedTech-BMC/aspeed_app.git;protocol=https;branch
 "
 PV = "1.0+git${SRCPV}"
 
-# Tag for v00.01.02
-SRCREV = "ca004c08d1e35dbe46641507b11df4304b4b3d29"
+# Tag for v00.01.03
+SRCREV = "0ac004f1c0bc1e116abb04b0b2a2994947d94b5b"
 BRANCH = "master"
 inherit meson
 
-do_configure_prepend() {
+do_configure:prepend() {
   cp ${WORKDIR}/meson.build ${S}
   cp ${WORKDIR}/video_ioctl.h ${S}/ast_rvas/rvas_lib
 }
 
-FILES_${PN}_append = " /usr/share/* "
+FILES:${PN}:append = " /usr/share/* "

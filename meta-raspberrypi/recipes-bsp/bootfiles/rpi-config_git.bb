@@ -105,6 +105,9 @@ do_deploy() {
     if [ -n "${HDMI_MODE}" ]; then
         sed -i '/#hdmi_mode=/ c\hdmi_mode=${HDMI_MODE}' $CONFIG
     fi
+    if [ -n "${HDMI_CVT}" ]; then
+        echo 'hdmi_cvt=${HDMI_CVT}' >> $CONFIG
+    fi
     if [ -n "${CONFIG_HDMI_BOOST}" ]; then
         sed -i '/#config_hdmi_boost=/ c\config_hdmi_boost=${CONFIG_HDMI_BOOST}' $CONFIG
     fi
@@ -212,7 +215,7 @@ do_deploy() {
     fi
 
     # DWC2 USB peripheral support
-    if [ "${ENABLE_DWC2_PERIPHERAL}" = "1" ]; then
+    if ([ "${ENABLE_DWC2_PERIPHERAL}" = "1" ] && [ "${ENABLE_DWC2_OTG}" != "1" ]); then
         echo "# Enable USB peripheral mode" >> $CONFIG
         echo "dtoverlay=dwc2,dr_mode=peripheral" >> $CONFIG
     fi
@@ -221,6 +224,12 @@ do_deploy() {
     if [ "${ENABLE_DWC2_HOST}" = "1" ]; then
         echo "# Enable USB host mode" >> $CONFIG
         echo "dtoverlay=dwc2,dr_mode=host" >> $CONFIG
+    fi
+    
+    # DWC2 USB OTG support
+    if ([ "${ENABLE_DWC2_OTG}" = "1" ] && [ "${ENABLE_DWC2_PERIPHERAL}" != "1" ]); then
+        echo "# Enable USB OTG mode" >> $CONFIG
+        echo "dtoverlay=dwc2,dr_mode=otg" >> $CONFIG
     fi
 
     # AT86RF23X support
@@ -261,7 +270,7 @@ do_deploy() {
     fi
 }
 
-do_deploy_append_raspberrypi3-64() {
+do_deploy:append:raspberrypi3-64() {
     echo "# have a properly sized image" >> $CONFIG
     echo "disable_overscan=1" >> $CONFIG
 

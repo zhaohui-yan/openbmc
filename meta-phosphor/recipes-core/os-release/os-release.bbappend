@@ -5,9 +5,11 @@
 # and pasting into another recipe ensure it is understood
 # what that means!
 
+OS_RELEASE_ROOTPATH ?= "${COREBASE}"
+
 def run_git(d, cmd):
     try:
-        oeroot = d.getVar('COREBASE', True)
+        oeroot = d.getVar('OS_RELEASE_ROOTPATH', True)
         return bb.process.run(("export PSEUDO_DISABLED=1; " +
                                "git --work-tree %s --git-dir %s/.git %s")
             % (oeroot, oeroot, cmd))[0].strip('\n')
@@ -29,10 +31,10 @@ VERSION = "${@'-'.join(d.getVar('VERSION_ID').split('-')[0:2])}"
 BUILD_ID := "${@run_git(d, 'describe --abbrev=0')}"
 OPENBMC_TARGET_MACHINE = "${MACHINE}"
 
-OS_RELEASE_FIELDS_append = " BUILD_ID OPENBMC_TARGET_MACHINE EXTENDED_VERSION"
+OS_RELEASE_FIELDS:append = " BUILD_ID OPENBMC_TARGET_MACHINE EXTENDED_VERSION"
 
 # Ensure the git commands run every time bitbake is invoked.
 BB_DONT_CACHE = "1"
 
 # Make os-release available to other recipes.
-SYSROOT_DIRS_append = " ${sysconfdir}"
+SYSROOT_DIRS:append = " ${sysconfdir}"

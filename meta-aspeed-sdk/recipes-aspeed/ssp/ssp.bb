@@ -19,4 +19,4 @@ do_install () {
     install -m 644 ${S}/${SSP_FIRMWARE} ${D}/${baselib}/firmware
 }
 
-FILES_${PN} += "${baselib}/firmware/*"
+FILES:${PN} += "${baselib}/firmware/*"

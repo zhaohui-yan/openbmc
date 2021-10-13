@@ -15,16 +15,12 @@ SRCREV = "ba7564f5006d09bec51058cf4f5ac90d4dc18b3c"
 
 S = "${WORKDIR}/git"
 
-inherit uboot-config cmake lib_package
+inherit cmake lib_package
 
 EXTRA_OECMAKE = "-DCMAKE_BUILD_TYPE=Release"
 
 DEPENDS = "zlib"
 PROVIDES += "u-boot-fw-utils"
-RPROVIDES_${PN}-bin += "u-boot-fw-utils"
-
-PACKAGE_ARCH = "${MACHINE_ARCH}"
-
-RRECOMMENDS_${PN}-bin_append_class-target = " u-boot-default-env"
+RPROVIDES:${PN}-bin += "u-boot-fw-utils"
 
 BBCLASSEXTEND = "native"

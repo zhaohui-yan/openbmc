@@ -28,6 +28,7 @@ ast2600-default
 ast2600-ecc
 ast2600-emmc
 ast2600-emmc-secure
+ast2600-ncsi
 ast2600-secure-rsa2048-sha256
 ast2600-secure-rsa2048-sha256-ncot
 ast2600-secure-rsa2048-sha256-o1
@@ -103,14 +104,14 @@ It changes the following settings.
 1. Change INITRAMFS_IMAGE to `aspeed-image-initramfs` in `conf/local.conf`.
 
 ```
-INITRAMFS_IMAGE_df-ast-img-sdk = "aspeed-image-initramfs"
+INITRAMFS_IMAGE:df-ast-img-sdk = "aspeed-image-initramfs"
 ```
 
 2. Change device tree from `aspeed-ast2600-obmc.dtb` to `aspeed-ast2600-evb.dtb` in meta-ast2600-sdk/conf/machine/${MACHINE}.conf file, e.g.,
 
 ```
 # ASPEED ast2600 evb dtb file if build aspeed-image-sdk
-KERNEL_DEVICETREE_df-ast-img-sdk = "aspeed-ast2600-evb.dtb"
+KERNEL_DEVICETREE:df-ast-img-sdk = "aspeed-ast2600-evb.dtb"
 KERNEL_DEVICETREE = "aspeed-ast2600-obmc.dtb"
 ```
 

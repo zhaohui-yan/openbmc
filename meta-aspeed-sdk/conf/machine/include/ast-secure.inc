@@ -1,2 +1,2 @@
-MACHINE_FEATURES_append = " ast-secure"
+MACHINE_FEATURES:append = " ast-secure"
 MACHINEOVERRIDES .= ":ast-secure"
