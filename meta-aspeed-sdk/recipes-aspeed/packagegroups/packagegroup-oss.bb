@@ -37,6 +37,8 @@ RDEPENDS:${PN}-apps = " \
 
 RDEPENDS:${PN}-apps:append:aspeed-g6 = " \
     fio \
+    freeipmi \
+    freeipmi-ipmi-raw \
     "
 
 SUMMARY:${PN}-libs = "Open Source Library"
