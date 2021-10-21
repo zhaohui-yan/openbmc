@@ -1,4 +1,4 @@
-project('aspeed-app', 'c', version: '1.0.0')
+project('aspeed-app', 'c', 'cpp', version: '1.0.0')
 thread_dep = dependency('threads')
 
 # TODO: ast-rvas
@@ -10,7 +10,7 @@ executable('rvas_test', ['ast_rvas/rvas_test.c'], install: true, link_with: libr
     dependencies: thread_dep, include_directories: include_directories('ast_rvas/rvas_lib'))
 
 # Video
-executable('ast-video', ['video/ast-video.c', 'video/video.c'], install: true)
+executable('ast-video', ['video/ikvm_video.cpp', 'video/main1.c', 'video/main2.cc', 'video/main.cc', 'video/video.c'], install: true)
 install_data('video/video.inf')
 
 # i2c
