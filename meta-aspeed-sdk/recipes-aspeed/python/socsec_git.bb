@@ -14,6 +14,13 @@ S = "${WORKDIR}/git"
 
 inherit python3native setuptools3
 
+DEPENDS += "python3-bitarray"
+DEPENDS += "python3-hexdump"
+DEPENDS += "python3-jsonschema"
+DEPENDS += "python3-jstyleson"
+DEPENDS += "python3-pycryptodome"
+DEPENDS += "python3-ecdsa"
+
 RDEPENDS:${PN} += "python3-bitarray"
 RDEPENDS:${PN} += "python3-core"
 RDEPENDS:${PN} += "python3-hexdump"
