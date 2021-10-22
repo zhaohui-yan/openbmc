@@ -33,6 +33,7 @@ RDEPENDS:${PN}-apps = " \
     e2fsprogs-mke2fs \
     nvme-cli \
     ${@d.getVar('PREFERRED_PROVIDER_u-boot-fw-utils', True) or 'u-boot-fw-utils'} \
+    aer-inject \
     "
 
 RDEPENDS:${PN}-apps:append:aspeed-g6 = " \
