@@ -18,10 +18,10 @@ SRC_URI = " git://github.com/AspeedTech-BMC/aspeed_app.git;protocol=https;branch
             file://meson.build \
             file://video_ioctl.h \
 "
-PV = "1.0+git${SRCPV}"
+PV = "v00.01.03+git${SRCPV}"
 
 # Tag for v00.01.03
-SRCREV = "0ac004f1c0bc1e116abb04b0b2a2994947d94b5b"
+SRCREV = "e41ca51cbd69e739119d60df46daa2f8530e5094"
 BRANCH = "master"
 inherit meson
 
