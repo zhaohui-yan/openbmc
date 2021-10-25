@@ -14,6 +14,7 @@ PACKAGES:append = " \
     ${PN}-ssif \
     ${PN}-mtdtest \
     ${PN}-ktools \
+    ${PN}-usbtools \
     "
 
 SUMMARY:${PN}-apps = "AspeedTech Test App"
@@ -62,4 +63,9 @@ RDEPENDS:${PN}-ktools = " \
     "
 RRECOMMENDS:${PN}-ktools= " \
     perf \
+    "
+
+SUMMARY:${PN}-usbtools = "USB test tools"
+RDEPENDS:${PN}-usbtools = " \
+    usb-gadget \
     "

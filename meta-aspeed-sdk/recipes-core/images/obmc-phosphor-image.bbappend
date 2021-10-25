@@ -15,6 +15,7 @@ IMAGE_INSTALL:append = " \
         packagegroup-aspeed-obmc-inband \
         ${@bb.utils.contains('MACHINE_FEATURES', 'ast-ssp', 'packagegroup-aspeed-ssp', '', d)} \
         packagegroup-aspeed-mtdtest \
+        packagegroup-aspeed-usbtools \
         "
 
 # Only install in AST26xx series rofs as the free space of AST2500 rofs is not enough.
