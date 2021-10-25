@@ -57,7 +57,6 @@ RDEPENDS:${PN}-inband = " \
     phosphor-ipmi-ssif \
     phosphor-ipmi-bt \
     phosphor-ipmi-kcs \
-    usb-gadget \
     "
 
 SUMMARY:${PN}-apps = "Open Source Applications for OpenBMC Image"
