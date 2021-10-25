@@ -11,6 +11,7 @@ IMAGE_INSTALL:append = " \
         ${@bb.utils.contains('MACHINE_FEATURES', 'ast-ssp', 'packagegroup-aspeed-ssp', '', d)} \
         packagegroup-aspeed-mtdtest \
         packagegroup-aspeed-ktools \
+        packagegroup-aspeed-usbtools \
         "
 
 EXTRA_IMAGE_FEATURES:append = " \
