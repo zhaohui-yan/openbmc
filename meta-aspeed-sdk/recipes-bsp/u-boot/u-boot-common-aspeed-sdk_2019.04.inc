@@ -21,29 +21,30 @@ UBOOT_INITIAL_ENV=""
 
 PV = "v2019.04+git${SRCPV}"
 
+inherit gitpkgv
+
+PKGVTAG ="${GITPKGVTAG}"
+
 do_set_local_version() {
     rm -f ${S}/.scmversion
     rm -f ${B}/.scmversion
-    is_tag="$(git -C ${S} name-rev --name-only --tags HEAD)"
 
-    if [ $? -ne 0 ] ; then
+    if [[ "${PKGVTAG}" == "None" ||  "${PKGVTAG}" == "0+0" ]]; then
         echo "not a git repository!!!"
+    elif [[ "${PKGVTAG}" == "0.0-"*"-g"* ]] ; then
+        version="$(git -C ${S} rev-parse --verify --short HEAD)"
+        echo "-dirty-${version}" > ${S}/.scmversion
+        echo "-dirty-${version}" > ${B}/.scmversion
     else
-        if test "x${is_tag}" = "xundefined"; then
-            version="$(git -C ${S} rev-parse --verify --short HEAD)"
-            echo "-dirty-${version}" > ${S}/.scmversion
-            echo "-dirty-${version}" > ${B}/.scmversion
-        else
-            version="$(git -C ${S} describe --tags --exact-match HEAD)"
+        version="$(git -C ${S} describe --tags --exact-match HEAD)"
 
-            if echo "${version}" | grep -q "devtool"; then
-                 version_ext="$(git -C ${S} rev-parse --verify --short HEAD)"
-                 echo "-${version}-${version_ext}" > ${S}/.scmversion
-                 echo "-${version}-${version_ext}" > ${B}/.scmversion
-            else
-                echo "-${version}" > ${S}/.scmversion
-                echo "-${version}" > ${B}/.scmversion
-            fi
+        if echo "${version}" | grep -q "devtool"; then
+             version_ext="$(git -C ${S} rev-parse --verify --short HEAD)"
+             echo "-${version}-${version_ext}" > ${S}/.scmversion
+             echo "-${version}-${version_ext}" > ${B}/.scmversion
+        else
+            echo "-${version}" > ${S}/.scmversion
+            echo "-${version}" > ${B}/.scmversion
         fi
     fi
 }
