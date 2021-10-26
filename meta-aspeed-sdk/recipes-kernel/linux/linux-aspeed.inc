@@ -16,7 +16,7 @@ LINUX_VERSION_EXTENSION ?= "-${SRCREV}"
 
 PV = "${LINUX_VERSION}+git${SRCPV}"
 
-inherit kernel
+inherit kernel gitpkgv
 require recipes-kernel/linux/linux-yocto.inc
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=bbea815ee2795b2f4230826c0c6b8814"
@@ -24,27 +24,28 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=bbea815ee2795b2f4230826c0c6b8814"
 # Do not install the kernel image into rootfs at /boot directory
 RDEPENDS:${KERNEL_PACKAGE_NAME}-base = ""
 
+PKGVTAG ="${GITPKGVTAG}"
+
 do_set_local_version() {
-    is_tag="$(git -C ${S} name-rev --name-only --tags HEAD)"
+    rm -f ${S}/.scmversion
+    rm -f ${B}/.scmversion
 
-    if [ $? -ne 0 ] ; then
+    if [[ "${PKGVTAG}" == "None" ||  "${PKGVTAG}" == "0+0" ]]; then
         echo "not a git repository!!!"
+    elif [[ "${PKGVTAG}" == "0.0-"*"-g"* ]] ; then
+        version="$(git -C ${S} rev-parse --verify --short HEAD)"
+        echo "-dirty-${version}" > ${S}/.scmversion
+        echo "-dirty-${version}" > ${B}/.scmversion
     else
-        # Remove previous CONFIG_LOCALVERSION
-        sed -i '/CONFIG_LOCALVERSION/d' ${B}/.config
+        version="$(git -C ${S} describe --tags --exact-match HEAD)"
 
-        if test "x${is_tag}" = "xundefined"; then
-            version="$(git -C ${S} rev-parse --verify --short HEAD)"
-            echo "CONFIG_LOCALVERSION="\"-dirty-${version}\" >> ${B}/.config
+        if echo "${version}" | grep -q "devtool"; then
+             version_ext="$(git -C ${S} rev-parse --verify --short HEAD)"
+             echo "-${version}-${version_ext}" > ${S}/.scmversion
+             echo "-${version}-${version_ext}" > ${B}/.scmversion
         else
-            version="$(git -C ${S} describe --tags --exact-match HEAD)"
-
-            if echo "${version}" | grep -q "devtool"; then
-                version_ext="$(git -C ${S} rev-parse --verify --short HEAD)"
-                echo "CONFIG_LOCALVERSION="\"-${version}-${version_ext}\" >> ${B}/.config
-            else
-                echo "CONFIG_LOCALVERSION="\"-${version}\" >> ${B}/.config
-            fi
+            echo "-${version}" > ${S}/.scmversion
+            echo "-${version}" > ${B}/.scmversion
         fi
     fi
 }
