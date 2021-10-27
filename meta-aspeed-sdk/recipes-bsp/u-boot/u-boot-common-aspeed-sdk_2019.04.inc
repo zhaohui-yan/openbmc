@@ -21,32 +21,34 @@ UBOOT_INITIAL_ENV=""
 
 PV = "v2019.04+git${SRCPV}"
 
-inherit gitpkgv
+python do_set_local_version() {
+    import os
+    s = d.getVar("S")
+    b = d.getVar("B")
+    try:
+        os.remove('%s/.scmversion' % s)
+        os.remove('%s/.scmversion' % b)
+    except:
+        pass
 
-PKGVTAG ="${GITPKGVTAG}"
+    scm_ver = ""
 
-do_set_local_version() {
-    rm -f ${S}/.scmversion
-    rm -f ${B}/.scmversion
+    try:
+        res=bb.process.run("git -C %s describe --tags --exact-match" %  s)[0].strip("\n")
 
-    if [[ "${PKGVTAG}" == "None" ||  "${PKGVTAG}" == "0+0" ]]; then
-        echo "not a git repository!!!"
-    elif [[ "${PKGVTAG}" == "0.0-"*"-g"* ]] ; then
-        version="$(git -C ${S} rev-parse --verify --short HEAD)"
-        echo "-dirty-${version}" > ${S}/.scmversion
-        echo "-dirty-${version}" > ${B}/.scmversion
-    else
-        version="$(git -C ${S} describe --tags --exact-match HEAD)"
+        if res.find("devtool") != -1:
+            version_ext = bb.process.run("git -C %s rev-parse --verify --short HEAD" % s)[0].strip("\n")
+            scm_ver = ('-%s-%s' % res, version_ext)
+        else:
+            scm_ver = ('-%s' % res)
+    except Exception as e:
+        version=bb.process.run("git -C %s rev-parse --verify --short HEAD" % s)[0].strip("\n")
+        scm_ver = ('-dirty-%s' % version)
 
-        if echo "${version}" | grep -q "devtool"; then
-             version_ext="$(git -C ${S} rev-parse --verify --short HEAD)"
-             echo "-${version}-${version_ext}" > ${S}/.scmversion
-             echo "-${version}-${version_ext}" > ${B}/.scmversion
-        else
-            echo "-${version}" > ${S}/.scmversion
-            echo "-${version}" > ${B}/.scmversion
-        fi
-    fi
+    with open("%s/.scmversion" % s, "a") as f:
+        f.write(scm_ver)
+    with open("%s/.scmversion" % b, "a") as f:
+        f.write(scm_ver)
 }
 
 addtask set_local_version before do_compile after do_configure

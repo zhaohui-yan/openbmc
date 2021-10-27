@@ -22,29 +22,32 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=bbea815ee2795b2f4230826c0c6b8814"
 # Do not install the kernel image into rootfs at /boot directory
 RDEPENDS:${KERNEL_PACKAGE_NAME}-base = ""
 
-do_set_local_version() {
-    is_tag="$(git -C ${S} name-rev --name-only --tags HEAD)"
+python do_set_local_version() {
+    s = d.getVar("S")
+    b = d.getVar("B")
+    conf_local_ver = ""
 
-    if [ $? -ne 0 ] ; then
-        echo "not a git repository!!!"
-    else
-        # Remove previous CONFIG_LOCALVERSION
-        sed -i '/CONFIG_LOCALVERSION/d' ${B}/.config
+    with open("%s/.config" % b, "r+") as f:
+        lines = f.readlines()
+        f.seek(0)
+        for line in lines:
+            if line.find("CONFIG_LOCALVERSION") == -1:
+                f.write(line)
+        f.truncate()
 
-        if test "x${is_tag}" = "xundefined"; then
-            version="$(git -C ${S} rev-parse --verify --short HEAD)"
-            echo "CONFIG_LOCALVERSION="\"-dirty-${version}\" >> ${B}/.config
-        else
-            version="$(git -C ${S} describe --tags --exact-match HEAD)"
+    try:
+        res=bb.process.run("git -C %s describe --tags --exact-match" %  s)[0].strip("\n")
 
-            if echo "${version}" | grep -q "devtool"; then
-                version_ext="$(git -C ${S} rev-parse --verify --short HEAD)"
-                echo "CONFIG_LOCALVERSION="\"-${version}-${version_ext}\" >> ${B}/.config
-            else
-                echo "CONFIG_LOCALVERSION="\"-${version}\" >> ${B}/.config
-            fi
-        fi
-    fi
+        if res.find("devtool") != -1:
+            version_ext = bb.process.run("git -C %s rev-parse --verify --short HEAD" % s)[0].strip("\n")
+            conf_local_ver = ('CONFIG_LOCALVERSION=\"-%s-%s\"' % res, version_ext)
+        else:
+            conf_local_ver = ('CONFIG_LOCALVERSION=\"-%s\"' % res)
+    except Exception as e:
+        version=bb.process.run("git -C %s rev-parse --verify --short HEAD" % s)[0].strip("\n")
+        conf_local_ver = ('CONFIG_LOCALVERSION=\"-dirty-%s\"' % version)
+    with open("%s/.config" % b, "a") as f:
+        f.write(conf_local_ver)
 }
 
 addtask set_local_version before do_configure after do_kernel_configme
