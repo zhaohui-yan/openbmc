@@ -12,11 +12,6 @@
 LICENSE = "CLOSED"
 LIC_FILES_CHKSUM = ""
 
-# S = "${WORKDIR}"
-
-# No information for SRC_URI yet (only an external source tree was specified)
-# http://192.168.10.30:7990/scm/bmc/ast_app.git
-
 S = "${WORKDIR}/git"
 
 SRC_URI = " git://gerrit.aspeed.com:29418/aspeed_app.git;protocol=ssh;branch=${BRANCH} \
