@@ -7,7 +7,7 @@ LIC_FILES_CHKSUM = "file://Licenses/README;md5=30503fd321432fc713238f582193b78e"
 PE = "1"
 
 BRANCH="aspeed-dev-v2019.04"
-SRC_URI = "git://192.168.10.13:29418/u-boot.git;protocol=ssh;branch=${BRANCH}"
+SRC_URI = "git://192.168.10.9:29418/u-boot.git;protocol=ssh;branch=${BRANCH}"
 SRC_URI:append:ast-abr = " file://0001-u-boot-disable-wdt2-for-abr.patch "
 SRCREV = "${AUTOREV}"
 

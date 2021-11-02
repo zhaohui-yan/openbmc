@@ -15,7 +15,7 @@ DEPENDS = "virtual/kernel"
 S = "${WORKDIR}/git"
 
 BRANCH="aspeed-dev-v1.12"
-SRC_URI = "git://192.168.10.13:29418/cryptodev.git;protocol=ssh;branch=${BRANCH}"
+SRC_URI = "git://192.168.10.9:29418/cryptodev.git;protocol=ssh;branch=${BRANCH}"
 SRCREV = "${AUTOREV}"
 
 inherit module
