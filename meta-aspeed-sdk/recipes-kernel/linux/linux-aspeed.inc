@@ -7,7 +7,7 @@ PROVIDES += "virtual/kernel"
 KCONFIG_MODE="--alldefconfig"
 KERNEL_VERSION_SANITY_SKIP="1"
 
-KSRC = "git://192.168.10.9:29418/linux.git;protocol=ssh;branch=${KBRANCH}"
+KSRC = "git://gerrit.aspeed.com:29418/linux.git;protocol=ssh;branch=${KBRANCH}"
 
 SRC_URI = "${KSRC}"
 SRC_URI:append:ast-abr = " file://0001-abr-alternate-flash-layout.patch "

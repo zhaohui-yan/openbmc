@@ -19,7 +19,7 @@ LIC_FILES_CHKSUM = ""
 
 S = "${WORKDIR}/git"
 
-SRC_URI = " git://192.168.10.9:29418/aspeed_app.git;protocol=ssh;branch=${BRANCH} \
+SRC_URI = " git://gerrit.aspeed.com:29418/aspeed_app.git;protocol=ssh;branch=${BRANCH} \
             file://meson.build \
             file://video_ioctl.h \
 "
