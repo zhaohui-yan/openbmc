@@ -34,6 +34,7 @@ RDEPENDS:${PN}-apps = " \
     nvme-cli \
     ${@d.getVar('PREFERRED_PROVIDER_u-boot-fw-utils', True) or 'u-boot-fw-utils'} \
     aer-inject \
+    libmctp-intel-test \
     "
 
 RDEPENDS:${PN}-apps:append:aspeed-g6 = " \

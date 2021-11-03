@@ -1,0 +1,32 @@
+From 6766b67173f851285d2b6db549910b3d205957ce Mon Sep 17 00:00:00 2001
+From: Jamin Lin <jamin_lin@aspeedtech.com>
+Date: Wed, 3 Nov 2021 17:10:27 +0800
+Subject: [PATCH] support to build over smbus and astpcie test program
+
+Signed-off-by: Jamin Lin <jamin_lin@aspeedtech.com>
+---
+ CMakeLists.txt | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index b27da63..e5f51f3 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -81,5 +81,12 @@ add_test (NAME encode_decode COMMAND test_encode_decode)
+ add_executable (mctp_astpcie_register_type utils/mctp-astpcie-register-type.c)
+ target_link_libraries (mctp_astpcie_register_type mctp_intel)
+ 
+-install (TARGETS mctp_intel DESTINATION lib)
+-install (FILES libmctp.h libmctp-cmds.h libmctp-vdpci.h libmctp-smbus.h libmctp-astpcie.h libmctp-msgtypes.h DESTINATION include)
++add_executable (mctp-astpcie-test tests/mctp-astpcie-test.c)
++target_link_libraries (mctp-astpcie-test mctp_intel)
++
++add_executable (mctp-smbus-test tests/mctp-smbus-test.c)
++target_link_libraries (mctp-smbus-test mctp_intel)
++
++install (TARGETS mctp-astpcie-test mctp-smbus-test DESTINATION bin)
++#install (TARGETS mctp_intel DESTINATION lib)
++#install (FILES libmctp.h libmctp-cmds.h libmctp-vdpci.h libmctp-smbus.h libmctp-astpcie.h libmctp-msgtypes.h DESTINATION include)
+-- 
+2.17.1
+
