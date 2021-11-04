@@ -1,0 +1,43 @@
+From d904b019831c437aae594d6bb4b9e6af1eb6f933 Mon Sep 17 00:00:00 2001
+From: Lei YU <yulei.sh@bytedance.com>
+Date: Fri, 06 Aug 2021 17:12:29 +0800
+Subject: [PATCH] [POC] login: Fix waiting in login page after login
+
+When the user enter the correct username/password and click the "Log in"
+button, sometimes the page stays at the login page. The user will have
+to reload the page, enter the username/password, and click the "Log in"
+button again to actually login the WebUI.
+
+From the browser's debug control, we could see it's waiting for the
+response of
+https://$bmc/redfish/v1/AccountService/Accounts/root
+and it does not get any response.
+
+From the BMC side, we could see the first login is successful.
+
+Somehow if we remove the async keyword of function
+checkPasswordChangeRequired(), the issue is not reproduced anymore.
+
+So this is a POC patch to fix the issue, but the root cause is unknown.
+
+Tested: Clear the browser's cookie, successful login multiple times.
+
+Signed-off-by: Lei YU <yulei.sh@bytedance.com>
+Change-Id: I01e3ab5ca63baed18045915500fa8ca2e6b247ea
+---
+
+diff --git a/src/store/modules/Authentication/AuthenticanStore.js b/src/store/modules/Authentication/AuthenticanStore.js
+index e08f5b0..07d5ee8 100644
+--- a/src/store/modules/Authentication/AuthenticanStore.js
++++ b/src/store/modules/Authentication/AuthenticanStore.js
+@@ -52,8 +52,8 @@
+         .then(() => router.go('/login'))
+         .catch((error) => console.log(error));
+     },
+-    async checkPasswordChangeRequired(_, username) {
+-      return await api
++    checkPasswordChangeRequired(_, username) {
++      api
+         .get(`/redfish/v1/AccountService/Accounts/${username}`)
+         .then(({ data: { PasswordChangeRequired } }) => PasswordChangeRequired)
+         .catch((error) => console.log(error));
