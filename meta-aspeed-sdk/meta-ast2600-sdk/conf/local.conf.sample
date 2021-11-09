@@ -68,13 +68,9 @@ EXTRA_USERS_PARAMS = " \
 TZ = '/etc/localtime'
 
 require conf/machine/include/obmc-bsp-common.inc
-# ASPEED initramfs if build aspeed-image-sdk
-#require conf/distro/include/ast-img-sdk.inc
 
 # AST2600 Alternate Boot Record feature
 #require conf/machine/include/ast-abr.inc
-
-INITRAMFS_IMAGE:df-ast-img-sdk = "aspeed-image-initramfs"
 
 # Free Open Source Software (FOSS) Creation
 # INHERIT += "archiver"

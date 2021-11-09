@@ -80,49 +80,10 @@ source setup ast2500-default [build_dir]
 ```
 
 ## Build OpenBMC firmware
+
 ```
 bitbake obmc-phosphor-image
 ```
-
-## Build SDK Image (all.bin)
-The difference between ASPEED SDK image and OpenBMC firmware is that ASPEED SDK image only has necessary applications and test tools for ASPEED testing without OpenBMC phosphor packages and services.
-Add `ast-img-sdk` DISTRO_FEATURES and `df-ast-img-sdk` DISTROOVERRIDES to apply the following change in `conf/local.conf`:
-
-```
-# ASPEED initramfs if build aspeed-image-sdk
-- #require conf/distro/include/ast-img-sdk.inc
-+ require conf/distro/include/ast-img-sdk.inc
-```
-
-Then trigger the build.
-
-```
-bitbake aspeed-image-sdk
-```
-
-It changes the following settings.
-1. Change INITRAMFS_IMAGE to `aspeed-image-initramfs` in `conf/local.conf`.
-
-```
-INITRAMFS_IMAGE:df-ast-img-sdk = "aspeed-image-initramfs"
-```
-
-2. Change device tree from `aspeed-ast2600-obmc.dtb` to `aspeed-ast2600-evb.dtb` in meta-ast2600-sdk/conf/machine/${MACHINE}.conf file, e.g.,
-
-```
-# ASPEED ast2600 evb dtb file if build aspeed-image-sdk
-KERNEL_DEVICETREE:df-ast-img-sdk = "aspeed-ast2600-evb.dtb"
-KERNEL_DEVICETREE = "aspeed-ast2600-obmc.dtb"
-```
-
-3. Remove `phosphor-mmc` DISTRO_FEATURES and DISTROOVERRIDES in `meta-ast2600-sdk/conf/machine/${MACHINE}.conf` file for boot from eMMC, e.g.,
-
-```
-# remove phosphor-mmc distro feature if build aspeed-image-sdk
-require ${@bb.utils.contains('INITRAMFS_IMAGE', 'aspeed-image-initramfs', '', 'conf/distro/include/phosphor-mmc.inc', d)}
-```
-
-Then the image will be built according to the setting of `meta-aspeed-sdk/meta-ast2600-sdk/conf/machine/${MACHINE}.conf`.
 
 # Output image
 After you successfully built the image, the image file can be found in: `[build_dir]/tmp/work/deploy/images/${MACHINE}/`.
@@ -157,31 +118,7 @@ After you successfully built the image, the image file can be found in: `[build_
 - `fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE}`: fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE} processed with verified boot signing for CoT2 image
 - `otp_image`: OTP image
 
-## SDK Image
-
-### Boot from SPI image
-- `all.bin`: whole flash image
-
-### Boot from SPI with secure boot image
-- `all.bin`: whole flash image
-- `s_u-boot-spl`: u-boot-spl.bin processed with socsec tool signing for RoT image
-- `u-boot`: u-boot.bin processed with verified boot signing for CoT1 image
-- `fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE}`: fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE} processed with verified boot signing for CoT2 image
-- `otp_image`: OTP image
-
-### Boot from eMMC image
-- `emmc_image-u-boot`: u-boot-spl.bin + u-boot.bin processed with gen\_emmc\_image.py for boot partition
-- `aspeed-image-sdk-${MACHINE}.wic.xz`: compressed emmc flash image for user data partition
-
-### Boot from eMMC with secure boot image
-- `s_emmc_image-u-boot`: s_u-boot-spl.bin(RoT) + u-boot.bin(CoT1) for boot partition
-- `aspeed-image-sdk-${MACHINE}.wic.xz`: compressed emmc flash image for user data partition
-- `s_u-boot_spl`: u-boot-spl.bin processed with socsec tool signing for RoT image
-- `u-boot`: u-boot.bin processed with verified boot signing for CoT1 image
-- `fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE}`: fitImage-${INITRAMFS_IMAGE}-${MACHINE}-${MACHINE} processed with verified boot signing for CoT2 image
-- `otp_image`: OTP image
-
-## Recovery Image via UART
+### Recovery Image via UART
 - `recovery_u-boot-spl` : u-boot-spl.bin processed with gen_uart_booting_image.sh for recovery image via UART
 - `recovery_s_u-boot-spl` : s_u-boot-spl.bin processed with gen_uart_booting_image.sh for recovery image via UART with secure boot
 
