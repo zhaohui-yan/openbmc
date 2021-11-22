@@ -18,7 +18,7 @@ PV = "${LINUX_VERSION}+git${SRCPV}"
 inherit kernel
 require recipes-kernel/linux/linux-yocto.inc
 
-LIC_FILES_CHKSUM = "file://COPYING;md5=bbea815ee2795b2f4230826c0c6b8814"
+LIC_FILES_CHKSUM ?= "file://COPYING;md5=bbea815ee2795b2f4230826c0c6b8814"
 
 # Do not install the kernel image into rootfs at /boot directory
 RDEPENDS:${KERNEL_PACKAGE_NAME}-base = ""
