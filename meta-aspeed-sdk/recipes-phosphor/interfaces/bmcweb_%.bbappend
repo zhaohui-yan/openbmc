@@ -3,7 +3,7 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 # TODO: Remove this after next upgrade OpenBMC
 SRCREV = "021d32cf907222cd72a5b9d2fe2e8159dd4bf083"
 
-EXTRA_OEMESON:append:ast-mmc = " \
+EXTRA_OEMESON:append= " \
     -Dredfish-dbus-log=enabled \
     -Dhttp-body-limit=128 \
     "
