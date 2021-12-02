@@ -16,13 +16,15 @@
 #define SYSFS_SLAVE_QUEUE "/sys/bus/i2c/devices/%d-00%02x/slave-mqueue"
 
 struct mctp_smbus_pkt_private *smbus_extra_params = NULL;
-const char short_options [] = "htrdl:c:";
+uint8_t enable_response = 1;
+const char short_options [] = "htrdnl:c:";
 const struct option
     long_options [] = {
     { "help",   no_argument,        NULL,   'h' },
     { "req",    no_argument,        NULL,   't' },
     { "resp",   no_argument,        NULL,   'r' },
     { "deb",    no_argument,        NULL,   'd' },
+    { "noresp", no_argument,        NULL,   'n' },
     { "len",    required_argument,  NULL,   'l' },
     { "count",  required_argument,  NULL,   'c' },
     { 0, 0, 0, 0 }
@@ -40,6 +42,7 @@ void usage(FILE *fp, int argc, char **argv)
         " -d | --deb        debug\n"
         " -l | --len        data length\n"
         " -c | --count      test times\n"
+        " -n | --noresp     no response\n"
         "Command fields\n"
         " <bus_num>         I2C bus number\n"
         " <dst_addr>        destination slave address\n"
@@ -177,11 +180,13 @@ void rx_request_handler(mctp_eid_t src, void *data, void *msg, size_t len,
         break;
     }
 
-    rc = mctp_message_tx(ctx->mctp, src, &resp, resp_len, false, tag,
-                 (void *)pkt_prv);
+    if(enable_response) {
+        rc = mctp_message_tx(ctx->mctp, src, &resp, resp_len, false, tag,
+                     (void *)pkt_prv);
 
-    if (rc < 0) {
-        mctp_prerr("%s: send response failed", __func__);
+        if (rc < 0) {
+            mctp_prerr("%s: send response failed", __func__);
+        }
     }
 }
 
@@ -237,11 +242,13 @@ void rx_request_control_handler(mctp_eid_t src, void *data, void *msg, size_t le
         break;
     }
 
-    rc = mctp_message_tx(ctx->mctp, src, &resp, resp_len, false, tag,
-                 (void *)pkt_prv);
+    if(enable_response) {
+        rc = mctp_message_tx(ctx->mctp, src, &resp, resp_len, false, tag,
+                     (void *)pkt_prv);
 
-    if (rc < 0) {
-        mctp_prerr("%s: send response failed", __func__);
+        if (rc < 0) {
+            mctp_prerr("%s: send response failed", __func__);
+        }
     }
 }
 
@@ -442,10 +449,15 @@ int test_send_mctp_cmd(uint8_t bus, uint8_t src_addr, uint8_t dst_addr, uint8_t 
 
     ctx->rx_buf = (uint8_t *)rbuf;
 
-    ret = test_mctp_smbus_recv_data_timeout_raw(ctx, dst_eid, -1);
-    if (ret < 0) {
-        mctp_prerr("%s: error getting response\n", __func__);
-        goto bail;
+    if (enable_response) {
+        ret = test_mctp_smbus_recv_data_timeout_raw(ctx, dst_eid, -1);
+        if (ret < 0) {
+            mctp_prerr("%s: error getting response\n", __func__);
+            goto bail;
+        } else {
+            *rlen = ret;
+            ret = 0;
+        }
     } else {
         *rlen = ret;
         ret = 0;
@@ -529,6 +541,10 @@ int main(int argc, char *argv[])
         case 'c':
             loop_count = strtoul(optarg, NULL, 0);
             minargc += 2;
+            break;
+        case 'n':
+            enable_response = 0;
+            minargc += 1;
             break;
         default:
             usage(stdout, argc, argv);

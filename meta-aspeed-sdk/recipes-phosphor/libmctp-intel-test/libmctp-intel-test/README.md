@@ -18,12 +18,20 @@
 - OpenBMC/libmctp
   - https://github.com/openbmc/libmctp
 
-# Known Issue
-- Currently, libmctp only supports MCTP payload size 64bytes.
+# Dependencies
 - To test MCTP over PCIE, it is required to use MCTP driver which is provided by Intel.
   - https://github.com/Intel-BMC/linux/blob/dev-5.10-intel/drivers/soc/aspeed/aspeed-mctp.c
   - https://github.com/Intel-BMC/linux/commit/2e6b88503f430fb55a02882716f3841d29a84a7e#diff-b97d7679f6e1d68f489b1cb890c2f2175cfb59d42df3a612f286e6122c31f117
-- MCTP over PCIE only supports route by ID.
+
+  **This driver had been integrated into AspeedTech-BMC/linux.**
+
+- It is required to use Intel-BMC/libmctp to build this test program. The reason are as following.
+  - Intel-BMC/libmctp has not been upstreamed to OpenBMC/libmctp, yet.
+  - OpenBMC/libmctp only supports linux kernel v5.15 and higher version. To fix conflict issue between Intel-BMC/libmctp and OpenBMC/libmctp, Intel-BMC/libmctp is only used
+to build this test program. It will not install header files and static library of Intel-BMC/libmctp into image.
+
+# Known Issue
+- Currently, libmctp only supports MCTP payload size 64bytes.
 
 # MCTP Message Type
 ## MCTP control messages (0x00)
@@ -88,40 +96,7 @@ A MCTP over PCIe VDM compliant PCIe device shall support MCTP over PCIe VDM comm
 The MCTP over PCI Express (PCIe) VDM transport binding transfers MCTP messages using PCIe Type 1 VDMs with data. MCTP messages use the MCTP VDM code value (0000b) that uniquely differentiates MCTP messages from other DMTF VDMs. The fields labeled “PCIe Medium-Specific Header” and “PCIe Medium-Specific Trailer” are specific to carrying MCTP packets using PCIe VDMs. The fields labeled “MCTP Transport Header” and “MCTP Packet Payload” are common fields for all MCTP packets and messages and are specified in MCTP. The location of those fields when they are carried in a PCIe VDM. The PCIe specification allows the last four bytes of the PCIE VDM header to be vendor defined. The MCTP over PCIe VDM transport binding specification uses these bytes for MCTP Transport header fields under the DMTF Vendor ID. This document also specifies the medium-specific use of the MCTP “Hdr Version” field.
 
 ## Test
-**It is required to get the PCIE bus number on host machine by lspci command.**
-```
-$ lspci
-00:00.0 Host bridge: Intel Corporation 8th Gen Core Processor Host Bridge/DRAM Registers (rev 07)
-00:01.0 PCI bridge: Intel Corporation Xeon E3-1200 v5/E3-1500 v5/6th Gen Core Processor PCIe Controller (x16) (rev 07)
-00:08.0 System peripheral: Intel Corporation Xeon E3-1200 v5/v6 / E3-1500 v5 / 6th/7th Gen Core Processor Gaussian Mixture Model
-00:14.0 USB controller: Intel Corporation 200 Series/Z370 Chipset Family USB 3.0 xHCI Controller
-00:16.0 Communication controller: Intel Corporation 200 Series PCH CSME HECI #1
-00:17.0 SATA controller: Intel Corporation 200 Series PCH SATA controller [AHCI mode]
-00:1b.0 PCI bridge: Intel Corporation 200 Series PCH PCI Express Root Port #19 (rev f0)
-00:1b.3 PCI bridge: Intel Corporation 200 Series PCH PCI Express Root Port #20 (rev f0)
-00:1b.4 PCI bridge: Intel Corporation 200 Series PCH PCI Express Root Port #21 (rev f0)
-00:1c.0 PCI bridge: Intel Corporation 200 Series PCH PCI Express Root Port #3 (rev f0)
-00:1c.3 PCI bridge: Intel Corporation 200 Series PCH PCI Express Root Port #4 (rev f0)
-00:1c.5 PCI bridge: Intel Corporation 200 Series PCH PCI Express Root Port #6 (rev f0)
-00:1c.6 PCI bridge: Intel Corporation 200 Series PCH PCI Express Root Port #7 (rev f0)
-00:1c.7 PCI bridge: Intel Corporation 200 Series PCH PCI Express Root Port #8 (rev f0)
-00:1d.0 PCI bridge: Intel Corporation 200 Series PCH PCI Express Root Port #9 (rev f0)
-00:1d.4 PCI bridge: Intel Corporation 200 Series PCH PCI Express Root Port #13 (rev f0)
-00:1f.0 ISA bridge: Intel Corporation Device a2cc
-00:1f.2 Memory controller: Intel Corporation 200 Series/Z370 Chipset Family Power Management Controller
-00:1f.3 Audio device: Intel Corporation 200 Series PCH HD Audio
-00:1f.4 SMBus: Intel Corporation 200 Series/Z370 Chipset Family SMBus Controller
-00:1f.6 Ethernet controller: Intel Corporation Ethernet Connection (2) I219-V
-01:00.0 PCI bridge: ASPEED Technology, Inc. AST1150 PCI-to-PCI Bridge (rev 06)
-02:00.0 VGA compatible controller: ASPEED Technology, Inc. ASPEED Graphics Family (rev 52)
-02:01.0 Unassigned class [ff00]: ASPEED Technology, Inc. Device 2402
-09:00.0 PCI bridge: ASPEED Technology, Inc. AST1150 PCI-to-PCI Bridge (rev 05)
-0a:00.0 VGA compatible controller: ASPEED Technology, Inc. ASPEED Graphics Family (rev 51)
-0a:01.0 Unassigned class [ff00]: ASPEED Technology, Inc. Device 2402
-0b:00.0 PCI bridge: Integrated Technology Express, Inc. IT8892E PCIe to PCI Bridge (rev 71)
-```
-
-**Add -g option to get the BDF information, so users do not need to get the PCIE bus number on host machine by lspci command.**
+**It is required to get the BDF information if users test route by ID and two EVB role are endpoints.**
 
 ### Usage
 ```
@@ -134,7 +109,9 @@ Options:
  -r | --resp       responder
  -d | --deb        debug
  -l | --len        data length
+ -c | --count      test times
  -g | --gbdf       get BDF information
+ -n | --noresp     no response
 Command fields
  <bus_num>         destination PCIE bus number
  <routing_type>    PCIE routing type 0: route to RC, 2: route by ID, 3: Broadcast from RC
@@ -145,7 +122,7 @@ Command fields
  <type>            MCTP message type
    0x00                - MCTP Control Message
    0x85                - ASPEED Control Message
- example: get BDF: mctp-astpcie-test -g  
+ example: get BDF: mctp-astpcie-test -g
  example: rx : mctp-astpcie-test -r 2 2 0 0 8 9
  example: tx :
    MCTP Control Message
@@ -257,6 +234,8 @@ Options:
  -r | --resp       responder
  -d | --deb        debug
  -l | --len        data length
+ -c | --count      test times
+ -n | --noresp     no response
 Command fields
  <bus_num>         I2C bus number
  <dst_addr>        destination slave address

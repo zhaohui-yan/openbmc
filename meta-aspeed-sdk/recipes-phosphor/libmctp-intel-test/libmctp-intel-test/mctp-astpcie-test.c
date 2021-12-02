@@ -13,16 +13,18 @@
 #include "mctp-astpcie-test.h"
 
 struct mctp_astpcie_pkt_private *astpcie_extra_params = NULL;
-const char short_options [] = "htrdl:c:g";
+uint8_t enable_response = 1;
+const char short_options [] = "htrdgnl:c:";
 const struct option
     long_options [] = {
     { "help",   no_argument,        NULL,   'h' },
     { "req",    no_argument,        NULL,   't' },
     { "resp",   no_argument,        NULL,   'r' },
     { "deb",    no_argument,        NULL,   'd' },
+    { "gbdf",   no_argument,        NULL,   'g' },
+    { "noresp", no_argument,        NULL,   'n' },
     { "len",    required_argument,  NULL,   'l' },
     { "count",  required_argument,  NULL,   'c' },
-    { "gbdf",   required_argument,  NULL,   'g' },
     { 0, 0, 0, 0 }
 };
 
@@ -39,6 +41,7 @@ void usage(FILE *fp, int argc, char **argv)
         " -l | --len        data length\n"
         " -c | --count      test times\n"
         " -g | --gbdf       get BDF information\n"
+        " -n | --noresp     no response\n"
         "Command fields\n"
         " <bus_num>         destination PCIE bus number\n"
         " <routing_type>    PCIE routing type 0: route to RC, 2: route by ID, 3: Broadcast from RC\n"
@@ -177,12 +180,14 @@ void rx_request_handler(mctp_eid_t src, void *data, void *msg, size_t len,
         break;
     }
 
-    mctp_binding_set_tx_enabled(ctx->astpcie_binding, true);
-    rc = mctp_message_tx(ctx->mctp, src, &resp, resp_len, false, tag,
-                 (void *)pkt_prv);
+    if(enable_response) {
+        mctp_binding_set_tx_enabled(ctx->astpcie_binding, true);
+        rc = mctp_message_tx(ctx->mctp, src, &resp, resp_len, false, tag,
+                     (void *)pkt_prv);
 
-    if (rc < 0) {
-        mctp_prerr("%s: send response failed", __func__);
+        if (rc < 0) {
+            mctp_prerr("%s: send response failed", __func__);
+        }
     }
 }
 
@@ -237,12 +242,14 @@ void rx_request_control_handler(mctp_eid_t src, void *data, void *msg, size_t le
         break;
     }
 
-    mctp_binding_set_tx_enabled(ctx->astpcie_binding, true);
-    rc = mctp_message_tx(ctx->mctp, src, &resp, resp_len, false, tag,
-                 (void *)pkt_prv);
+    if(enable_response) {
+        mctp_binding_set_tx_enabled(ctx->astpcie_binding, true);
+        rc = mctp_message_tx(ctx->mctp, src, &resp, resp_len, false, tag,
+                     (void *)pkt_prv);
 
-    if (rc < 0) {
-        mctp_prerr("%s: send response failed", __func__);
+        if (rc < 0) {
+            mctp_prerr("%s: send response failed", __func__);
+        }
     }
 }
 
@@ -462,12 +469,17 @@ int test_send_mctp_cmd(uint8_t bus, uint8_t routing, uint8_t dst_dev, uint8_t ds
 
     ctx->rx_buf = (uint8_t *)rbuf;
 
-    ret = test_mctp_astpcie_recv_data_timeout_raw(ctx, dst_eid, -1);
-    if (ret < 0) {
-        mctp_prerr("%s: error getting response\n", __func__);
-        goto bail;
+    if (enable_response) {
+        ret = test_mctp_astpcie_recv_data_timeout_raw(ctx, dst_eid, -1);
+        if (ret < 0) {
+            mctp_prerr("%s: error getting response\n", __func__);
+            goto bail;
+        } else {
+            *rlen = ret;
+            ret = 0;
+        }
     } else {
-        *rlen = ret;
+        *rlen = 0;
         ret = 0;
     }
 
@@ -560,6 +572,10 @@ int main(int argc, char *argv[])
             getbdf_flag = 1;
             minargc += 1;
             break;
+        case 'n':
+            enable_response = 0;
+            minargc += 1;
+            break;
         default:
             usage(stdout, argc, argv);
             exit(EXIT_FAILURE);
@@ -615,6 +631,12 @@ int main(int argc, char *argv[])
     dst_func = (uint8_t)strtoul(argv[optind++], NULL, 0);
     dst_eid = (uint8_t)strtoul(argv[optind++], NULL, 0);
     src_eid = (uint8_t)strtoul(argv[optind++], NULL, 0);
+
+    if (routing != PCIE_ROUTE_TO_RC && routing != PCIE_ROUTE_BY_ID && routing != PCIE_BROADCAST_FROM_RC) {
+        mctp_prerr("Not supported PCIE routing type %d\n", routing);
+        usage(stdout, argc, argv);
+        exit(EXIT_FAILURE);
+    }
 
     // requester
     if (requester_flag) {
