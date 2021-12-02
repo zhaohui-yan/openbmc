@@ -25,10 +25,14 @@ Target machine must be specified. Use one of:
 ast2500-default
 ast2605-default
 ast2600-default
+ast2600-default-510
+ast2600-default-515
 ast2600-ecc
 ast2600-emmc
 ast2600-emmc-secure
 ast2600-ncsi
+ast2600-pfr
+ast2600-usbadp
 ast2600-secure-rsa2048-sha256
 ast2600-secure-rsa2048-sha256-ncot
 ast2600-secure-rsa2048-sha256-o1
