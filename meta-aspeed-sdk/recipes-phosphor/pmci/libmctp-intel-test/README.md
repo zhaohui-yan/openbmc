@@ -13,6 +13,8 @@
   - https://github.com/facebook/openbmc/tree/helium/common/recipes-core/mctp-util
 - Intel-BMC/libmctp
   - https://github.com/Intel-BMC/libmctp
+- Intel-BMC/pmci
+  - https://github.com/Intel-BMC/pmci
 - Intel-BMC/linux
   - https://github.com/Intel-BMC/linux
 - OpenBMC/libmctp

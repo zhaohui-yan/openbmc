@@ -1,0 +1,23 @@
+From 4e558654949bb9780155002df79f4723e05c5c1d Mon Sep 17 00:00:00 2001
+From: Jamin Lin <jamin_lin@aspeedtech.com>
+Date: Wed, 15 Dec 2021 10:30:15 +0800
+Subject: [PATCH] Add to install libmctp-log.h
+
+Signed-off-by: Jamin Lin <jamin_lin@aspeedtech.com>
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index b27da63..b70cb7e 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -82,4 +82,4 @@ add_executable (mctp_astpcie_register_type utils/mctp-astpcie-register-type.c)
+ target_link_libraries (mctp_astpcie_register_type mctp_intel)
+ 
+ install (TARGETS mctp_intel DESTINATION lib)
+-install (FILES libmctp.h libmctp-cmds.h libmctp-vdpci.h libmctp-smbus.h libmctp-astpcie.h libmctp-msgtypes.h DESTINATION include)
++install (FILES libmctp.h libmctp-cmds.h libmctp-vdpci.h libmctp-smbus.h libmctp-astpcie.h libmctp-msgtypes.h libmctp-log.h DESTINATION include)
+-- 
+2.17.1
+

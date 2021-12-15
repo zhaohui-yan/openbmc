@@ -5,9 +5,10 @@ require recipes-core/images/core-image-minimal.bb
 IMAGE_INSTALL:append = " \
         packagegroup-oss-apps \
         packagegroup-oss-libs \
+        packagegroup-oss-intel-pmci \
         packagegroup-aspeed-apps \
         packagegroup-aspeed-crypto \
-	packagegroup-aspeed-ssif \
+        packagegroup-aspeed-ssif \
         ${@bb.utils.contains('MACHINE_FEATURES', 'ast-ssp', 'packagegroup-aspeed-ssp', '', d)} \
         packagegroup-aspeed-mtdtest \
         packagegroup-aspeed-ktools \
