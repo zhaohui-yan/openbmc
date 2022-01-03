@@ -1,6 +1,6 @@
-From 79b6aa13b22c9d67e0e6ab7024d8cd51aedc8a16 Mon Sep 17 00:00:00 2001
+From 17e7de2832d1d13fc108fb3c67e9d577982e776a Mon Sep 17 00:00:00 2001
 From: zhanghch05 <zhanghch05@inspur.com>
-Date: Wed, 20 Oct 2021 18:43:55 +0800
+Date: Wed, 17 Nov 2021 15:15:12 +0800
 Subject: [PATCH] Change the completionhandler to accept Res
 
 These modifications are from WIP:Redfish:Query parameters:Only
@@ -10,24 +10,35 @@ will be used in Redfish:Query Parameters:Only.
 The code changed the completion handle to accept Res to be able to
 recall handle with a new Response object.
 AsyncResp owns a new res, so there is no need to pass in a res.
+The move operator on Response is pre-crow code, there is an error in
+res.resultInt() when using std::move(res). So changed it to = default.
 
 Tested:
-1.Basic and Token auth both still work.
-2.Use scripts/websocket_test.py to test websockets. It is still work
+1.Use robot to run Image CI, and test passed
+robot -v OPENBMC_HOST:127.0.0.1  -v OPENBMC_PASSWORD:0penBmc -v
+SSH_PORT:2222 -v HTTPS_PORT:2443 -v IPMI_PORT:2623 --argumentfile
+test_lists/QEMU_CI ./tests ./redfish
+2.Basic and Token auth both still work.
+3.Use scripts/websocket_test.py to test websockets. It is still work
 correctly.
 python3 websocket_test.py --host 127.0.0.1:2443
-This modification is a public part, so you can use any URL to test
-this function. The response is the same as before.
 
 Signed-off-by: zhanghaicheng <zhanghch05@inspur.com>
-Change-Id: I570e32fb47a9a90fe111fcd1f4054060cd21def3
+Change-Id: I45e152afae29737986648da495b28badfd9e4cf7
 ---
+ http/http_connection.hpp      | 36 +++++++++++------------
+ http/http_response.hpp        | 54 +++++++++++++++++++++--------------
+ http/websocket.hpp            |  4 +--
+ include/async_resp.hpp        | 15 ++--------
+ include/openbmc_dbus_rest.hpp |  4 +--
+ redfish-core/lib/sensors.hpp  |  5 ++--
+ 6 files changed, 57 insertions(+), 61 deletions(-)
 
 diff --git a/http/http_connection.hpp b/http/http_connection.hpp
-index b169309..a0ab1ec 100644
+index 9ba1601..8ab9d9b 100644
 --- a/http/http_connection.hpp
 +++ b/http/http_connection.hpp
-@@ -332,7 +332,7 @@
+@@ -323,7 +323,7 @@ class Connection :
              if (thisReq.getHeaderValue(boost::beast::http::field::host).empty())
              {
                  res.result(boost::beast::http::status::bad_request);
@@ -36,7 +47,7 @@ index b169309..a0ab1ec 100644
                  return;
              }
          }
-@@ -351,25 +351,27 @@
+@@ -342,25 +342,27 @@ class Connection :
  
          if (res.completed)
          {
@@ -44,7 +55,7 @@ index b169309..a0ab1ec 100644
 +            completeRequest(res);
              return;
          }
- 
+ #ifndef BMCWEB_INSECURE_DISABLE_AUTHENTICATION
          if (!crow::authorization::isOnAllowlist(req->url, req->method()) &&
              thisReq.session == nullptr)
          {
@@ -57,7 +68,7 @@ index b169309..a0ab1ec 100644
 +            completeRequest(res);
              return;
          }
- 
+ #endif // BMCWEB_INSECURE_DISABLE_AUTHENTICATION
 -        res.setCompleteRequestHandler([self(shared_from_this())] {
 -            boost::asio::post(self->adaptor.get_executor(),
 -                              [self] { self->completeRequest(); });
@@ -71,7 +82,7 @@ index b169309..a0ab1ec 100644
  
          if (thisReq.isUpgrade() &&
              boost::iequals(
-@@ -379,10 +381,9 @@
+@@ -370,10 +372,9 @@ class Connection :
              handler->handleUpgrade(thisReq, res, std::move(adaptor));
              // delete lambda with self shared_ptr
              // to enable connection destruction
@@ -83,7 +94,7 @@ index b169309..a0ab1ec 100644
          handler->handle(thisReq, asyncResp);
      }
  
-@@ -406,8 +407,7 @@
+@@ -397,8 +398,7 @@ class Connection :
                                           boost::asio::ip::tcp::socket>>)
          {
              adaptor.next_layer().close();
@@ -93,7 +104,7 @@ index b169309..a0ab1ec 100644
              {
                  BMCWEB_LOG_DEBUG
                      << this
-@@ -415,7 +415,6 @@
+@@ -406,7 +406,6 @@ class Connection :
                  persistent_data::SessionStore::getInstance().removeSession(
                      userSession);
              }
@@ -101,7 +112,7 @@ index b169309..a0ab1ec 100644
          }
          else
          {
-@@ -423,12 +422,13 @@
+@@ -414,12 +413,13 @@ class Connection :
          }
      }
  
@@ -116,7 +127,7 @@ index b169309..a0ab1ec 100644
          BMCWEB_LOG_INFO << "Response: " << this << ' ' << req->url << ' '
                          << res.resultInt() << " keepalive=" << req->keepAlive();
  
-@@ -481,7 +481,7 @@
+@@ -472,7 +472,7 @@ class Connection :
  
          res.keepAlive(req->keepAlive());
  
@@ -125,31 +136,26 @@ index b169309..a0ab1ec 100644
  
          // delete lambda with self shared_ptr
          // to enable connection destruction
-@@ -655,7 +655,7 @@
+@@ -616,11 +616,11 @@ class Connection :
              });
      }
  
 -    void doWrite()
 +    void doWrite(crow::Response& thisRes)
      {
-         bool loggedIn = req && req->session;
-         if (loggedIn)
-@@ -667,8 +667,8 @@
-             startDeadline(loggedOutAttempts);
-         }
          BMCWEB_LOG_DEBUG << this << " doWrite";
 -        res.preparePayload();
 -        serializer.emplace(*res.stringResponse);
 +        thisRes.preparePayload();
 +        serializer.emplace(*thisRes.stringResponse);
+         startDeadline();
          boost::beast::http::async_write(
              adaptor, *serializer,
-             [this,
 diff --git a/http/http_response.hpp b/http/http_response.hpp
-index a983d4a..c99b2c3 100644
+index a983d4a..3ac0a46 100644
 --- a/http/http_response.hpp
 +++ b/http/http_response.hpp
-@@ -39,6 +39,8 @@
+@@ -39,17 +39,11 @@ struct Response
      Response() : stringResponse(response_type{})
      {}
  
@@ -157,8 +163,20 @@ index a983d4a..c99b2c3 100644
 +
      Response& operator=(const Response& r) = delete;
  
-     Response& operator=(Response&& r) noexcept
-@@ -113,37 +115,53 @@
+-    Response& operator=(Response&& r) noexcept
+-    {
+-        BMCWEB_LOG_DEBUG << "Moving response containers";
+-        stringResponse = std::move(r.stringResponse);
+-        r.stringResponse.emplace(response_type{});
+-        jsonValue = std::move(r.jsonValue);
+-        completed = r.completed;
+-        return *this;
+-    }
++    Response& operator=(Response&& r) = default;
+ 
+     void result(boost::beast::http::status v)
+     {
+@@ -113,37 +107,53 @@ struct Response
      {
          if (completed)
          {
@@ -179,20 +197,17 @@ index a983d4a..c99b2c3 100644
      }
  
 -    void end(std::string_view bodyPart)
--    {
++    bool isAlive()
+     {
 -        write(bodyPart);
 -        end();
--    }
--
-     bool isAlive()
-     {
-         return isAliveHelper && isAliveHelper();
++        return isAliveHelper && isAliveHelper();
      }
  
--    void setCompleteRequestHandler(std::function<void()> newHandler)
+-    bool isAlive()
 +    void setCompleteRequestHandler(std::function<void(Response&)>&& handler)
      {
--        completeRequestHandler = std::move(newHandler);
+-        return isAliveHelper && isAliveHelper();
 +        BMCWEB_LOG_DEBUG << this << " setting completion handler";
 +        completeRequestHandler = std::move(handler);
 +    }
@@ -209,10 +224,12 @@ index a983d4a..c99b2c3 100644
 +    void setIsAliveHelper(std::function<bool()>&& handler)
 +    {
 +        isAliveHelper = std::move(handler);
-+    }
-+
+     }
+ 
+-    void setCompleteRequestHandler(std::function<void()> newHandler)
 +    std::function<bool()> releaseIsAliveHelper()
-+    {
+     {
+-        completeRequestHandler = std::move(newHandler);
 +        std::function<bool()> ret = std::move(isAliveHelper);
 +        isAliveHelper = nullptr;
 +        return ret;
@@ -227,10 +244,10 @@ index a983d4a..c99b2c3 100644
  
      // In case of a JSON object, set the Content-Type header
 diff --git a/http/websocket.hpp b/http/websocket.hpp
-index 30a9b9f..324ffd5 100644
+index dede9c2..f69ca23 100644
 --- a/http/websocket.hpp
 +++ b/http/websocket.hpp
-@@ -193,10 +193,10 @@
+@@ -232,10 +232,10 @@ class ConnectionImpl : public Connection
      {
          BMCWEB_LOG_DEBUG << "Websocket accepted connection";
  
@@ -247,7 +264,7 @@ diff --git a/include/async_resp.hpp b/include/async_resp.hpp
 index 8e9584c..7306017 100644
 --- a/include/async_resp.hpp
 +++ b/include/async_resp.hpp
-@@ -15,28 +15,17 @@
+@@ -15,28 +15,17 @@ namespace bmcweb
  class AsyncResp
  {
    public:
@@ -279,10 +296,10 @@ index 8e9584c..7306017 100644
  
  } // namespace bmcweb
 diff --git a/include/openbmc_dbus_rest.hpp b/include/openbmc_dbus_rest.hpp
-index 3188188..0096e86 100644
+index 78853a5..4db6d1d 100644
 --- a/include/openbmc_dbus_rest.hpp
 +++ b/include/openbmc_dbus_rest.hpp
-@@ -2233,9 +2233,7 @@
+@@ -2259,9 +2259,7 @@ inline void requestRoutes(App& app)
              [](const crow::Request&,
                 const std::shared_ptr<bmcweb::AsyncResp>& asyncResp,
                 const std::string& connection) {
@@ -294,10 +311,10 @@ index 3188188..0096e86 100644
  
      BMCWEB_ROUTE(app, "/bus/system/<str>/<path>")
 diff --git a/redfish-core/lib/sensors.hpp b/redfish-core/lib/sensors.hpp
-index f9d806b..5724e86 100644
+index eba0652..b2379df 100644
 --- a/redfish-core/lib/sensors.hpp
 +++ b/redfish-core/lib/sensors.hpp
-@@ -2972,10 +2972,9 @@
+@@ -2977,10 +2977,9 @@ inline void retrieveUriToDbusMap(const std::string& chassis,
          return;
      }
  
@@ -310,3 +327,6 @@ index f9d806b..5724e86 100644
              const boost::beast::http::status status,
              const boost::container::flat_map<std::string, std::string>&
                  uriToDbus) { mapCompleteCb(status, uriToDbus); };
+-- 
+2.25.1
+
