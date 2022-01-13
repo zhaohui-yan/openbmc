@@ -3,4 +3,4 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 SRC_URI:append = " file://0001-Potentially-connect-udc-device-incorrectly.patch "
 
 # Use latest revision
-SRCREV = "ee09e3033a453565034b2b9bf4f2e0cbc8323ccd"
+SRCREV = "3b201f6961e3de80440384cb4f63822425bca9ec"
