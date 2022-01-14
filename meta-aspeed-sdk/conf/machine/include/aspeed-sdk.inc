@@ -3,7 +3,7 @@ PREFERRED_PROVIDER_virtual/bootloader ?= "u-boot-aspeed-sdk"
 PREFERRED_PROVIDER_u-boot ?= "u-boot-aspeed-sdk"
 PREFERRED_PROVIDER_u-boot-fw-utils ?= "u-boot-fw-utils-aspeed-sdk"
 
-PREFERRED_VERSION_linux-aspeed ?= "5.4.%"
+PREFERRED_VERSION_linux-aspeed ?= "5.15.%"
 
 # Build a FIT image and stuff core-image-minimal in it by default.
 KERNEL_IMAGETYPE ?= "fitImage"

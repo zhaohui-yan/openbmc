@@ -34,3 +34,4 @@ EXTRA_OECMAKE = "-DBUILD_UT=OFF"
 
 CFLAGS:append = " -I ${STAGING_KERNEL_BUILDDIR}/include/uapi"
 CFLAGS:append = " -I ${STAGING_KERNEL_BUILDDIR}/arch/arm/include/generated/"
+
