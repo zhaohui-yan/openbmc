@@ -15,13 +15,3 @@ BBLAYERS ?= " \
   ##OEROOT##/meta-aspeed-sdk \
   ##OEROOT##/meta-aspeed-sdk/meta-ast2500-sdk \
   "
-BBLAYERS_NON_REMOVABLE ?= " \
-  ##OEROOT##/meta \
-  ##OEROOT##/meta-poky \
-  ##OEROOT##/meta-openembedded/meta-oe \
-  ##OEROOT##/meta-openembedded/meta-networking \
-  ##OEROOT##/meta-openembedded/meta-python \
-  ##OEROOT##/meta-phosphor \
-  ##OEROOT##/meta-aspeed-sdk \
-  ##OEROOT##/meta-aspeed-sdk/meta-ast2500-sdk \
-  "
