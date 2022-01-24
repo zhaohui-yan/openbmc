@@ -1,8 +1,18 @@
-diff --git a/arch/arm/boot/dts/aspeed-ast2600-obmc.dts b/arch/arm/boot/dts/aspeed-ast2600-obmc.dts
-index 7e25c3fa66a4..aa2fb28c45f9 100644
---- a/arch/arm/boot/dts/aspeed-ast2600-obmc.dts
-+++ b/arch/arm/boot/dts/aspeed-ast2600-obmc.dts
-@@ -397,10 +397,41 @@
+From e8b2a0435e1485e7a66c3771d504ac840784dbfd Mon Sep 17 00:00:00 2001
+From: Jamin Lin <jamin_lin@aspeedtech.com>
+Date: Thu, 18 Nov 2021 13:44:30 +0800
+Subject: [PATCH] dts: update flash partition to support ABR mode
+
+Signed-off-by: Jamin Lin <jamin_lin@aspeedtech.com>
+---
+ arch/arm/boot/dts/aspeed-ast2600-evb.dts | 33 +++++++++++++++++++++++-
+ 1 file changed, 32 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/aspeed-ast2600-evb.dts b/arch/arm/boot/dts/aspeed-ast2600-evb.dts
+index 48197c1bf43e..4ff478d31724 100644
+--- a/arch/arm/boot/dts/aspeed-ast2600-evb.dts
++++ b/arch/arm/boot/dts/aspeed-ast2600-evb.dts
+@@ -567,10 +567,41 @@
  	flash@1 {
  		status = "okay";
  		m25p,fast-read;
@@ -45,3 +55,6 @@ index 7e25c3fa66a4..aa2fb28c45f9 100644
  	};
  
  	flash@2 {
+-- 
+2.25.1
+

@@ -8,6 +8,8 @@ IMAGE_INSTALL:append = " \
 
 IMAGE_INSTALL:append = " \
         packagegroup-oss-apps \
+        packagegroup-oss-libs \
+        packagegroup-oss-intel-pmci \
         packagegroup-aspeed-obmc-apps \
         packagegroup-aspeed-apps \
         packagegroup-aspeed-crypto \

@@ -32,7 +32,7 @@ https://.*/.*    http://downloads.yoctoproject.org/mirror/sources/ \n"
 # The CONNECTIVITY_CHECK_URI's are used to test whether we can successfully
 # fetch from the network (and warn you if not). To disable the test set
 # the variable to be empty.
-# Git example url: git://git.yoctoproject.org/yocto-firewall-test;protocol=git;rev=master
+# Git example url: git://git.yoctoproject.org/yocto-firewall-test;protocol=https;rev=master
 CONNECTIVITY_CHECK_URIS ?= "https://www.example.com/"
 
 SANITY_TESTED_DISTROS ?= " \
@@ -108,10 +108,6 @@ DISTRO_FEATURES_DEFAULT = " \
 DISTRO_FEATURES += " \
         ${DISTRO_FEATURES_DEFAULT} \
         ${DISTRO_FEATURES_OBMC} \
-        "
-
-MACHINE_FEATURES += " \
-        ${OBMC_MACHINE_FEATURES} \
         "
 
 DISTRO_EXTRA_RDEPENDS:remove:qemuarm = "packagegroup-core-device-devel"

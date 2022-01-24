@@ -9,6 +9,7 @@ PROVIDES = "${PACKAGES}"
 PACKAGES = " \
     ${PN}-apps \
     ${PN}-libs \
+    ${PN}-intel-pmci \
     "
 
 SUMMARY:${PN}-apps = "Open Source Applications"
@@ -34,6 +35,11 @@ RDEPENDS:${PN}-apps = " \
     nvme-cli \
     ${@d.getVar('PREFERRED_PROVIDER_u-boot-fw-utils', True) or 'u-boot-fw-utils'} \
     aer-inject \
+    "
+
+SUMMARY:${PN}-intel-pmci = "Open Source Intel PMCI Applications"
+RDEPENDS:${PN}-intel-pmci = " \
+    libmctp-intel-test \
     "
 
 RDEPENDS:${PN}-apps:append:aspeed-g6 = " \

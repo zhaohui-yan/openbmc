@@ -1,0 +1,26 @@
+From c6aa8d316fb0a2ba52611bd92866ad816f4f26ce Mon Sep 17 00:00:00 2001
+From: Jamin Lin <jamin_lin@aspeedtech.com>
+Date: Wed, 3 Nov 2021 17:14:32 +0800
+Subject: [PATCH] i2c: change max payload size to 255
+
+Signed-off-by: Jamin Lin <jamin_lin@aspeedtech.com>
+---
+ libmctp-smbus.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/libmctp-smbus.h b/libmctp-smbus.h
+index 8af25d0..5e45ed5 100644
+--- a/libmctp-smbus.h
++++ b/libmctp-smbus.h
+@@ -8,7 +8,7 @@ extern "C" {
+ #include "libmctp.h"
+ 
+ #define MCTP_HEADER_SIZE 4
+-#define MCTP_PAYLOAD_SIZE 64
++#define MCTP_PAYLOAD_SIZE 255
+ 
+ #define SMBUS_HEADER_SIZE 4
+ #define SMBUS_PEC_BYTE_SIZE 1
+-- 
+2.17.1
+

@@ -1,8 +1,14 @@
 MACHINE ??= "ast2600-default"
+#MACHINE ??= "ast2600-default-510"
+#MACHINE ??= "ast2600-default-54"
 #MACHINE ??= "ast2600-ecc"
 #MACHINE ??= "ast2600-emmc"
 #MACHINE ??= "ast2600-emmc-secure"
+#MACHINE ??= "ast2600-emmc-secure-rsa2048-sha256"
 #MACHINE ??= "ast2600-ncsi"
+#MACHINE ??= "ast2600-pfr"
+#MACHINE ??= "ast2600-pfr-54"
+#MACHINE ??= "ast2600-usbadp"
 #MACHINE ??= "ast2600-secure-rsa2048-sha256"
 #MACHINE ??= "ast2600-secure-rsa2048-sha256-ncot"
 #MACHINE ??= "ast2600-secure-rsa2048-sha256-o1"
@@ -14,9 +20,11 @@ MACHINE ??= "ast2600-default"
 #MACHINE ??= "ast2600-secure-rsa4096-sha512-o1"
 #MACHINE ??= "ast2600-secure-rsa4096-sha512-o2-pub"
 #MACHINE ??= "ast2600-a2"
+#MACHINE ??= "ast2600-a2-54"
 #MACHINE ??= "ast2600-a2-ecc"
 #MACHINE ??= "ast2600-a2-emmc"
 #MACHINE ??= "ast2600-a2-emmc-secure"
+#MACHINE ??= "ast2600-a2-emmc-secure-rsa2048-sha256"
 #MACHINE ??= "ast2600-a2-secure-rsa2048-sha256"
 #MACHINE ??= "ast2600-a2-secure-rsa2048-sha256-ncot"
 #MACHINE ??= "ast2600-a2-secure-rsa2048-sha256-o1"
@@ -28,6 +36,7 @@ MACHINE ??= "ast2600-default"
 #MACHINE ??= "ast2600-a2-secure-rsa4096-sha512-o1"
 #MACHINE ??= "ast2600-a2-secure-rsa4096-sha512-o2-pub"
 #MACHINE ??= "ast2600-a1"
+#MACHINE ??= "ast2600-a1-54"
 #MACHINE ??= "ast2600-a1-ecc"
 #MACHINE ??= "ast2600-a1-secure-rsa2048-sha256"
 #MACHINE ??= "ast2600-a1-secure-rsa2048-sha256-ncot"
@@ -67,13 +76,9 @@ EXTRA_USERS_PARAMS = " \
 TZ = '/etc/localtime'
 
 require conf/machine/include/obmc-bsp-common.inc
-# ASPEED initramfs if build aspeed-image-sdk
-#require conf/distro/include/ast-img-sdk.inc
 
 # AST2600 Alternate Boot Record feature
 #require conf/machine/include/ast-abr.inc
-
-INITRAMFS_IMAGE:df-ast-img-sdk = "aspeed-image-initramfs"
 
 # Free Open Source Software (FOSS) Creation
 # INHERIT += "archiver"
