@@ -1,7 +1,7 @@
 KBRANCH = "aspeed-dev-v5.10"
 LINUX_VERSION ?= "5.10.53"
 
-SRCREV = "${AUTOREV}"
+SRCREV = "dcf2e8073a79cea99aa0456e1222effeb71019d4"
 LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 
 require linux-aspeed.inc
