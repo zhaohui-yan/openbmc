@@ -1,0 +1,58 @@
+From ed5271393ee4184a87027bb5dae0fae184904d60 Mon Sep 17 00:00:00 2001
+From: Jamin Lin <jamin_lin@aspeedtech.com>
+Date: Thu, 14 Oct 2021 17:02:39 +0800
+Subject: [PATCH] Costomize buffer size
+
+Signed-off-by: Jamin Lin <jamin_lin@aspeedtech.com>
+---
+ libmctp-smbus.h | 1 +
+ smbus.c | 10 +++++++++-
+ 2 files changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/libmctp-smbus.h b/libmctp-smbus.h
+index 5e3a7d2..8af25d0 100644
+--- a/libmctp-smbus.h
++++ b/libmctp-smbus.h
+@@ -59,6 +59,7 @@ void mctp_smbus_set_in_fd(struct mctp_binding_smbus *smbus, int fd);
+ void mctp_smbus_set_out_fd(struct mctp_binding_smbus *smbus, int fd);
+ void mctp_smbus_set_src_slave_addr(struct mctp_binding_smbus *smbus,
+ 				   uint8_t slave_addr);
++int mctp_smbus_set_pkt_size(size_t pkt_size);
+ #ifdef __cplusplus
+ }
+ #endif
+diff --git a/smbus.c b/smbus.c
+index 431a6cb..866fa0e 100644
+--- a/smbus.c
++++ b/smbus.c
+@@ -39,6 +39,8 @@
+ #define SMBUS_LENGTH_FIELD_SIZE 1
+ #define SMBUS_ADDR_OFFSET_SLAVE 0x1000
+ 
++size_t g_pkt_size = MCTP_PACKET_SIZE(MCTP_BTU);
++
+ #ifdef I2C_M_HOLD
+ static struct mctp_smbus_pkt_private active_mux_info = { .fd = -1,
+ 							 .mux_hold_timeout = 0,
+@@ -472,7 +474,7 @@ struct mctp_binding_smbus *mctp_smbus_init(void)
+ 	smbus->rx_pkt = NULL;
+ 	smbus->binding.name = "smbus";
+ 	smbus->binding.version = 1;
+-	smbus->binding.pkt_size = MCTP_PACKET_SIZE(MCTP_BTU);
++	smbus->binding.pkt_size = g_pkt_size;
+ 	smbus->binding.pkt_pad = SMBUS_HEADER_SIZE;
+ 	smbus->binding.pkt_priv_size = sizeof(struct mctp_smbus_pkt_private);
+ 
+@@ -501,3 +503,9 @@ void mctp_smbus_set_src_slave_addr(struct mctp_binding_smbus *smbus,
+ {
+ 	smbus->src_slave_addr = slave_addr;
+ }
++
++int mctp_smbus_set_pkt_size(size_t pkt_size)
++{
++	g_pkt_size = pkt_size;
++	return 0;
++}
+-- 
+2.17.1
+

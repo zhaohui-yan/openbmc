@@ -4,11 +4,11 @@ HOMEPAGE = "https://github.com/AspeedTech-BMC/socsec/"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=d50b901333b4eedfee074ebcd6a6d611"
 
-SRC_URI = "git://github.com/AspeedTech-BMC/socsec.git/;protocol=https;branch=master"
+SRC_URI = "git://github.com/AspeedTech-BMC/socsec.git;protocol=https;branch=master"
 
-PV = "v01.00.00+git${SRCPV}"
-# Tag for v01.00.00
-SRCREV = "2787a252988f4811097995ef9e807b1b433bde9f"
+PV = "v01.00.01+git${SRCPV}"
+# Tag for v01.00.01
+SRCREV = "90c8d03682cffcf89c4e6db1ca48963fd794b46c"
 
 S = "${WORKDIR}/git"
 

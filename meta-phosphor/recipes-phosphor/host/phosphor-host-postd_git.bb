@@ -20,7 +20,7 @@ DEPENDS += "systemd"
 
 S = "${WORKDIR}/git"
 SRC_URI = "git://github.com/openbmc/phosphor-host-postd"
-SRCREV = "ec799a5e1c27d5773361a8cf7df21e880f903c87"
+SRCREV = "6a5e0a1cba979c3c793e794c41481221da9a4e33"
 
 SNOOP_DEVICE ?= "aspeed-lpc-snoop0"
 POST_CODE_BYTES ?= "1"

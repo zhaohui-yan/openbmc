@@ -6,6 +6,8 @@ SRCREV = "84b82acbe1b1e7b1b4cd8ad398103b928754c68d"
 
 require linux-aspeed.inc
 
+LIC_FILES_CHKSUM = "file://COPYING;md5=bbea815ee2795b2f4230826c0c6b8814"
+
 DEPENDS += "lzop-native"
 DEPENDS += "${@bb.utils.contains('MACHINE_FEATURES', 'ast-secure', 'aspeed-secure-config-native', '', d)}"
 
