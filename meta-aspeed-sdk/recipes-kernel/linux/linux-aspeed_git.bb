@@ -2,7 +2,7 @@ KBRANCH = "aspeed-master-v5.15"
 LINUX_VERSION ?= "5.15.0"
 
 # Tag for v00.05.00
-SRCREV = "334b26719afabdc629a177ab3d4dc19a2393576b"
+SRCREV = "cb5e8bf618e1429681eb98e982eed6e1d75da3f2"
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 
