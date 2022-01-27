@@ -6,8 +6,8 @@ S = "${WORKDIR}/git"
 SRC_URI = " git://github.com/AspeedTech-BMC/aspeed_app.git;protocol=https;branch=${BRANCH} "
 PV = "1.0+git${SRCPV}"
 
-# Tag for v00.01.04
-SRCREV = "08217ae2099bd99dab52f7fa1407bca7f04acfd4"
+# Tag for v00.01.05
+SRCREV = "1fa803c9d93350f92b99f0f973b55eac74dbd4d6"
 BRANCH = "master"
 inherit meson
 
