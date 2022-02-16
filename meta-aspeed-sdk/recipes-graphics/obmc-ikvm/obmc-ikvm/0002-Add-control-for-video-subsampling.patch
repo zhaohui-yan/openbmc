@@ -1,0 +1,196 @@
+From 53c669f5454fac45e938108d74ee28f03d724df3 Mon Sep 17 00:00:00 2001
+From: Jammy Huang <jammy_huang@aspeedtech.com>
+Date: Mon, 14 Feb 2022 14:43:21 +0800
+Subject: [PATCH] Add control for video subsampling
+
+Add '-s' to assign jpeg subsampling.
+  0: 444, 1: 420
+
+Using 420 will make video lack of detail compared to 444, but cut
+amount of video data by half. This could be useful for some cases.
+
+Signed-off-by: Jammy Huang <jammy_huang@aspeedtech.com>
+Change-Id: I48836a7117f7e3b9986e3f5c6a92974c9268525e
+---
+ ikvm_args.cpp    | 11 +++++++++--
+ ikvm_args.hpp    | 12 ++++++++++++
+ ikvm_manager.cpp |  2 +-
+ ikvm_video.cpp   | 16 ++++++++++++++--
+ ikvm_video.hpp   | 22 +++++++++++++++++++++-
+ 5 files changed, 57 insertions(+), 6 deletions(-)
+
+diff --git a/ikvm_args.cpp b/ikvm_args.cpp
+index 21373aa..d60d14b 100644
+--- a/ikvm_args.cpp
++++ b/ikvm_args.cpp
+@@ -8,12 +8,13 @@
+ namespace ikvm
+ {
+ 
+-Args::Args(int argc, char* argv[]) : frameRate(30), calcFrameCRC{false},
++Args::Args(int argc, char* argv[]) : frameRate(30), subsampling(0), calcFrameCRC{false},
+                                      commandLine(argc, argv)
+ {
+     int option;
+-    const char* opts = "f:h:k:p:v:c";
++    const char* opts = "f:s:h:k:p:v:c";
+     struct option lopts[] = {{"frameRate", 1, 0, 'f'},
++                             {"subsampling", 1, 0, 's'},
+                              {"help", 0, 0, 'h'},
+                              {"keyboard", 1, 0, 'k'},
+                              {"mouse", 1, 0, 'p'},
+@@ -30,6 +31,11 @@ Args::Args(int argc, char* argv[]) : frameRate(30), calcFrameCRC{false},
+                 if (frameRate < 0 || frameRate > 60)
+                     frameRate = 30;
+                 break;
++            case 's':
++                subsampling = (int)strtol(optarg, NULL, 0);
++                if (subsampling < 0 || subsampling > 1)
++                    subsampling = 0;
++                break;
+             case 'h':
+                 printUsage();
+                 exit(0);
+@@ -55,6 +61,7 @@ void Args::printUsage()
+     fprintf(stderr, "OpenBMC IKVM daemon\n");
+     fprintf(stderr, "Usage: obmc-ikvm [options]\n");
+     fprintf(stderr, "-f frame rate          try this frame rate\n");
++    fprintf(stderr, "-s subsampling         try this subsampling\n");
+     fprintf(stderr, "-h, --help             show this message and exit\n");
+     fprintf(stderr, "-k device              HID keyboard gadget device\n");
+     fprintf(stderr, "-p device              HID mouse gadget device\n");
+diff --git a/ikvm_args.hpp b/ikvm_args.hpp
+index fbe19ad..bfd5507 100644
+--- a/ikvm_args.hpp
++++ b/ikvm_args.hpp
+@@ -71,6 +71,16 @@ class Args
+         return frameRate;
+     }
+ 
++    /*
++     * @brief Get the video subsampling
++     *
++     * @return Value of the video subsampling
++     */
++    inline int getSubsampling() const
++    {
++        return subsampling;
++    }
++
+     /*
+      * @brief Get the path to the USB keyboard device
+      *
+@@ -120,6 +130,8 @@ class Args
+      *        stream
+      */
+     int frameRate;
++    /* @brief Desired subsampling (0: 444, 1: 420) */
++    int subsampling;
+     /* @brief Path to the USB keyboard device */
+     std::string keyboardPath;
+     /* @brief Path to the USB mouse device */
+diff --git a/ikvm_manager.cpp b/ikvm_manager.cpp
+index d56110d..33e7b17 100644
+--- a/ikvm_manager.cpp
++++ b/ikvm_manager.cpp
+@@ -8,7 +8,7 @@ namespace ikvm
+ Manager::Manager(const Args& args) :
+     continueExecuting(true), serverDone(false), videoDone(true),
+     input(args.getKeyboardPath(), args.getPointerPath()),
+-    video(args.getVideoPath(), input, args.getFrameRate()),
++    video(args.getVideoPath(), input, args.getFrameRate(), args.getSubsampling()),
+     server(args, input, video)
+ {
+ }
+diff --git a/ikvm_video.cpp b/ikvm_video.cpp
+index 8303170..5159b25 100644
+--- a/ikvm_video.cpp
++++ b/ikvm_video.cpp
+@@ -30,9 +30,10 @@ using namespace phosphor::logging;
+ using namespace sdbusplus::xyz::openbmc_project::Common::File::Error;
+ using namespace sdbusplus::xyz::openbmc_project::Common::Device::Error;
+ 
+-Video::Video(const std::string& p, Input& input, int fr) :
++Video::Video(const std::string& p, Input& input, int fr, int sub) :
+     resizeAfterOpen(false), timingsError(false), fd(-1), frameRate(fr),
+-    lastFrameIndex(-1), height(600), width(800), input(input), path(p)
++    lastFrameIndex(-1), height(600), width(800), subSampling(sub),
++	input(input), path(p)
+ {
+ }
+ 
+@@ -378,6 +379,7 @@ void Video::start()
+     v4l2_capability cap;
+     v4l2_format fmt;
+     v4l2_streamparm sparm;
++    v4l2_control ctrl;
+ 
+     if (fd >= 0)
+     {
+@@ -444,6 +446,16 @@ void Video::start()
+                             entry("ERROR=%s", strerror(errno)));
+     }
+ 
++    ctrl.id = V4L2_CID_JPEG_CHROMA_SUBSAMPLING;
++    ctrl.value = subSampling
++	       ? V4L2_JPEG_CHROMA_SUBSAMPLING_420 : V4L2_JPEG_CHROMA_SUBSAMPLING_444;
++    rc = ioctl(fd, VIDIOC_S_CTRL, &ctrl);
++    if (rc < 0)
++    {
++        log<level::WARNING>("Failed to set video jpeg subsampling",
++                            entry("ERROR=%s", strerror(errno)));
++    }
++
+     height = fmt.fmt.pix.height;
+     width = fmt.fmt.pix.width;
+ 
+diff --git a/ikvm_video.hpp b/ikvm_video.hpp
+index fb8c5da..23c58a7 100644
+--- a/ikvm_video.hpp
++++ b/ikvm_video.hpp
+@@ -23,7 +23,7 @@ class Video
+      * @param[in] input - Reference to the Input object
+      * @param[in] fr    - desired frame rate of the video
+      */
+-    Video(const std::string& p, Input& input, int fr = 30);
++    Video(const std::string& p, Input& input, int fr = 30, int sub = 0);
+     ~Video();
+     Video(const Video&) = default;
+     Video& operator=(const Video&) = default;
+@@ -93,6 +93,24 @@ class Video
+     {
+         return width;
+     }
++    /*
++     * @brief Gets the subsampling of the video frame
++     *
++     * @return Value of the subsampling of video frame, 1:420/0:444
++     */
++    inline int getSubsampling() const
++    {
++        return subSampling;
++    }
++    /*
++     * @brief Sets the subsampling of the video frame
++     *
++     * @return Value of the subsampling of video frame, 1:420/0:444
++     */
++    inline void setSubsampling(int _sub)
++    {
++        subSampling = _sub;
++    }
+ 
+     /* @brief Number of bits per component of a pixel */
+     static const int bitsPerSample;
+@@ -141,6 +159,8 @@ class Video
+     size_t height;
+     /* @brief Width in pixels of the video frame */
+     size_t width;
++    /* @brief jpeg's subsampling, 1:420/0:444 */
++    int subSampling;
+     /* @brief Reference to the Input object */
+     Input& input;
+     /* @brief Path to the V4L2 video device */
+-- 
+2.25.1
+
