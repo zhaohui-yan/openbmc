@@ -21,7 +21,7 @@ index 51a85f0..396e6ff 100644
    "dependencies": {
      "@carbon/icons-vue": "10.28.0",
 -    "@novnc/novnc": "1.2.0",
-+    "@novnc/novnc": "git+https://git@github.com:AspeedTech-BMC/noVNC.git#6ef0024",
++    "@novnc/novnc": "git+https://github.com:AspeedTech-BMC/noVNC.git#6ef0024",
      "axios": "0.21.4",
      "bootstrap": "4.6.0",
      "bootstrap-vue": "2.21.2",
