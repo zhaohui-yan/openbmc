@@ -10,8 +10,11 @@ BBLAYERS ?= " \
   ##OEROOT##/meta-poky \
   ##OEROOT##/meta-openembedded/meta-oe \
   ##OEROOT##/meta-openembedded/meta-networking \
+  ##OEROOT##/meta-openembedded/meta-perl \
   ##OEROOT##/meta-openembedded/meta-python \
   ##OEROOT##/meta-phosphor \
+  ##OEROOT##/meta-security \
+  ##OEROOT##/meta-security/meta-tpm \
   ##OEROOT##/meta-aspeed-sdk \
   ##OEROOT##/meta-aspeed-sdk/meta-ast2600-sdk \
   "
