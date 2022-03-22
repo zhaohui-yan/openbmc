@@ -2,6 +2,8 @@ SUMMARY = "AspeedTech BMC Package Group"
 
 PR = "r2"
 
+PACKAGE_ARCH="${TUNE_PKGARCH}"
+
 inherit packagegroup
 
 PROVIDES = "${PACKAGES}"
