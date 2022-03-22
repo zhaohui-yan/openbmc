@@ -2,6 +2,8 @@ SUMMARY = "Packagegroup for Open Source"
 
 PR = "r1"
 
+PACKAGE_ARCH="${TUNE_PKGARCH}"
+
 inherit packagegroup
 
 PROVIDES = "${PACKAGES}"

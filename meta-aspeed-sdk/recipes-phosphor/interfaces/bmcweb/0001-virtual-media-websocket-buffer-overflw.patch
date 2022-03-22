@@ -1,17 +1,17 @@
-From 65882703517e2f8f50744c30690a14350135753c Mon Sep 17 00:00:00 2001
+From a966f851686731d73146842ce087377f2504d6f9 Mon Sep 17 00:00:00 2001
 From: Troy Lee <troy_lee@aspeedtech.com>
 Date: Thu, 6 May 2021 14:23:41 +0800
-Subject: [PATCH] bmcweb: fixes virtual media buffer overflow
+Subject: [PATCH 1/4] bmcweb: fixes virtual media buffer overflow
 
 ---
  include/vm_websocket.hpp | 23 ++++++++++++++++++++---
  1 file changed, 20 insertions(+), 3 deletions(-)
 
 diff --git a/include/vm_websocket.hpp b/include/vm_websocket.hpp
-index 02f958a..878fa52 100644
+index 5adf303..7c6f812 100644
 --- a/include/vm_websocket.hpp
 +++ b/include/vm_websocket.hpp
-@@ -17,7 +17,7 @@ static crow::websocket::Connection* session = nullptr;
+@@ -19,7 +19,7 @@ static crow::websocket::Connection* session = nullptr;
  // The max network block device buffer size is 128kb plus 16bytes
  // for the message header:
  // https://github.com/NetworkBlockDevice/nbd/blob/master/doc/proto.md#simple-reply-message
@@ -20,7 +20,7 @@ index 02f958a..878fa52 100644
  
  class Handler : public std::enable_shared_from_this<Handler>
  {
-@@ -39,7 +39,16 @@ class Handler : public std::enable_shared_from_this<Handler>
+@@ -46,7 +46,16 @@ class Handler : public std::enable_shared_from_this<Handler>
          {
              return;
          }
@@ -38,7 +38,7 @@ index 02f958a..878fa52 100644
      }
  
      void connect()
-@@ -197,7 +206,15 @@ inline void requestRoutes(App& app)
+@@ -204,7 +213,15 @@ inline void requestRoutes(App& app)
          })
          .onmessage([](crow::websocket::Connection& conn,
                        const std::string& data, bool) {
@@ -55,3 +55,6 @@ index 02f958a..878fa52 100644
              {
                  BMCWEB_LOG_ERROR << "Buffer overrun when writing "
                                   << data.length() << " bytes";
+-- 
+2.25.1
+

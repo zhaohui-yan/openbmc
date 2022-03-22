@@ -1,7 +1,7 @@
-From fe6f0bbfe5a48f505cf7eab129a0c28e64208e73 Mon Sep 17 00:00:00 2001
+From c0d946adbe79b72cee685882cb88333e4dd51c5b Mon Sep 17 00:00:00 2001
 From: Troy Lee <troy_lee@aspeedtech.com>
 Date: Thu, 19 Aug 2021 18:03:00 +0800
-Subject: [PATCH] Support websocket control frame callback
+Subject: [PATCH 2/4] Support websocket control frame callback
 
 boost::beast::websocket provide control_callback() to register control
 frame callback. This patch enables the callback and hook up with Handler
@@ -11,17 +11,16 @@ v2-v3: Fix coding style issue
 
 Signed-off-by: Troy Lee <troy_lee@aspeedtech.com>
 Change-Id: I912cd6ff823e938cc429e75ff635b8d8fad17876
-
 ---
  http/routing.hpp   | 22 ++++++++++++++++++++--
  http/websocket.hpp | 45 +++++++++++++++++++++++++++++++++++++++++++--
  2 files changed, 63 insertions(+), 4 deletions(-)
 
 diff --git a/http/routing.hpp b/http/routing.hpp
-index 5d9c8e3..b994079 100644
+index 5b819c5..e5b71fc 100644
 --- a/http/routing.hpp
 +++ b/http/routing.hpp
-@@ -341,7 +341,7 @@ class WebSocketRule : public BaseRule
+@@ -349,7 +349,7 @@ class WebSocketRule : public BaseRule
              myConnection = std::make_shared<
                  crow::websocket::ConnectionImpl<boost::asio::ip::tcp::socket>>(
                  req, std::move(adaptor), openHandler, messageHandler,
@@ -30,7 +29,7 @@ index 5d9c8e3..b994079 100644
          myConnection->start();
      }
  #ifdef BMCWEB_ENABLE_SSL
-@@ -354,7 +354,7 @@ class WebSocketRule : public BaseRule
+@@ -363,7 +363,7 @@ class WebSocketRule : public BaseRule
              myConnection = std::make_shared<crow::websocket::ConnectionImpl<
                  boost::beast::ssl_stream<boost::asio::ip::tcp::socket>>>(
                  req, std::move(adaptor), openHandler, messageHandler,
@@ -39,7 +38,7 @@ index 5d9c8e3..b994079 100644
          myConnection->start();
      }
  #endif
-@@ -387,6 +387,20 @@ class WebSocketRule : public BaseRule
+@@ -396,6 +396,20 @@ class WebSocketRule : public BaseRule
          return *this;
      }
  
@@ -60,7 +59,7 @@ index 5d9c8e3..b994079 100644
    protected:
      std::function<void(crow::websocket::Connection&,
                         std::shared_ptr<bmcweb::AsyncResp>)>
-@@ -396,6 +410,10 @@ class WebSocketRule : public BaseRule
+@@ -405,6 +419,10 @@ class WebSocketRule : public BaseRule
      std::function<void(crow::websocket::Connection&, const std::string&)>
          closeHandler;
      std::function<void(crow::websocket::Connection&)> errorHandler;
@@ -72,10 +71,10 @@ index 5d9c8e3..b994079 100644
  
  template <typename T>
 diff --git a/http/websocket.hpp b/http/websocket.hpp
-index 30a9b9f..dede9c2 100644
+index bd7b841..bf3b922 100644
 --- a/http/websocket.hpp
 +++ b/http/websocket.hpp
-@@ -70,13 +70,17 @@ class ConnectionImpl : public Connection
+@@ -75,14 +75,18 @@ class ConnectionImpl : public Connection
          std::function<void(Connection&, const std::string&, bool)>
              messageHandler,
          std::function<void(Connection&, const std::string&)> closeHandler,
@@ -83,8 +82,9 @@ index 30a9b9f..dede9c2 100644
 +        std::function<void(Connection&)> errorHandler,
 +        std::function<void(Connection&, const std::string&)> pingHandler,
 +        std::function<void(Connection&, const std::string&)> pongHandler) :
-         Connection(reqIn, reqIn.session->username),
-         ws(std::move(adaptorIn)), inString(), inBuffer(inString, 131088),
+         Connection(reqIn, reqIn.session == nullptr ? std::string{}
+                                                    : reqIn.session->username),
+         ws(std::move(adaptorIn)), inBuffer(inString, 131088),
          openHandler(std::move(openHandler)),
          messageHandler(std::move(messageHandler)),
          closeHandler(std::move(closeHandler)),
@@ -95,7 +95,7 @@ index 30a9b9f..dede9c2 100644
      {
          /* Turn on the timeouts on websocket stream to server role */
          ws.set_option(boost::beast::websocket::stream_base::timeout::suggested(
-@@ -142,6 +146,41 @@ class ConnectionImpl : public Connection
+@@ -148,6 +152,41 @@ class ConnectionImpl : public Connection
              }
              acceptDone();
          });
@@ -137,7 +137,7 @@ index 30a9b9f..dede9c2 100644
      }
  
      void sendBinary(const std::string_view msg) override
-@@ -285,6 +324,8 @@ class ConnectionImpl : public Connection
+@@ -291,6 +330,8 @@ class ConnectionImpl : public Connection
      std::function<void(Connection&, const std::string&, bool)> messageHandler;
      std::function<void(Connection&, const std::string&)> closeHandler;
      std::function<void(Connection&)> errorHandler;
@@ -147,5 +147,5 @@ index 30a9b9f..dede9c2 100644
  };
  } // namespace websocket
 -- 
-2.17.1
+2.25.1
 
