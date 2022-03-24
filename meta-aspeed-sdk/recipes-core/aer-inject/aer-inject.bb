@@ -5,7 +5,7 @@ driver error recovery handler and PCIE AER core handler."
 
 LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://README;md5=95cd6a39bf9e2981abfc7c7cfaf5d6dd"
-SRC_URI = "git://git.kernel.org/pub/scm/linux/kernel/git/gong.chen/aer-inject.git"
+SRC_URI = "git://git.kernel.org/pub/scm/linux/kernel/git/gong.chen/aer-inject.git;branch=master"
 
 DEPENDS = "bison-native"
 

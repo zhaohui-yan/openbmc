@@ -11,7 +11,7 @@ AUTHOR = "ESNET <info@es.net>, Lawrence Berkeley National Laboratory <websupport
 LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=8c3434c5a9a53c78c7739f0bc9e5adda"
 
-SRC_URI = "git://github.com/esnet/iperf.git;branch=${BRANCH} \
+SRC_URI = "git://github.com/esnet/iperf.git;protocol=https;branch=${BRANCH} \
            file://0001-configure.ac-check-for-CPP-prog.patch \
            "
 
