@@ -27,10 +27,10 @@ sendFrame and then queue back to driver.
 
 Signed-off-by: Jammy Huang <jammy_huang@aspeedtech.com>
 ---
- ikvm_server.cpp | 126 +++++++++++++++++++++++++-----------------------
- ikvm_video.cpp  |  78 +++++++++++++++++++-----------
- ikvm_video.hpp  |  34 +++++++++++--
- 3 files changed, 147 insertions(+), 91 deletions(-)
+ ikvm_server.cpp | 108 +++++++++++++++++++++++-------------------------
+ ikvm_video.cpp  |  78 +++++++++++++++++++++-------------
+ ikvm_video.hpp  |  34 +++++++++++++--
+ 3 files changed, 131 insertions(+), 89 deletions(-)
 
 diff --git a/ikvm_server.cpp b/ikvm_server.cpp
 index e5f12c5..510eec9 100644
@@ -44,7 +44,7 @@ index e5f12c5..510eec9 100644
  
  namespace ikvm
  {
-@@ -97,7 +98,7 @@ void Server::run()
+@@ -97,10 +98,10 @@ void Server::run()
  void Server::sendFrame()
  {
      char* data = video.getData();
@@ -52,20 +52,22 @@ index e5f12c5..510eec9 100644
 +    uint32_t frameCount;
      rfbClientIteratorPtr it;
      rfbClientPtr cl;
-     int64_t frame_crc = -1;
-@@ -119,79 +120,85 @@ void Server::sendFrame()
+-    int64_t frame_crc = -1;
++    bool frame_sent = false;
+ 
+     if (!data || pendingResize)
+     {
+@@ -119,79 +120,71 @@ void Server::sendFrame()
              continue;
          }
  
 -        if (cd->skipFrame)
--        {
++        for (auto i : video.buffersDone)
+         {
 -            cd->skipFrame--;
 -            continue;
 -        }
-+	for (auto i : video.buffersDone)
-+	{
-+            data = video.getData(i);
- 
+-
 -        if (!cd->needUpdate)
 -        {
 -            continue;
@@ -90,37 +92,9 @@ index e5f12c5..510eec9 100644
              {
                  continue;
              }
++            frame_sent = true;
  
 -            cd->last_crc = frame_crc;
--        }
--
--        cd->needUpdate = false;
-+            if (calcFrameCRC)
-+            {
-+                if (frame_crc == -1)
-+                {
-+                    /* JFIF header contains some varying data so skip it for
-+                     * checksum calculation */
-+                    frame_crc = boost::crc<32, 0x04C11DB7, 0xFFFFFFFF, 0xFFFFFFFF,
-+                                           true, true>(data + 0x30,
-+                                                       video.getFrameSize(i) - 0x30);
-+                }
-+
-+                if (cd->last_crc == frame_crc)
-+                {
-+                    continue;
-+                }
-+
-+                cd->last_crc = frame_crc;
-+            }
- 
--        if (cl->enableLastRectEncoding)
--        {
--            fu->nRects = 0xFFFF;
--        }
--        else
--        {
--            fu->nRects = Swap16IfLE(1);
 -        }
 +            if (cl->enableLastRectEncoding)
 +            {
@@ -131,33 +105,25 @@ index e5f12c5..510eec9 100644
 +                fu->nRects = Swap16IfLE(1);
 +            }
  
--        fu->type = rfbFramebufferUpdate;
--        cl->ublen = sz_rfbFramebufferUpdateMsg;
--        rfbSendUpdateBuf(cl);
+-        cd->needUpdate = false;
 +            fu->type = rfbFramebufferUpdate;
 +            cl->ublen = sz_rfbFramebufferUpdateMsg;
 +            rfbSendUpdateBuf(cl);
  
--        cl->tightEncoding = rfbEncodingAspeed;
--        rfbSendTightHeader(cl, 0, 0, video.getWidth(), video.getHeight());
+-        if (cl->enableLastRectEncoding)
+-        {
+-            fu->nRects = 0xFFFF;
+-        }
+-        else
+-        {
+-            fu->nRects = Swap16IfLE(1);
+-        }
 +            cl->tightEncoding = rfbEncodingAspeed;
 +            rfbSendTightHeader(cl, 0, 0, video.getWidth(), video.getHeight());
  
--        if (video.getFormat() == 1)
--        {
--            cl->updateBuf[cl->ublen++] = (char)(0);
--            cl->updateBuf[cl->ublen++] = (char)(frameCount >> 24 & 0xff);
--            cl->updateBuf[cl->ublen++] = (char)(frameCount >> 16 & 0xff);
--            cl->updateBuf[cl->ublen++] = (char)(frameCount >> 8 & 0xff);
--            cl->updateBuf[cl->ublen++] = (char)(frameCount & 0xff);
--            cl->updateBuf[cl->ublen++] = (char)(video.getSubsampling());
--            cl->updateBuf[cl->ublen++] = (char)(0x00);	// the value of quality if changed
--        }
--        else if (video.getFormat() == 0)
--        {
--            cl->updateBuf[cl->ublen++] = (char)(rfbTightJpeg << 4);
--        }
--        rfbSendCompressedDataTight(cl, data, video.getFrameSize());
+-        fu->type = rfbFramebufferUpdate;
+-        cl->ublen = sz_rfbFramebufferUpdateMsg;
+-        rfbSendUpdateBuf(cl);
 +            if (video.getFormat() == 1)
 +            {
 +                frameCount = video.getFrameCount(i);
@@ -173,29 +139,50 @@ index e5f12c5..510eec9 100644
 +            {
 +                cl->updateBuf[cl->ublen++] = (char)(rfbTightJpeg << 4);
 +            }
-+            rfbSendCompressedDataTight(cl, data, video.getFrameSize(i));
++            rfbSendCompressedDataTight(cl, video.getData(i), video.getFrameSize(i));
  
--        if (cl->enableLastRectEncoding)
--        {
--            rfbSendLastRectMarker(cl);
--        }
+-        cl->tightEncoding = rfbEncodingAspeed;
+-        rfbSendTightHeader(cl, 0, 0, video.getWidth(), video.getHeight());
 +            if (cl->enableLastRectEncoding)
 +            {
 +                rfbSendLastRectMarker(cl);
 +            }
  
--        rfbSendUpdateBuf(cl);
+-        if (video.getFormat() == 1)
+-        {
+-            cl->updateBuf[cl->ublen++] = (char)(0);
+-            cl->updateBuf[cl->ublen++] = (char)(frameCount >> 24 & 0xff);
+-            cl->updateBuf[cl->ublen++] = (char)(frameCount >> 16 & 0xff);
+-            cl->updateBuf[cl->ublen++] = (char)(frameCount >> 8 & 0xff);
+-            cl->updateBuf[cl->ublen++] = (char)(frameCount & 0xff);
+-            cl->updateBuf[cl->ublen++] = (char)(video.getSubsampling());
+-            cl->updateBuf[cl->ublen++] = (char)(0x00);	// the value of quality if changed
 +            rfbSendUpdateBuf(cl);
-+	}
+         }
+-        else if (video.getFormat() == 0)
+-        {
+-            cl->updateBuf[cl->ublen++] = (char)(rfbTightJpeg << 4);
+-        }
+-        rfbSendCompressedDataTight(cl, data, video.getFrameSize());
+ 
+-        if (cl->enableLastRectEncoding)
++        if (frame_sent)
+         {
+-            rfbSendLastRectMarker(cl);
++            cd->needUpdate = false;
+         }
+-
+-        rfbSendUpdateBuf(cl);
      }
  
      rfbReleaseClientIterator(it);
 +
-+    video.releaseFrames();
++    if (frame_sent)
++        video.releaseFrames();
  }
  
  void Server::clientFramebufferUpdateRequest(
-@@ -228,7 +235,7 @@ enum rfbNewClientAction Server::newClient(rfbClientPtr cl)
+@@ -228,7 +221,7 @@ enum rfbNewClientAction Server::newClient(rfbClientPtr cl)
      Server* server = (Server*)cl->screen->screenData;
  
      cl->clientData =
@@ -204,7 +191,7 @@ index e5f12c5..510eec9 100644
      cl->clientGoneHook = clientGone;
      cl->clientFramebufferUpdateRequestHook = clientFramebufferUpdateRequest;
      if (!server->numClients++)
-@@ -265,8 +272,9 @@ void Server::doResize()
+@@ -265,8 +258,9 @@ void Server::doResize()
              continue;
          }
  
