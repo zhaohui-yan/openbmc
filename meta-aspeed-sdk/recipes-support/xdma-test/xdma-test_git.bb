@@ -5,7 +5,7 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=b234ee4d69f5fce4486a80fdaf4a4263"
 
 INSANE_SKIP:${PN} = "ldflags"
 
-SRC_URI = "git://github.com/eddiejames/xdma-test.git"
+SRC_URI = "git://github.com/eddiejames/xdma-test.git;protocol=https;branch=master"
 
 PV = "1.0+git${SRCPV}"
 SRCREV = "caf176d53488433e2685ec082ac3d16bed9c1dc2"
