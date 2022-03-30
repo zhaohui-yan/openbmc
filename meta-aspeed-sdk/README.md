@@ -30,8 +30,8 @@ ast2600-default-510
 ast2600-default-54
 ast2600-ecc
 ast2600-emmc
-ast2600-emmc-secure
 ast2600-emmc-secure-rsa2048-sha256
+ast2600-emmc-secure-rsa4096-sha512
 ast2600-ncsi
 ast2600-pfr
 ast2600-pfr-54
@@ -50,8 +50,8 @@ ast2600-a2
 ast2600-a2-54
 ast2600-ecc
 ast2600-a2-emmc
-ast2600-a2-emmc-secure
 ast2600-a2-emmc-secure-rsa2048-sha256
+ast2600-a2-emmc-secure-rsa4096-sha512
 ast2600-a2-secure-rsa2048-sha256
 ast2600-a2-secure-rsa2048-sha256-ncot
 ast2600-a2-secure-rsa2048-sha256-o1
