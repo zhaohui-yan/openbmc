@@ -2,7 +2,7 @@ SUMMARY = "The Secondary Service Processor (SSP) firmware"
 DESCRIPTION = "The Secondary Service Processor (SSP) is an ARM Cortex-M3 r2p1 processor \
 which is aimed at monitoring/controlling the peripherals to offload the primary processor Cortex-A7"
 LICENSE = "Apache-2.0"
-LIC_FILES_CHKSUM = "file://${ASPEEDSDKBASE}/LICENSE;md5=796e0355fcfe2a3345d663c4153c9e42"
+LIC_FILES_CHKSUM = "file://${ASPEEDSDKBASE}/LICENSE;md5=a3740bd0a194cd6dcafdc482a200a56f"
 
 PR = "r0"
 
