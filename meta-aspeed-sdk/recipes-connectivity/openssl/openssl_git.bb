@@ -24,8 +24,8 @@ SRC_URI:append:class-nativesdk = " \
            file://environment.d-openssl.sh \
            "
 PV = "1.1.1g+git${SRCPV}"
-# Tag for v00.01.00
-SRCREV = "7f3f974d6cc16ebabdd01bc588141f51ed99aedb"
+# Tag for v00.01.01
+SRCREV = "4787534fe05848827ae60626ee8d9216949fafb5"
 
 S = "${WORKDIR}/git"
 
