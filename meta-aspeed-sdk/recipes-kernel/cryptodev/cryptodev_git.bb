@@ -4,7 +4,7 @@ equivalent to those in OpenBSD or FreeBSD. The main idea is \
 to access of existing ciphers in kernel space from userspace, \
 thus enabling the re-use of a hardware implementation of a cipher."
 SECTION = "kernel/modules"
-LICENSE = "GPLv2"
+LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263"
 
 PR = "r0"
