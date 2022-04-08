@@ -3,7 +3,7 @@ DESCRIPTION = "aer-inject allows to inject PCIE AER errors on the software level
 a running Linux kernel. This is intended for validation of the PCIE\
 driver error recovery handler and PCIE AER core handler."
 
-LICENSE = "GPLv2"
+LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://README;md5=95cd6a39bf9e2981abfc7c7cfaf5d6dd"
 SRC_URI = "git://git.kernel.org/pub/scm/linux/kernel/git/gong.chen/aer-inject.git;branch=master"
 
