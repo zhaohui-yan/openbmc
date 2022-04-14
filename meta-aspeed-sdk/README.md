@@ -34,7 +34,6 @@ ast2600-emmc-secure-rsa2048-sha256
 ast2600-emmc-secure-rsa4096-sha512
 ast2600-ncsi
 ast2600-pfr
-ast2600-pfr-54
 ast2600-usbadp
 ast2600-secure-rsa2048-sha256
 ast2600-secure-rsa2048-sha256-ncot
