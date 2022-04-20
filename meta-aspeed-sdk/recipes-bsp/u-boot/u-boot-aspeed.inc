@@ -36,6 +36,22 @@ def find_cfgs(d):
 
     return sources_list
 
+do_applyconfig () {
+    if [ -e ${B}/.config -a -e ${B}/.config.orig ]; then
+        sum1=$(md5sum ${B}/.config | cut -d' ' -f1)
+        sum2=$(md5sum ${B}/.config.orig | cut -d' ' -f1)
+        if [ ${sum1} != ${sum2} ]; then
+            diff --unchanged-line-format= --old-line-format= --new-line-format="%L" ${B}/.config.orig ${B}/.config > ${B}/fragment.cfg || err=$?
+            merge_config.sh -m ${S}/configs/${UBOOT_MACHINE} ${B}/fragment.cfg
+            mv .config ${S}/configs/${UBOOT_MACHINE}
+            cp -f ${B}/.config ${B}/.config.orig
+            bbplain "\n${UBOOT_MACHINE} was updated!!\n"
+        fi
+    fi
+}
+
+addtask do_applyconfig
+
 do_configure () {
     if [ -z "${UBOOT_CONFIG}" ]; then
         if [ -n "${UBOOT_MACHINE}" ]; then
