@@ -1,4 +1,4 @@
-From 11ca4b523caef4b95d5c73d5685956734855705f Mon Sep 17 00:00:00 2001
+From b867675f6ef1b455b4ba78e156c298ce6c3e57b3 Mon Sep 17 00:00:00 2001
 From: Jammy Huang <jammy_huang@aspeedtech.com>
 Date: Fri, 18 Feb 2022 14:08:40 +0800
 Subject: [PATCH] Avoid frame drop
@@ -28,12 +28,12 @@ sendFrame and then queue back to driver.
 Signed-off-by: Jammy Huang <jammy_huang@aspeedtech.com>
 ---
  ikvm_server.cpp | 108 +++++++++++++++++++++++-------------------------
- ikvm_video.cpp  |  78 +++++++++++++++++++++-------------
+ ikvm_video.cpp  |  84 ++++++++++++++++++++++++-------------
  ikvm_video.hpp  |  34 +++++++++++++--
- 3 files changed, 131 insertions(+), 89 deletions(-)
+ 3 files changed, 137 insertions(+), 89 deletions(-)
 
 diff --git a/ikvm_server.cpp b/ikvm_server.cpp
-index e5f12c5..510eec9 100644
+index e5f12c5..6bf61e3 100644
 --- a/ikvm_server.cpp
 +++ b/ikvm_server.cpp
 @@ -10,6 +10,7 @@
@@ -203,7 +203,7 @@ index e5f12c5..510eec9 100644
  
      rfbReleaseClientIterator(it);
 diff --git a/ikvm_video.cpp b/ikvm_video.cpp
-index dcf4abb..20ddeed 100644
+index dcf4abb..3c4e35b 100644
 --- a/ikvm_video.cpp
 +++ b/ikvm_video.cpp
 @@ -34,7 +34,7 @@ using namespace sdbusplus::xyz::openbmc_project::Common::Device::Error;
@@ -240,7 +240,20 @@ index dcf4abb..20ddeed 100644
  }
  
  void Video::getFrame()
-@@ -95,48 +104,59 @@ void Video::getFrame()
+@@ -67,6 +76,12 @@ void Video::getFrame()
+         return;
+     }
+ 
++    // Don't get more new frames until we run out of previous ones
++    if (!buffersDone.empty())
++    {
++        return;
++    }
++
+     FD_ZERO(&fds);
+     FD_SET(fd, &fds);
+ 
+@@ -95,48 +110,59 @@ void Video::getFrame()
  
                  if (!(buf.flags & V4L2_BUF_FLAG_ERROR))
                  {
@@ -323,7 +336,7 @@ index dcf4abb..20ddeed 100644
  bool Video::needsResize()
  {
      int rc;
-@@ -186,7 +206,7 @@ bool Video::needsResize()
+@@ -186,7 +212,7 @@ bool Video::needsResize()
                  xyz::openbmc_project::Common::File::Open::PATH(path.c_str()));
          }
  
@@ -332,7 +345,7 @@ index dcf4abb..20ddeed 100644
          return true;
      }
  
-@@ -501,7 +521,7 @@ void Video::stop()
+@@ -501,7 +527,7 @@ void Video::stop()
          return;
      }
  
