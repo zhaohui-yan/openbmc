@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=7becf906c8f8d03c237bad13bc3dac53"
 inherit cmake systemd
 
 SRC_URI = " \
-	git://github.com/openbmc/pfr-manager;protocol=https \
+	git://github.com/openbmc/pfr-manager;protocol=https;branch=master \
 	file://0001-Porting-for-ast2600-pfr-evaluation-board.patch \
 	"
 
