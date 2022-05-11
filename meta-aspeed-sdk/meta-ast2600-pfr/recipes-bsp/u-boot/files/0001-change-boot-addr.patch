@@ -1,0 +1,26 @@
+diff --git a/configs/ast2600-pfr_defconfig b/configs/ast2600-pfr_defconfig
+index 398e55d0f3..42c512bff7 100644
+--- a/configs/ast2600-pfr_defconfig
++++ b/configs/ast2600-pfr_defconfig
+@@ -18,7 +18,7 @@ CONFIG_SPL_MMC_SUPPORT=y
+ CONFIG_SPL_SERIAL_SUPPORT=y
+ CONFIG_SPL_DRIVERS_MISC_SUPPORT=y
+ CONFIG_ENV_SIZE=0x10000
+-CONFIG_ENV_OFFSET=0xE0000
++CONFIG_ENV_OFFSET=0x100000
+ CONFIG_SPL=y
+ CONFIG_SPL_STACK_R_ADDR=0x93000000
+ CONFIG_ARMV7_BOOT_SEC_DEFAULT=y
+diff --git a/include/configs/evb_ast2600_spl.h b/include/configs/evb_ast2600_spl.h
+index 23dd7ecd7f..a34b0ccdd8 100644
+--- a/include/configs/evb_ast2600_spl.h
++++ b/include/configs/evb_ast2600_spl.h
+@@ -32,7 +32,7 @@
+ #undef CONFIG_EXTRA_ENV_SETTINGS
+ #define CONFIG_EXTRA_ENV_SETTINGS	\
+ 	"loadaddr=" STR(CONFIG_SYS_LOAD_ADDR) "\0"	\
+-	"bootspi=fdt addr 20100000 && fdt header get fitsize totalsize && cp.b 20100000 ${loadaddr} ${fitsize} && bootm; echo Error loading kernel FIT image\0"	\
++	"bootspi=fdt addr 20b00000 && fdt header get fitsize totalsize && cp.b 20b00000 ${loadaddr} ${fitsize} && bootm; echo Error loading kernel FIT image\0"	\
+ 	"verify=yes\0"	\
+ 	""
+ 
