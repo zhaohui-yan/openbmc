@@ -80,6 +80,10 @@ require conf/machine/include/obmc-bsp-common.inc
 # AST2600 Alternate Boot Record feature
 #require conf/machine/include/ast-abr.inc
 
+# Enable both of them if BMC flash model is Cypress S25Hxx and 2-bit ECC is enabled.
+#require conf/machine/include/cypress-s25hx.inc
+#require conf/machine/include/static-rwfs.inc
+
 # Free Open Source Software (FOSS) Creation
 # INHERIT += "archiver"
 # ARCHIVER_MODE[src] = "original"
