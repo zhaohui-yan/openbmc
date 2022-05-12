@@ -50,6 +50,10 @@ RDEPENDS:${PN}-apps:append:aspeed-g6 = " \
     freeipmi-ipmi-raw \
     "
 
+RDEPENDS:${PN}-apps:append:cypress-s25hx = " \
+    mtd-utils \
+    "
+
 SUMMARY:${PN}-libs = "Open Source Library"
 RDEPENDS:${PN}-libs = " \
     libgpiod \
