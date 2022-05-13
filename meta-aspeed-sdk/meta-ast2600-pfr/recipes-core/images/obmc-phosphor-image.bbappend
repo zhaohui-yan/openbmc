@@ -3,7 +3,7 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 DEPENDS:append = " obmc-pfr-image-native "
 DEPENDS:append = " intel-pfr-signing-utility-native "
 
-IMAGE_INSTALL:append = " ufm checkpoint "
+IMAGE_INSTALL:append = " ufm checkpoint aspeed-pfr-tool "
 
 IMAGE_INSTALL:remove:ast2600-pfr = " \
         webui-vue \
