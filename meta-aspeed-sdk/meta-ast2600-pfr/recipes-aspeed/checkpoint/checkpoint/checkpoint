@@ -1,7 +1,7 @@
 #!/bin/sh
 
 I2C_BUS=${I2C_BUS:-14}
-I2C_SA=${I2C_SA:-0x40}
+I2C_SA=${I2C_SA:-0x38}
 I2C_REG=${I2C_REG:-0x0f}
 
 usage() {
@@ -16,24 +16,24 @@ usage() {
 
 do_start() {
 	echo "Start Timer i2c-${I2C_BUS}[${I2C_SA}]@${I2C_REG}"
-	i2cset -y ${I2C_BUS} ${I2C_SA} ${I2C_REG} 0x01 i
+	i2cset -y ${I2C_BUS} ${I2C_SA} ${I2C_REG} 0x01
 }
 
 do_pause() {
 	echo "Pause Timer i2c-${I2C_BUS}[${I2C_SA}]@${I2C_REG}"
-	i2cset -y ${I2C_BUS} ${I2C_SA} ${I2C_REG} 0x07 i
+	i2cset -y ${I2C_BUS} ${I2C_SA} ${I2C_REG} 0x07
 }
 
 do_resume() {
 
 	echo "Pause Timer i2c-${I2C_BUS}[${I2C_SA}]@${I2C_REG}"
-	i2cset -y ${I2C_BUS} ${I2C_SA} ${I2C_REG} 0x08 i
+	i2cset -y ${I2C_BUS} ${I2C_SA} ${I2C_REG} 0x08
 
 }
 
 do_complete() {
 	echo "Complete Timer i2c-${I2C_BUS}[${I2C_SA}]@${I2C_REG}"
-	i2cset -y ${I2C_BUS} ${I2C_SA} ${I2C_REG} 0x09 i
+	i2cset -y ${I2C_BUS} ${I2C_SA} ${I2C_REG} 0x09
 }
 
 if [ $# -lt 1 ]

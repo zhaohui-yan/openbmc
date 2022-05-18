@@ -9,17 +9,19 @@
 #include "i2c_utils.h"
 
 uint8_t debug_flag;
-static const char short_options[] = "hb:a:p:w:r:d";
+static const char short_options[] = "hb:a:p:w:r:dum";
 
 static const struct option
 	long_options[] = {
-	{ "help",       no_argument,            NULL,   'h' },
-	{ "bus",        required_argument,      NULL,   'b' },
-	{ "address",    required_argument,      NULL,   'a' },
-	{ "provision",  required_argument,      NULL,   'p' },
-	{ "write_reg",  required_argument,      NULL,   'w' },
-	{ "read_reg",	required_argument,		NULL,	'r' },
-	{ "debug",      no_argument,            NULL,   'd' },
+	{ "help",			no_argument,		NULL,   'h' },
+	{ "bus",			required_argument,	NULL,   'b' },
+	{ "address",		required_argument,	NULL,   'a' },
+	{ "provision",		required_argument,	NULL,   'p' },
+	{ "unprovision",	no_argument,		NULL,   'u' },
+	{ "write_reg",		required_argument,	NULL,   'w' },
+	{ "read_reg",		required_argument,	NULL,	'r' },
+	{ "aspeed_dcscm",	no_argument,		NULL,	'm' },
+	{ "debug",			no_argument,		NULL,   'd' },
 	{ 0, 0, 0, 0 }
 };
 
@@ -32,16 +34,18 @@ static void usage(FILE *fp, int argc, char **argv)
 			" -b | --bus            bus number [default : 14]\n"
 			" -a | --address        slave address [default : 0x38]\n"
 			" -p | --provision      provision\n"
+			" -u | --unprovision    unprovision\n"
 			" -w | --write_reg      write register\n"
 			" -r | --read_reg       read register\n"
+			" -m | --aspeed_dcscm   aspeed dcscm flash offset [default: aspeed_pfr]\n"
 			" -d | --debug          debug mode\n"
 			"example:\n"
-			"--provision /usr/local/share/pfrconfig/rk_pub.pem\n"
+			"--provision rk_pub.pem\n"
 			"--provision show\n"
-			"--write_reg <rf_addr> <data> for byte mode\n"
-			"--write_reg <rf_addr> <data1> <data2> ... for block mode\n"
-			"--read_reg <rf_addr> for byte mode\n"
-			"--read_reg <rf_addr> <length> for block mode\n"
+			"--write_reg <rf_addr> <data> (byte mode)\n"
+			"--write_reg <rf_addr> <data1> <data2>... (block mode)\n"
+			"--read_reg <rf_addr> (byte mode)\n"
+			"--read_reg <rf_addr> <length> (block mode)\n"
 			"",
 			argv[0]);
 }
@@ -52,9 +56,11 @@ int main(int argc, char *argv[])
 	uint8_t slave_addr = 0x38;
 	uint8_t tx_msg[64] = {0};
 	uint8_t rx_msg[64] = {0};
+	int unprovision_flag = 0;
 	int provision_flag = 0;
 	int write_reg_flag = 0;
 	int read_reg_flag = 0;
+	int is_dcscm_flag = 0;
 	int tx_msg_len = 0;
 	int rx_msg_len = 0;
 	uint8_t bus = 14;
@@ -86,6 +92,12 @@ int main(int argc, char *argv[])
 			provision_cmd = optarg;
 			provision_flag = 1;
 			break;
+		case 'u':
+			unprovision_flag = 1;
+			break;
+		case 'm':
+			is_dcscm_flag = 1;
+			break;
 		case 'd':
 			debug_flag = 1;
 			break;
@@ -114,13 +126,19 @@ int main(int argc, char *argv[])
 			print_raw_data(tx_msg, tx_msg_len);
 	}
 
+	if (provision_flag && unprovision_flag) {
+		printf("provison and unprovision commands can not be set at the same time\n");
+		exit(EXIT_FAILURE);
+	}
+
 	fd = open_i2c_dev(bus, slave_addr);
 	if (read_reg_flag) {
 		if (tx_msg_len > 2)
 			printf("invalid read register command\n");
 		else {
 			if (tx_msg_len == 1) {
-				if (!i2cReadByteData(fd, tx_msg[0], &rx_msg[0]))
+				rx_msg[0] = i2cReadByteData(fd, tx_msg[0]);
+				if (rx_msg[0])
 					print_raw_data(rx_msg, 1);
 			} else {
 				rx_msg_len = i2cReadBlockData(fd, tx_msg[0], tx_msg[1], rx_msg);
@@ -141,7 +159,10 @@ int main(int argc, char *argv[])
 	}
 
 	if (provision_flag)
-		provision(fd, provision_cmd);
+		provision(fd, provision_cmd, is_dcscm_flag);
+
+	if (unprovision_flag)
+		unprovision(fd);
 
 	close(fd);
 	return 0;
