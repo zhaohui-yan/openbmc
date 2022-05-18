@@ -1,6 +1,26 @@
 #pragma once
 #include <stdint.h>
 
+#define SHA256_LENGTH 32
+#define SHA384_LENGTH 48
+#define SHA512_LENGTH 64
+
+// Flash Offset for ASPEED-PFR
+#define PFR_BMC_ACTIVE_PFM_OFFSET 0xe0000
+#define PFR_BMC_STAGING_REGION_OFFSET 0x4a00000
+#define PFR_BMC_RECOVERY_REGION_OFFSET 0x2a00000
+#define PFR_PCH_ACTIVE_PFM_OFFSET 0xe0000
+#define PFR_PCH_STAGING_REGION_OFFSET 0x4a00000
+#define PFR_PCH_RECOVERY_REGION_OFFSET 0x2a00000
+
+// Flash Offset for ASPEED-DCSCM
+#define DCSCM_BMC_ACTIVE_PFM_OFFSET 0xe0000
+#define DCSCM_BMC_STAGING_REGION_OFFSET 0x4220000
+#define DCSCM_BMC_RECOVERY_REGION_OFFSET 0x8000000
+#define DCSCM_PCH_ACTIVE_PFM_OFFSET 0xe0000
+#define DCSCM_PCH_STAGING_REGION_OFFSET 0x4220000
+#define DCSCM_PCH_RECOVERY_REGION_OFFSET 0x8000000
+
 // Supported Hash Algorithms
 typedef enum {
 	Sha256,
@@ -8,10 +28,6 @@ typedef enum {
 	Sha512
 } HashAlg;
 
-int extractQxQyFromPubkey(const char *file, uint8_t *qx,
-	uint8_t *qy, int *len);
-int hashBuffer(const uint8_t *buffer, const int bufSize,
-	const HashAlg hashAlg, uint8_t *hash, int *size);
-int getRootKeyHash(const char *file, uint8_t *hash, int *size);
-void provision(int fd, char *cmd);
+void provision(int fd, char *cmd, int is_dcscm_flag);
+void unprovision(int fd);
 

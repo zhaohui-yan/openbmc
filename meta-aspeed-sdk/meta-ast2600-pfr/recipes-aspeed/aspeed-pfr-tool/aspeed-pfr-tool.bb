@@ -7,6 +7,7 @@ SRC_URI = " file://provision.c;subdir=${S} \
             file://provision.h;subdir=${S} \
             file://i2c_utils.c;subdir=${S} \
             file://i2c_utils.h;subdir=${S} \
+            file://mailbox_enums.h;subdir=${S} \
             file://main.c;subdir=${S} \
             file://meson.build;subdir=${S} \
           "
