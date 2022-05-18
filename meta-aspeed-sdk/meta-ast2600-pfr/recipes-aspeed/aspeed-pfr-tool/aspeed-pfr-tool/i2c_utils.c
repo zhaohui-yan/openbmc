@@ -10,6 +10,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+extern uint8_t debug_flag;
+
 void print_raw_data(uint8_t *buf, int len)
 {
 	int i = 0;
@@ -57,6 +59,9 @@ int i2cWriteByteData(int fd, uint8_t offset, uint8_t value)
 		usleep(10*1000);
 	}
 
+	if (debug_flag)
+		printf("write_reg(%02x, %02x)\n", offset, value);
+
 	return 0;
 }
 
@@ -76,17 +81,19 @@ int i2cWriteBlockData(int fd, uint8_t offset, uint8_t length, uint8_t *value)
 	return 0;
 }
 
-uint8_t i2cReadByteData(int fd, uint8_t offset, uint8_t *value)
+int i2cReadByteData(int fd, uint8_t offset)
 {
-	int res = i2c_smbus_read_byte_data(fd, offset);
+	int value = i2c_smbus_read_byte_data(fd, offset);
 
-	if (res < 0) {
-		printf("i2c_smbus_read_byte_data() failed");
-		return 1;
+	if (value < 0) {
+		printf("i2c_smbus_read_byte_data() failed\n");
+		return -1;
 	}
 
-	*value = (uint8_t) res;
-	return 0;
+	if (debug_flag)
+		printf("read_reg(%02x, %02x)\n", offset, (uint8_t)value);
+
+	return (uint8_t)value;
 }
 
 int i2cReadBlockData(int fd, uint8_t offset, uint8_t length, uint8_t *value)
