@@ -3,7 +3,9 @@ PR = "r1"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/Apache-2.0;md5=89aea4e17d99a7cacdbeed46a0096b10"
 
-inherit native
+# 1 = SHA256
+# 2 = SHA384
+PFR_SHA ?= "1"
 
 SRC_URI = " \
            file://pfr_image.py \
@@ -44,3 +46,16 @@ do_install () {
         install -m 400 ${WORKDIR}/bmc_config_secp384r1.xml ${D}/${datadir}/pfrconfig/bmc_config_secp384r1.xml
 }
 
+do_install:class-target () {
+	install -d ${D}/${datadir}/pfrconfig
+
+	if [ ${PFR_SHA} == "1" ]; then
+		install -m 400 ${WORKDIR}/rk_pub.pem ${D}/${datadir}/pfrconfig/rk_pub.pem
+	else
+		install -m 400 ${WORKDIR}/rk384_pub.pem ${D}/${datadir}/pfrconfig/rk384_pub.pem
+	fi
+}
+
+FILES:${PN}:append = " ${datadir}/pfrconfig"
+
+BBCLASSEXTEND = "native nativesdk"

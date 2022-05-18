@@ -12,5 +12,5 @@ SRC_URI = " file://provision.c;subdir=${S} \
             file://meson.build;subdir=${S} \
           "
 
-DEPENDS = "openssl i2c-tools"
-
+DEPENDS = "openssl i2c-tools obmc-pfr-image"
+RDEPENDS:${PN} = "openssl i2c-tools obmc-pfr-image"
