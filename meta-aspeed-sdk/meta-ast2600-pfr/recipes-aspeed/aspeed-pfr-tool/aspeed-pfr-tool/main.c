@@ -13,41 +13,41 @@ static const char short_options[] = "hb:a:p:w:r:dum";
 
 static const struct option
 	long_options[] = {
-	{ "help",			no_argument,		NULL,   'h' },
-	{ "bus",			required_argument,	NULL,   'b' },
+	{ "help",		no_argument,		NULL,   'h' },
+	{ "bus",		required_argument,	NULL,   'b' },
 	{ "address",		required_argument,	NULL,   'a' },
 	{ "provision",		required_argument,	NULL,   'p' },
 	{ "unprovision",	no_argument,		NULL,   'u' },
 	{ "write_reg",		required_argument,	NULL,   'w' },
 	{ "read_reg",		required_argument,	NULL,	'r' },
 	{ "aspeed_dcscm",	no_argument,		NULL,	'm' },
-	{ "debug",			no_argument,		NULL,   'd' },
+	{ "debug",		no_argument,		NULL,   'd' },
 	{ 0, 0, 0, 0 }
 };
 
 static void usage(FILE *fp, int argc, char **argv)
 {
 	fprintf(fp,
-			"Usage: %s [options]\n\n"
-			"Options:\n"
-			" -h | --help           Print this message\n"
-			" -b | --bus            bus number [default : 14]\n"
-			" -a | --address        slave address [default : 0x38]\n"
-			" -p | --provision      provision\n"
-			" -u | --unprovision    unprovision\n"
-			" -w | --write_reg      write register\n"
-			" -r | --read_reg       read register\n"
-			" -m | --aspeed_dcscm   aspeed dcscm flash offset [default: aspeed_pfr]\n"
-			" -d | --debug          debug mode\n"
-			"example:\n"
-			"--provision rk_pub.pem\n"
-			"--provision show\n"
-			"--write_reg <rf_addr> <data> (byte mode)\n"
-			"--write_reg <rf_addr> <data1> <data2>... (block mode)\n"
-			"--read_reg <rf_addr> (byte mode)\n"
-			"--read_reg <rf_addr> <length> (block mode)\n"
-			"",
-			argv[0]);
+		"Usage: %s [options]\n\n"
+		"Options:\n"
+		" -h | --help           Print this message\n"
+		" -b | --bus            bus number [default : 14]\n"
+		" -a | --address        slave address [default : 0x38]\n"
+		" -p | --provision      provision\n"
+		" -u | --unprovision    unprovision\n"
+		" -w | --write_reg      write register\n"
+		" -r | --read_reg       read register\n"
+		" -m | --aspeed_dcscm   aspeed dcscm flash offset [default: aspeed_pfr]\n"
+		" -d | --debug          debug mode\n"
+		"example:\n"
+		"--provision /usr/share/pfrconfig/rk_pub.pem\n"
+		"--provision show\n"
+		"--write_reg <rf_addr> <data> (byte mode)\n"
+		"--write_reg <rf_addr> <data1> <data2>... (block mode)\n"
+		"--read_reg <rf_addr> (byte mode)\n"
+		"--read_reg <rf_addr> <length> (block mode)\n"
+		"",
+		argv[0]);
 }
 
 int main(int argc, char *argv[])
