@@ -17,5 +17,6 @@ typedef struct _ARGUMENTS {
 	int rx_msg_len;
 	char *pfr_tool_conf;
 	char *provision_cmd;
+	char *checkpoint_cmd;
 } ARGUMENTS;
 

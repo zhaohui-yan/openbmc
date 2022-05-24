@@ -20,6 +20,7 @@ executable(
     [
       'i2c_utils.c',
       'provision.c',
+      'checkpoint.c',
       'main.c'
     ],
     include_directories : incdir,

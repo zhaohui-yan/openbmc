@@ -199,7 +199,7 @@ void writeUfmProvBmcPchRegionOffset(ARGUMENTS args)
 	writeUfmProvFifoCmd(args, MB_UFM_PROV_PCH_OFFSETS, pch_offset, sizeof(pch_offset));
 }
 
-void provision_lock(ARGUMENTS args)
+void provisionLock(ARGUMENTS args)
 {
 	i2cWriteByteData(args, MB_PROVISION_CMD, MB_UFM_PROV_END);
 	usleep(60*1000);
@@ -229,7 +229,7 @@ void Provision(ARGUMENTS args)
 		printf("Root Key Hash:\n");
 		printRawData(read_buf, SHA384_LENGTH);
 	} else if (strncmp(args.provision_cmd, "lock", strlen(args.provision_cmd)) == 0) {
-		provision_lock(args);
+		provisionLock(args);
 	} else {
 		if (getRootKeyHash(args.provision_cmd, write_buffer, &hashLen) == 0) {
 			if (args.debug_flag)
