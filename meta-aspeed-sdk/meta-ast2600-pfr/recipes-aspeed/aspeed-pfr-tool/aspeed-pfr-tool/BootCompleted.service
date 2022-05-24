@@ -9,7 +9,7 @@ RemainAfterExit=no
 TimeoutStartSec=60
 Restart=no
 
-ExecStart=/usr/bin/checkpoint complete
+ExecStart=/usr/bin/aspeed-pfr-tool --checkpoint complete
 
 [Install]
 WantedBy=multi-user.target

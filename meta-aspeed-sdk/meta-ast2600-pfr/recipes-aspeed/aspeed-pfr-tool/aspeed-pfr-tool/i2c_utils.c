@@ -110,6 +110,7 @@ int i2cReadByteData(ARGUMENTS args, uint8_t offset)
 int i2cReadBlockData(ARGUMENTS args, uint8_t offset, uint8_t length, uint8_t *value)
 {
 	int retries = 3;
+	int ret = 0;
 
 	while (i2c_smbus_read_i2c_block_data(args.i2c_fd, offset, length, value) < 0) {
 		printf("i2c_smbus_read_i2c_block_data, retrying....%d\n", retries);
@@ -122,8 +123,8 @@ int i2cReadBlockData(ARGUMENTS args, uint8_t offset, uint8_t length, uint8_t *va
 
 	if (args.debug_flag) {
 		printf("read_block(rf_addr: %02x)\n", offset);
-		printRawData(value, length);
+		printRawData(value, ret);
 	}
 
-	return 0;
+	return ret;
 }

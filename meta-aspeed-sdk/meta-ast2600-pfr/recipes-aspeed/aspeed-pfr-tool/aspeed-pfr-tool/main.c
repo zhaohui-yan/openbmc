@@ -7,21 +7,23 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include "provision.h"
+#include "checkpoint.h"
 #include "i2c_utils.h"
 #include "arguments.h"
 
-static const char short_options[] = "hb:a:p:w:r:c:du";
+static const char short_options[] = "hb:a:c:p:uk:w:r:d";
 static const struct option
 	long_options[] = {
-	{ "help",		no_argument,		NULL,   'h' },
-	{ "bus",		required_argument,	NULL,   'b' },
-	{ "address",		required_argument,	NULL,   'a' },
-	{ "pfrtoolconf",	required_argument,	NULL,   'c' },
-	{ "provision",		required_argument,	NULL,   'p' },
-	{ "unprovision",	no_argument,		NULL,   'u' },
-	{ "write_reg",		required_argument,	NULL,   'w' },
-	{ "read_reg",		required_argument,	NULL,	'r' },
-	{ "debug",		no_argument,		NULL,   'd' },
+	{ "help", no_argument, NULL, 'h' },
+	{ "bus", required_argument, NULL, 'b' },
+	{ "address", required_argument, NULL, 'a' },
+	{ "pfrtoolconf", required_argument, NULL, 'c' },
+	{ "provision", required_argument, NULL, 'p' },
+	{ "unprovision", no_argument, NULL, 'u' },
+	{ "checkpoint", required_argument, NULL, 'k' },
+	{ "write_reg", required_argument, NULL, 'w' },
+	{ "read_reg", required_argument, NULL, 'r' },
+	{ "debug", no_argument, NULL, 'd' },
 	{ 0, 0, 0, 0 }
 };
 
@@ -37,6 +39,7 @@ static void usage(FILE *fp, int argc, char **argv)
 		"                       [default : /usr/share/pfrconfig/aspeed-pfr-tool.conf]\n"
 		" -p | --provision      provision\n"
 		" -u | --unprovision    unprovision\n"
+		" -k | --checkpoint     checkpoint\n"
 		" -w | --write_reg      write register\n"
 		" -r | --read_reg       read register\n"
 		" -d | --debug          debug mode\n"
@@ -44,6 +47,10 @@ static void usage(FILE *fp, int argc, char **argv)
 		"--provision /usr/share/pfrconfig/rk_pub.pem\n"
 		"--provision show\n"
 		"--provision lock\n"
+		"--checkpoint start\n"
+		"--checkpoint pause\n"
+		"--checkpoint resume\n"
+		"--checkpoint complete\n"
 		"--write_reg <rf_addr> <data> (byte mode)\n"
 		"--write_reg <rf_addr> <data1> <data2>... (block mode)\n"
 		"--read_reg <rf_addr> (byte mode)\n"
@@ -54,6 +61,7 @@ static void usage(FILE *fp, int argc, char **argv)
 
 void printArguments(ARGUMENTS args)
 {
+	printf("%s\n", __func__);
 	printf("I2C_BUS = %d\n", args.i2c_bus);
 	printf("ROT_ADDRESS = 0x%02x\n", args.rot_addr);
 	printf("BMC_ACTIVE_PFM_OFFSET = 0x%08x\n", args.bmc_active_pfm_offset);
@@ -62,6 +70,7 @@ void printArguments(ARGUMENTS args)
 	printf("PCH_ACTIVE_PFM_OFFSET = 0x%08x\n", args.pch_active_pfm_offset);
 	printf("PCH_STAGING_OFFSET = 0x%08x\n", args.pch_staging_offset);
 	printf("PCH_RECOVERY_OFFSET = 0x%08x\n", args.pch_recovery_offset);
+	printf("Tx Msg\n");
 	printRawData(args.tx_msg, args.tx_msg_len);
 }
 
@@ -102,14 +111,15 @@ int main(int argc, char *argv[])
 {
 	uint8_t rot_address_flag = 0;
 	uint8_t unprovision_flag = 0;
+	uint8_t checkpoint_flag = 0;
 	uint8_t provision_flag = 0;
 	uint8_t write_reg_flag = 0;
 	uint8_t read_reg_flag = 0;
 	int read_reg_value = 0;
 	uint8_t bus_flag = 0;
 	ARGUMENTS args = {0};
-	char option = 0;
 	uint8_t rot_addr;
+	char option = 0;
 	uint8_t bus;
 	int i;
 	int j;
@@ -145,6 +155,10 @@ int main(int argc, char *argv[])
 			break;
 		case 'u':
 			unprovision_flag = 1;
+			break;
+		case 'k':
+			args.checkpoint_cmd = optarg;
+			checkpoint_flag = 1;
 			break;
 		case 'd':
 			args.debug_flag = 1;
@@ -183,11 +197,6 @@ int main(int argc, char *argv[])
 	if (args.debug_flag)
 		printArguments(args);
 
-	if (provision_flag && unprovision_flag) {
-		printf("provison and unprovision commands can not be set at the same time\n");
-		exit(EXIT_FAILURE);
-	}
-
 	args.i2c_fd = i2cOpenDev(args.i2c_bus, args.rot_addr);
 	if (read_reg_flag) {
 		if (args.tx_msg_len > 2)
@@ -220,6 +229,9 @@ int main(int argc, char *argv[])
 
 	if (unprovision_flag)
 		Unprovision(args);
+
+	if (checkpoint_flag)
+		Checkpoint(args);
 
 	if (args.i2c_fd >= 0)
 		close(args.i2c_fd);
