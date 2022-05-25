@@ -22,14 +22,14 @@ option(
 option(
     'bmc_staging_offset',
     type: 'string',
-    value: '0x04a00000',
+    value: '0x04220000',
     description: 'BMC Staging Region Offset'
 )
 
 option(
     'bmc_recovery_offset',
     type: 'string',
-    value: '0x02a00000',
+    value: '0x08000000',
     description: 'BMC Recovery Region Offset'
 )
 
