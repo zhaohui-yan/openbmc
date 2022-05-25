@@ -23,6 +23,8 @@ RDEPENDS:${PN} = "openssl i2c-tools obmc-pfr-image"
 
 EXTRA_OEMESON:ast2600-pfr = " \
     -Di2c_bus=14 \
+    -Dbmc_staging_offset=0x04a00000 \
+    -Dbmc_recovery_offset=0x02a00000 \
     "
 
 inherit obmc-phosphor-systemd
