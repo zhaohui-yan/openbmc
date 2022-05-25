@@ -29,7 +29,7 @@ void checkpointResume(ARGUMENTS args)
 
 void checkpointComplete(ARGUMENTS args)
 {
-	i2cWriteByteData(args, MB_PROVISION_CMD, MB_CHKPT_COMPLETE);
+	i2cWriteByteData(args, MB_BMC_CHECKPOINT, MB_CHKPT_COMPLETE);
 	usleep(60*1000);
 }
 
