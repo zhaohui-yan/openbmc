@@ -33,17 +33,17 @@ void checkpointComplete(ARGUMENTS args)
 	usleep(60*1000);
 }
 
-void Checkpoint(ARGUMENTS args)
+void checkpoint(ARGUMENTS args)
 {
-	if (strncmp(args.checkpoint_cmd, "start", strlen(args.checkpoint_cmd)) == 0)
+	if (strncmp(args.checkpoint_cmd, "start", strlen("start")) == 0)
 		checkpointStart(args);
-	else if (strncmp(args.checkpoint_cmd, "pause", strlen(args.checkpoint_cmd)) == 0)
+	else if (strncmp(args.checkpoint_cmd, "pause", strlen("pause")) == 0)
 		checkpointPause(args);
-	else if (strncmp(args.checkpoint_cmd, "resume", strlen(args.checkpoint_cmd)) == 0)
+	else if (strncmp(args.checkpoint_cmd, "resume", strlen("resume")) == 0)
 		checkpointResume(args);
-	else if (strncmp(args.checkpoint_cmd, "complete", strlen(args.checkpoint_cmd)) == 0)
+	else if (strncmp(args.checkpoint_cmd, "complete", strlen("complete")) == 0)
 		checkpointComplete(args);
 	else
-		printf("unsupported checkpoint command, %s\n", args.checkpoint_cmd);
+		printf("unsupported command, %s\n", args.checkpoint_cmd);
 }
 
