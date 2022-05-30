@@ -10,11 +10,13 @@
 #include "checkpoint.h"
 #include "i2c_utils.h"
 #include "arguments.h"
+#include "config.h"
 
-static const char short_options[] = "hb:a:c:p:uk:w:r:d";
+static const char short_options[] = "hvb:a:c:p:uk:w:r:d";
 static const struct option
 	long_options[] = {
 	{ "help", no_argument, NULL, 'h' },
+	{ "version", no_argument, NULL, 'v' },
 	{ "bus", required_argument, NULL, 'b' },
 	{ "address", required_argument, NULL, 'a' },
 	{ "pfrtoolconf", required_argument, NULL, 'c' },
@@ -33,6 +35,7 @@ static void usage(FILE *fp, int argc, char **argv)
 		"Usage: %s [options]\n\n"
 		"Options:\n"
 		" -h | --help           Print this message\n"
+		" -v | --version        show version\n"
 		" -b | --bus            bus number\n"
 		" -a | --address        slave address\n"
 		" -c | --pfrtoolconf    aspeed pfr tool config\n"
@@ -59,9 +62,13 @@ static void usage(FILE *fp, int argc, char **argv)
 		argv[0]);
 }
 
+void printVersion(void)
+{
+	printf("ASPEED PFR tool version: %s\n", ASPEED_PFR_TOOL_VERSION);
+}
+
 void printArguments(ARGUMENTS args)
 {
-	printf("%s\n", __func__);
 	printf("I2C_BUS = %d\n", args.i2c_bus);
 	printf("ROT_ADDRESS = 0x%02x\n", args.rot_addr);
 	printf("BMC_ACTIVE_PFM_OFFSET = 0x%08x\n", args.bmc_active_pfm_offset);
@@ -136,6 +143,10 @@ int main(int argc, char *argv[])
 		switch (option) {
 		case 'h':
 			usage(stdout, argc, argv);
+			exit(EXIT_SUCCESS);
+			break;
+		case 'v':
+			printVersion();
 			exit(EXIT_SUCCESS);
 			break;
 		case 'b':
@@ -225,13 +236,13 @@ int main(int argc, char *argv[])
 	}
 
 	if (provision_flag)
-		Provision(args);
+		provision(args);
 
 	if (unprovision_flag)
-		Unprovision(args);
+		unprovision(args);
 
 	if (checkpoint_flag)
-		Checkpoint(args);
+		checkpoint(args);
 
 	if (args.i2c_fd >= 0)
 		close(args.i2c_fd);
