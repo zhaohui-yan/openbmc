@@ -207,13 +207,13 @@ void provisionLock(ARGUMENTS args)
 	usleep(60*1000);
 }
 
-void Provision(ARGUMENTS args)
+void provision(ARGUMENTS args)
 {
 	uint8_t write_buffer[64];
 	uint8_t read_buf[64];
 	int hashLen = 0;
 
-	if (strncmp(args.provision_cmd, "show", strlen(args.provision_cmd)) == 0) {
+	if (strncmp(args.provision_cmd, "show", strlen("show")) == 0) {
 		// Read BMC offset
 		readUfmProvFifoCmd(args, MB_UFM_PROV_RD_BMC_OFFSETS, read_buf, 12);
 		printf("BMC Active PFM Offset : 0x%08x\n", *(uint32_t *)&read_buf[0]);
@@ -228,7 +228,7 @@ void Provision(ARGUMENTS args)
 		readUfmProvFifoCmd(args, MB_UFM_PROV_RD_ROOT_KEY, read_buf, SHA384_LENGTH);
 		printf("Root Key Hash:\n");
 		printRawData(read_buf, SHA384_LENGTH);
-	} else if (strncmp(args.provision_cmd, "lock", strlen(args.provision_cmd)) == 0) {
+	} else if (strncmp(args.provision_cmd, "lock", strlen("lock")) == 0) {
 		provisionLock(args);
 	} else {
 		if (getRootKeyHash(args.provision_cmd, write_buffer, &hashLen) == 0) {
@@ -243,7 +243,7 @@ void Provision(ARGUMENTS args)
 	}
 }
 
-void Unprovision(ARGUMENTS args)
+void unprovision(ARGUMENTS args)
 {
 	i2cWriteByteData(args, MB_PROVISION_CMD, MB_UFM_PROV_ERASE);
 	usleep(60*1000);
