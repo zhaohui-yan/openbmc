@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2022 ASPEED Technology Inc.
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
