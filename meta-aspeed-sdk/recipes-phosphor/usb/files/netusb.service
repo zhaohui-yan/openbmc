@@ -5,8 +5,8 @@ After=multi-user.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/netusb.sh
-ExecStop=/usr/bin/netusb.sh stop
+ExecStart=/usr/bin/usbA-net.sh
+ExecStop=/usr/bin/usbA-net.sh stop
 RemainAfterExit=yes
 
 [Install]
