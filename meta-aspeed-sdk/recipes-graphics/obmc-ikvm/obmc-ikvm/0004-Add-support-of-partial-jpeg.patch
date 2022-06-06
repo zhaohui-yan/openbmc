@@ -1,0 +1,160 @@
+From 0bbd4cbcc367a87c619cc0ca46c5bf1a368e4a6c Mon Sep 17 00:00:00 2001
+From: Jammy Huang <jammy_huang@aspeedtech.com>
+Date: Thu, 2 Jun 2022 16:33:12 +0800
+Subject: [PATCH] Add support of partial jpeg
+
+Partial jpeg is a standard jpeg but only include the changed blocks to
+save amount of data to be transferred.
+
+Use '-m' to assign jpeg format
+ 0: standard jpeg, 1: aspeed jpeg, 2: partial jpeg
+
+Both 0/2 can be used with TightVNC like vnc-clients.
+
+Signed-off-by: Jammy Huang <jammy_huang@aspeedtech.com>
+---
+ ikvm_args.cpp   |  2 +-
+ ikvm_server.cpp | 17 +++++++++++++----
+ ikvm_video.cpp  | 16 ++++++++++++++++
+ ikvm_video.hpp  | 12 ++++++++++++
+ 4 files changed, 42 insertions(+), 5 deletions(-)
+
+diff --git a/ikvm_args.cpp b/ikvm_args.cpp
+index 850c6c5..675f63e 100644
+--- a/ikvm_args.cpp
++++ b/ikvm_args.cpp
+@@ -39,7 +39,7 @@ Args::Args(int argc, char* argv[]) : frameRate(30), subsampling(0), format(0), c
+                 break;
+             case 'm':
+                 format = (int)strtol(optarg, NULL, 0);
+-                if (format < 0 || format > 1)
++                if (format < 0 || format > 2)
+                     format = 0;
+                 break;
+             case 'h':
+diff --git a/ikvm_server.cpp b/ikvm_server.cpp
+index 6bf61e3..25a3dbe 100644
+--- a/ikvm_server.cpp
++++ b/ikvm_server.cpp
+@@ -147,11 +147,11 @@ void Server::sendFrame()
+             cl->ublen = sz_rfbFramebufferUpdateMsg;
+             rfbSendUpdateBuf(cl);
+ 
+-            cl->tightEncoding = rfbEncodingAspeed;
+-            rfbSendTightHeader(cl, 0, 0, video.getWidth(), video.getHeight());
+-
+             if (video.getFormat() == 1)
+             {
++                cl->tightEncoding = rfbEncodingAspeed;
++                rfbSendTightHeader(cl, 0, 0, video.getWidth(), video.getHeight());
++
+                 frameCount = video.getFrameCount(i);
+                 cl->updateBuf[cl->ublen++] = (char)(0);
+                 cl->updateBuf[cl->ublen++] = (char)(frameCount >> 24 & 0xff);
+@@ -161,8 +161,17 @@ void Server::sendFrame()
+                 cl->updateBuf[cl->ublen++] = (char)(video.getSubsampling());
+                 cl->updateBuf[cl->ublen++] = (char)(0x00);	// the value of quality if changed
+             }
+-            else if (video.getFormat() == 0)
++            else
+             {
++                cl->tightEncoding = rfbEncodingTight;
++                if (video.getFormat() == 2) {
++                    v4l2_rect r = video.getBoundingBox(i);
++
++                    rfbSendTightHeader(cl, r.left, r.top, r.width, r.height);
++                } else {
++                    rfbSendTightHeader(cl, 0, 0, video.getWidth(), video.getHeight());
++                }
++
+                 cl->updateBuf[cl->ublen++] = (char)(rfbTightJpeg << 4);
+             }
+             rfbSendCompressedDataTight(cl, video.getData(i), video.getFrameSize(i));
+diff --git a/ikvm_video.cpp b/ikvm_video.cpp
+index 3c4e35b..89990d8 100644
+--- a/ikvm_video.cpp
++++ b/ikvm_video.cpp
+@@ -20,6 +20,7 @@
+ #include <xyz/openbmc_project/Common/File/error.hpp>
+ 
+ #define V4L2_PIX_FMT_AJPG     v4l2_fourcc('A', 'J', 'P', 'G')
++#define V4L2_PIX_FMT_FLAG_PARTIAL_JPG   0x00000004
+ 
+ namespace ikvm
+ {
+@@ -70,6 +71,7 @@ void Video::getFrame()
+     v4l2_buffer buf;
+     fd_set fds;
+     timeval tv;
++    v4l2_selection comp = {.type = V4L2_BUF_TYPE_VIDEO_CAPTURE, .target = V4L2_SEL_TGT_CROP_DEFAULT};
+ 
+     if (fd < 0)
+     {
+@@ -112,6 +114,18 @@ void Video::getFrame()
+                 {
+                     buffers[buf.index].payload = buf.bytesused;
+                     buffers[buf.index].sequence = buf.sequence;
++                    if (format == 2) {
++                        rc = ioctl(fd, VIDIOC_G_SELECTION, &comp);
++                        if (rc) {
++                            log<level::ERR>("Failed to get selection box",
++                                            entry("ERROR=%s", strerror(errno)));
++                            comp.r.left = 0;
++                            comp.r.top = 0;
++                            comp.r.width = width;
++                            comp.r.height = height;
++                        }
++                        buffers[buf.index].box = comp.r;
++                    }
+                     buffersDone.push_back(buf.index);
+                 }
+                 else
+@@ -464,6 +478,8 @@ void Video::start()
+     }
+ 
+     switch (format) {
++        case 2:
++            fmt.fmt.pix.flags = V4L2_PIX_FMT_FLAG_PARTIAL_JPG;
+         default:
+         case 0:
+             fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_JPEG;
+diff --git a/ikvm_video.hpp b/ikvm_video.hpp
+index 0cc0b76..4794de1 100644
+--- a/ikvm_video.hpp
++++ b/ikvm_video.hpp
+@@ -6,6 +6,7 @@
+ #include <string>
+ #include <vector>
+ #include <deque>
++ #include <linux/videodev2.h>
+ 
+ namespace ikvm
+ {
+@@ -157,6 +158,16 @@ class Video
+         format = _fmt;
+     }
+ 
++    /*
++     * @brief Gets the bounding-box of the partial-jpeg
++     *
++     * @return Bounding-box of the video frame
++     */
++    inline v4l2_rect getBoundingBox(unsigned int i) const
++    {
++        return buffers[i].box;
++    }
++
+     /* @brief Number of bits per component of a pixel */
+     static const int bitsPerSample;
+     /* @brief Number of bytes of storage for a pixel */
+@@ -190,6 +201,7 @@ class Video
+         size_t payload;
+         size_t size;
+         uint32_t sequence;
++        v4l2_rect box;
+     };
+ 
+     /*
+-- 
+2.25.1
+
