@@ -2,10 +2,15 @@ SUMMARY = "Turn On USB gadget"
 DESCRIPTION = "Script to turn on usb gadget after BMC is ready"
 
 S = "${WORKDIR}"
-SRC_URI = "file://netusb.sh \
+SRC_URI = "file://usbA-net.sh \
+           file://usbB-net.sh \
+           file://usbA-rndis.sh \
+           file://usbB-rndis.sh \
+           file://usbA-ms.sh \
+           file://usbB-ms.sh \
+           file://usbA-uart.sh \
+           file://usbB-uart.sh \
            file://netusb.service \
-           file://uart.sh \
-           file://ms.sh \
            file://keyboard.sh \
            file://mouse.sh \
 	   file://hid_gadget_app \
@@ -20,9 +25,14 @@ do_install() {
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/netusb.service ${D}${systemd_system_unitdir}
     install -d ${D}${bindir}
-    install -m 0755 ${S}/netusb.sh ${D}/${bindir}/netusb.sh
-    install -m 0755 ${S}/uart.sh ${D}/${bindir}/uart.sh
-    install -m 0755 ${S}/ms.sh ${D}/${bindir}/ms.sh
+    install -m 0755 ${S}/usbA-net.sh ${D}/${bindir}/usbA-net.sh
+    install -m 0755 ${S}/usbB-net.sh ${D}/${bindir}/usbB-net.sh
+    install -m 0755 ${S}/usbA-rndis.sh ${D}/${bindir}/usbA-rndis.sh
+    install -m 0755 ${S}/usbB-rndis.sh ${D}/${bindir}/usbB-rndis.sh
+    install -m 0755 ${S}/usbA-ms.sh ${D}/${bindir}/usbA-ms.sh
+    install -m 0755 ${S}/usbB-ms.sh ${D}/${bindir}/usbB-ms.sh
+    install -m 0755 ${S}/usbA-uart.sh ${D}/${bindir}/usbA-uart.sh
+    install -m 0755 ${S}/usbB-uart.sh ${D}/${bindir}/usbB-uart.sh
     install -m 0755 ${S}/keyboard.sh ${D}/${bindir}/keyboard.sh
     install -m 0755 ${S}/mouse.sh ${D}/${bindir}/mouse.sh
     install -m 0755 ${S}/hid_gadget_app ${D}/${bindir}/hid_gadget_app
