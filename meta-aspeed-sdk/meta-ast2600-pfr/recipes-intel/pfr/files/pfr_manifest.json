@@ -79,16 +79,6 @@
 			"pfm": 1,
 			"hash": 0,
 			"compress": 0
-		},
-		{
-			"name": "cpld-rc",
-			"index": 8,
-			"offset": "0x7f00000",
-			"size": "0x100000",
-			"prot_mask": 0,
-			"pfm": 1,
-			"hash": 0,
-			"compress": 0
 		}
 	],
 	"i2c-rules": [
