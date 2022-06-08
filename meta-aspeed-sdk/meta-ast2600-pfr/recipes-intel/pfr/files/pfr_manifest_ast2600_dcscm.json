@@ -61,7 +61,7 @@
 			"compress": 1
 		},
 		{
-			"name": "image-stg",
+			"name": "rc-image",
 			"index": 6,
 			"offset": "0x4220000",
 			"size": "0x3de0000",
@@ -71,10 +71,10 @@
 			"compress": 0
 		},
 		{
-			"name": "rc-image",
+			"name": "image-stg",
 			"index": 7,
 			"offset": "0x8000000",
-			"size": "0x3de0000",
+			"size": "0x52e0000",
 			"prot_mask": 0,
 			"pfm": 1,
 			"hash": 0,
