@@ -34,7 +34,6 @@ EXTRA_IMAGE_FEATURES:append = " \
         ${@bb.utils.contains('DISTRO_FEATURES', 'phosphor-mmc', 'read-only-rootfs-delayed-postinsts', '', d)} \
         "
 
-OVERLAY_MKFS_OPTS:static-rwfs-jffs2 = " --pad=${RWFS_SIZE} "
 OVERLAY_MKFS_OPTS:cypress-s25hx:static-rwfs-jffs2 = " -c 16 -e 262144 --pad=${RWFS_SIZE} "
 
 do_generate_rwfs_static:static-rwfs-jffs2() {
