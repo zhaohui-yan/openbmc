@@ -32,9 +32,6 @@
   - OpenBMC/libmctp only supports linux kernel v5.15 and higher version. To fix conflict issue between Intel-BMC/libmctp and OpenBMC/libmctp, Intel-BMC/libmctp is only used
 to build this test program. It will not install header files and static library of Intel-BMC/libmctp into image.
 
-# Known Issue
-- Currently, libmctp only supports MCTP payload size 64bytes.
-
 # MCTP Message Type
 ## MCTP control messages (0x00)
 So far, this test program only supports **Get Message Type Support** command.
