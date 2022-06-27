@@ -6,9 +6,9 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=d50b901333b4eedfee074ebcd6a6d611"
 
 SRC_URI = "git://github.com/AspeedTech-BMC/socsec.git;protocol=https;branch=master"
 
-PV = "v01.00.01+git${SRCPV}"
-# Tag for v01.00.03
-SRCREV = "984eba09f4133bdb1e47eb5623be4881a9c65d87"
+PV = "v01.00.04+git${SRCPV}"
+# Tag for v01.00.04
+SRCREV = "d607cee5c081466f4e05985fed19ed1d53b8a205"
 
 S = "${WORKDIR}/git"
 
