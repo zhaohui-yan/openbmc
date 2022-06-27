@@ -14,10 +14,10 @@ Both 0/2 can be used with TightVNC like vnc-clients.
 Signed-off-by: Jammy Huang <jammy_huang@aspeedtech.com>
 ---
  ikvm_args.cpp   |  2 +-
- ikvm_server.cpp | 17 +++++++++++++----
+ ikvm_server.cpp |  8 +++++++-
  ikvm_video.cpp  | 16 ++++++++++++++++
  ikvm_video.hpp  | 12 ++++++++++++
- 4 files changed, 42 insertions(+), 5 deletions(-)
+ 4 files changed, 36 insertions(+), 2 deletions(-)
 
 diff --git a/ikvm_args.cpp b/ikvm_args.cpp
 index 850c6c5..675f63e 100644
@@ -36,40 +36,21 @@ diff --git a/ikvm_server.cpp b/ikvm_server.cpp
 index 6bf61e3..25a3dbe 100644
 --- a/ikvm_server.cpp
 +++ b/ikvm_server.cpp
-@@ -147,11 +147,11 @@ void Server::sendFrame()
-             cl->ublen = sz_rfbFramebufferUpdateMsg;
-             rfbSendUpdateBuf(cl);
- 
--            cl->tightEncoding = rfbEncodingAspeed;
+@@ -165,7 +165,13 @@ void Server::sendFrame()
+         else
+         {
+             cl->tightEncoding = rfbEncodingTight;
 -            rfbSendTightHeader(cl, 0, 0, video.getWidth(), video.getHeight());
--
-             if (video.getFormat() == 1)
-             {
-+                cl->tightEncoding = rfbEncodingAspeed;
++            if (video.getFormat() == 2) {
++                v4l2_rect r = video.getBoundingBox(i);
++
++                rfbSendTightHeader(cl, r.left, r.top, r.width, r.height);
++            } else {
 +                rfbSendTightHeader(cl, 0, 0, video.getWidth(), video.getHeight());
-+
-                 frameCount = video.getFrameCount(i);
-                 cl->updateBuf[cl->ublen++] = (char)(0);
-                 cl->updateBuf[cl->ublen++] = (char)(frameCount >> 24 & 0xff);
-@@ -161,8 +161,17 @@ void Server::sendFrame()
-                 cl->updateBuf[cl->ublen++] = (char)(video.getSubsampling());
-                 cl->updateBuf[cl->ublen++] = (char)(0x00);	// the value of quality if changed
-             }
--            else if (video.getFormat() == 0)
-+            else
-             {
-+                cl->tightEncoding = rfbEncodingTight;
-+                if (video.getFormat() == 2) {
-+                    v4l2_rect r = video.getBoundingBox(i);
-+
-+                    rfbSendTightHeader(cl, r.left, r.top, r.width, r.height);
-+                } else {
-+                    rfbSendTightHeader(cl, 0, 0, video.getWidth(), video.getHeight());
-+                }
-+
-                 cl->updateBuf[cl->ublen++] = (char)(rfbTightJpeg << 4);
-             }
-             rfbSendCompressedDataTight(cl, video.getData(i), video.getFrameSize(i));
++            }
+ 
+             cl->updateBuf[cl->ublen++] = (char)(rfbTightJpeg << 4);
+         }
 diff --git a/ikvm_video.cpp b/ikvm_video.cpp
 index 3c4e35b..89990d8 100644
 --- a/ikvm_video.cpp
