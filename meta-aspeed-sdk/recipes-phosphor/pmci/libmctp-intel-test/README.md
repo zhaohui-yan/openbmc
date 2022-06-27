@@ -21,12 +21,6 @@
   - https://github.com/openbmc/libmctp
 
 # Dependencies
-- To test MCTP over PCIE, it is required to use MCTP driver which is provided by Intel.
-  - https://github.com/Intel-BMC/linux/blob/dev-5.10-intel/drivers/soc/aspeed/aspeed-mctp.c
-  - https://github.com/Intel-BMC/linux/commit/2e6b88503f430fb55a02882716f3841d29a84a7e#diff-b97d7679f6e1d68f489b1cb890c2f2175cfb59d42df3a612f286e6122c31f117
-
-  **This driver had been integrated into AspeedTech-BMC/linux.**
-
 - It is required to use Intel-BMC/libmctp to build this test program. The reason are as following.
   - Intel-BMC/libmctp has not been upstreamed to OpenBMC/libmctp, yet.
   - OpenBMC/libmctp only supports linux kernel v5.15 and higher version. To fix conflict issue between Intel-BMC/libmctp and OpenBMC/libmctp, Intel-BMC/libmctp is only used

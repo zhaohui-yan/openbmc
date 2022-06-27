@@ -23,7 +23,7 @@
       <magic>0x14711C2F</magic>
       <curvemagic>0x08F07B47</curvemagic>
       <permissions>4</permissions>
-      <keyid>1</keyid>
+      <keyid>0</keyid>
       <pubkey>csk384_pub.pem</pubkey>
       <sigmagic>0xEA2A50E9</sigmagic>
       <hashalg>sha384</hashalg>
