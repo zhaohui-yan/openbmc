@@ -433,6 +433,4 @@ do
 	mount --move $f root/$f
 done
 
-# switch_root /root $init
-exec chroot /root $init
-
+exec switch_root /root $init
