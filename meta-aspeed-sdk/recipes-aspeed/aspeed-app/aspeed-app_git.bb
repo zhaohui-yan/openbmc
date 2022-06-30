@@ -1,14 +1,18 @@
 LICENSE = "GPL-2.0-or-later"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/GPL-2.0-or-later;md5=fed54355545ffd980b814dab4a3b312c"
 
-S = "${WORKDIR}/git"
+inherit pkgconfig meson
 
 SRC_URI = " git://github.com/AspeedTech-BMC/aspeed_app.git;protocol=https;branch=${BRANCH} "
 PV = "1.0+git${SRCPV}"
 
 # Tag for v00.01.07
-SRCREV = "33aed232dde7e1e2e36897b77605fdcf0fe81411"
+SRCREV = "22fc1decc8189e6f53070d18ca05857b7eefef79"
 BRANCH = "master"
-inherit meson
+
+S = "${WORKDIR}/git"
+
+DEPENDS += "openssl"
+RDEPENDS:${PN} += "openssl"
 
 FILES:${PN}:append = " /usr/share/* "
