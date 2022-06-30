@@ -10,7 +10,7 @@ DEPENDS = "openssl-native libxml2-native "
 
 SRC_URI = "git://github.com/Intel-BMC/intel-pfr-signing-utility;protocol=ssh;branch=master"
 
-SRCREV = "33b8e02e9b25d5150b744fcbda4cf1e508813194"
+SRCREV = "2c6f15434db57e5f51e3b1a4817f0e621a5bad25"
 
 S = "${WORKDIR}/git"
 
