@@ -48,5 +48,4 @@ do_generate_rwfs_static:static-rwfs-jffs2() {
     ${JFFS2_RWFS_CMD}  ${OVERLAY_MKFS_OPTS} --squash-uids
 }
 
-### Workaround
 inherit image_types_phosphor_aspeed

@@ -25,7 +25,6 @@ Target machine must be specified. Use one of:
 ast2500-default
 ast2500-default-54
 ast2600-dcscm
-ast2605-default
 ast2600-default
 ast2600-default-510
 ast2600-default-54
