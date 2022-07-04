@@ -10,11 +10,6 @@ do_generate_image_uboot_file() {
             if=${DEPLOY_DIR_IMAGE}/${FLASH_UBOOT_SPL_IMAGE}.${UBOOT_SUFFIX} \
             of=${image_dst}
         uboot_offset=${FLASH_UBOOT_SPL_SIZE}
-    elif [ ! -z ${AST2605_SSP_BINARY} ]; then
-        dd bs=1k conv=notrunc seek=${FLASH_UBOOT_OFFSET} \
-            if=${DEPLOY_DIR_IMAGE}/${AST2605_SSP_BINARY} \
-            of=${image_dst}
-        uboot_offset=${FLASH_AST2605_SSP_SIZE}
     fi
 
     dd bs=1k conv=notrunc seek=${uboot_offset} \
@@ -26,7 +21,6 @@ do_generate_image_uboot_file() {
 python do_generate_static:append() {
     uboot_offset = int(d.getVar('FLASH_UBOOT_OFFSET', True))
     spl_binary = d.getVar('SPL_BINARY', True)
-    ast2605_ssp_binary = d.getVar('AST2605_SSP_BINARY', True)
 
     if spl_binary:
         _append_image(os.path.join(d.getVar('DEPLOY_DIR_IMAGE', True),
@@ -36,13 +30,6 @@ python do_generate_static:append() {
                       int(d.getVar('FLASH_UBOOT_OFFSET', True)),
                       int(d.getVar('FLASH_UBOOT_SPL_SIZE', True)))
         uboot_offset += int(d.getVar('FLASH_UBOOT_SPL_SIZE', True))
-    elif ast2605_ssp_binary:
-        _append_image(os.path.join(d.getVar('DEPLOY_DIR_IMAGE', True),
-                                   '%s' % (
-                                    d.getVar('AST2605_SSP_BINARY', True))),
-                      int(d.getVar('FLASH_UBOOT_OFFSET', True)),
-                      int(d.getVar('FLASH_UBOOT_SPL_SIZE', True)))
-        uboot_offset += int(d.getVar('FLASH_AST2605_SSP_SIZE', True))
 
     _append_image(os.path.join(d.getVar('DEPLOY_DIR_IMAGE', True),
                                '%s.%s' % (
@@ -61,11 +48,6 @@ do_make_ubi:append() {
             if=${DEPLOY_DIR_IMAGE}/${FLASH_UBOOT_SPL_IMAGE}.${UBOOT_SUFFIX} \
             of=${IMGDEPLOYDIR}/${IMAGE_NAME}.ubi.mtd
         uboot_offset=${FLASH_UBOOT_SPL_SIZE}
-    elif [ ! -z ${AST2605_SSP_BINARY} ]; then
-        dd bs=1k conv=notrunc seek=${FLASH_UBOOT_OFFSET} \
-            if=${DEPLOY_DIR_IMAGE}/${AST2605_SSP_BINARY} \
-            of=${IMGDEPLOYDIR}/${IMAGE_NAME}.ubi.mtd
-        uboot_offset=${FLASH_AST2605_SSP_SIZE}
     fi
 
     dd bs=1k conv=notrunc seek=${uboot_offset} \
@@ -78,9 +60,3 @@ do_generate_ubi_tar[depends] += "${@bb.utils.contains('MACHINE_FEATURES', 'ast-s
 do_generate_static_tar[depends] += "${@bb.utils.contains('MACHINE_FEATURES', 'ast-secure', 'aspeed-image-secureboot:do_deploy', '', d)}"
 do_generate_ext4_tar[depends] += "${@bb.utils.contains('MACHINE_FEATURES', 'ast-secure', 'aspeed-image-secureboot:do_deploy', '', d)}"
 do_generate_static[depends] += "${@bb.utils.contains('MACHINE_FEATURES', 'ast-secure', 'aspeed-image-secureboot:do_deploy', '', d)}"
-
-do_make_ubi[depends] += "${@bb.utils.contains('MACHINE_FEATURES', 'ast2605-ssp', 'aspeed-image-ast2605-ssp:do_deploy', '', d)}"
-do_generate_ubi_tar[depends] += "${@bb.utils.contains('MACHINE_FEATURES', 'ast2605-ssp', 'aspeed-image-ast2605-ssp:do_deploy', '', d)}"
-do_generate_static_tar[depends] += "${@bb.utils.contains('MACHINE_FEATURES', 'ast2605-ssp', 'aspeed-image-ast2605-ssp:do_deploy', '', d)}"
-do_generate_ext4_tar[depends] += "${@bb.utils.contains('MACHINE_FEATURES', 'ast2605-ssp', 'aspeed-image-ast2605-ssp:do_deploy', '', d)}"
-do_generate_static[depends] += "${@bb.utils.contains('MACHINE_FEATURES', 'ast2605-ssp', 'aspeed-image-ast2605-ssp:do_deploy', '', d)}"
