@@ -8,7 +8,7 @@ SRC_URI = "git://github.com/AspeedTech-BMC/socsec.git;protocol=https;branch=mast
 
 PV = "v02.00.00+git${SRCPV}"
 # Tag for v02.00.00
-SRCREV = "04a0b920221bff4cf7ed550a451c3cab5e275f04"
+SRCREV = "32fb3f1b2d0955233122d0ffd53cb7833d97eb87"
 
 S = "${WORKDIR}/git"
 
