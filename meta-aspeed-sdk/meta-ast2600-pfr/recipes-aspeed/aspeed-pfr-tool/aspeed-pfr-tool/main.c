@@ -125,10 +125,10 @@ int main(int argc, char *argv[])
 	uint8_t rot_address_flag = 0;
 	uint8_t unprovision_flag = 0;
 	uint8_t checkpoint_flag = 0;
+	uint8_t read_reg_value = 0;
 	uint8_t provision_flag = 0;
 	uint8_t write_reg_flag = 0;
 	uint8_t read_reg_flag = 0;
-	int read_reg_value = 0;
 	uint8_t bus_flag = 0;
 	ARGUMENTS args = {0};
 	uint8_t rot_addr;
@@ -221,8 +221,7 @@ int main(int argc, char *argv[])
 		else {
 			if (args.tx_msg_len == 1) {
 				read_reg_value = i2cReadByteData(args, args.tx_msg[0]);
-				if (read_reg_value >= 0)
-					printf("%02x\n", (uint8_t)read_reg_value);
+				printf("%02x\n", read_reg_value);
 			} else {
 				args.rx_msg_len = i2cReadBlockData(args, args.tx_msg[0], args.tx_msg[1], args.rx_msg);
 				if (args.rx_msg_len > 0)

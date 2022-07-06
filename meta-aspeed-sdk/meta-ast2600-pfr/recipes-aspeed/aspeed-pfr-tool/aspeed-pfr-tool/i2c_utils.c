@@ -51,34 +51,32 @@ int i2cOpenDev(int bus, int slave_addr)
 	return fd;
 }
 
-int i2cWriteByteData(ARGUMENTS args, uint8_t offset, uint8_t value)
+void i2cWriteByteData(ARGUMENTS args, uint8_t offset, uint8_t value)
 {
-	int retries = 3;
+	int retries = 5;
 
 	while (i2c_smbus_write_byte_data(args.i2c_fd, offset, value) < 0) {
 		printf("i2c write byte failed, retrying....%d\n", retries);
 		if (!retries--)	{
 			printf("i2c_smbus_write_byte_data() failed\n");
-			return -1;
+			exit(EXIT_FAILURE);
 		}
 		usleep(10*1000);
 	}
 
 	if (args.debug_flag)
 		printf("write_reg(%02x, %02x)\n", offset, value);
-
-	return 0;
 }
 
-int i2cWriteBlockData(ARGUMENTS args, uint8_t offset, uint8_t length, uint8_t *value)
+void i2cWriteBlockData(ARGUMENTS args, uint8_t offset, uint8_t length, uint8_t *value)
 {
-	int retries = 3;
+	int retries = 5;
 
 	while (i2c_smbus_write_i2c_block_data(args.i2c_fd, offset, length, value) < 0) {
 		printf("i2c write block failed, retrying....%d\n", retries);
 		if (!retries--)	{
 			printf("i2c_smbus_write_i2c_block_data() failed\n");
-			return -1;
+			exit(EXIT_FAILURE);
 		}
 		usleep(10*1000);
 	}
@@ -87,21 +85,19 @@ int i2cWriteBlockData(ARGUMENTS args, uint8_t offset, uint8_t length, uint8_t *v
 		printf("write_block(rf_addr: %02x)\n", offset);
 		printRawData(value, length);
 	}
-
-	return 0;
 }
 
-int i2cReadByteData(ARGUMENTS args, uint8_t offset)
+uint8_t i2cReadByteData(ARGUMENTS args, uint8_t offset)
 {
 	int value = i2c_smbus_read_byte_data(args.i2c_fd, offset);
-	int retries = 3;
+	int retries = 5;
 
 	while (value < 0) {
 		printf("i2c_smbus_read_byte_data failed, retrying....%d\n", retries);
 
 		if (!retries--)	{
 			printf("i2c_smbus_read_byte_data() failed\n");
-			return -1;
+			exit(EXIT_FAILURE);
 		}
 		usleep(10*1000);
 		value = i2c_smbus_read_byte_data(args.i2c_fd, offset);
@@ -115,22 +111,24 @@ int i2cReadByteData(ARGUMENTS args, uint8_t offset)
 
 int i2cReadBlockData(ARGUMENTS args, uint8_t offset, uint8_t length, uint8_t *value)
 {
-	int retries = 3;
-	int ret = 0;
+	int read_length = i2c_smbus_read_i2c_block_data(args.i2c_fd, offset, length, value);
+	int retries = 5;
 
-	while (i2c_smbus_read_i2c_block_data(args.i2c_fd, offset, length, value) < 0) {
+	while (read_length < 0) {
 		printf("i2c_smbus_read_i2c_block_data, retrying....%d\n", retries);
+
 		if (!retries--)	{
 			printf("i2c_smbus_read_i2c_block_data() failed\n");
-			return -1;
+			exit(EXIT_FAILURE);
 		}
 		usleep(10*1000);
+		read_length = i2c_smbus_read_i2c_block_data(args.i2c_fd, offset, length, value);
 	}
 
 	if (args.debug_flag) {
 		printf("read_block(rf_addr: %02x)\n", offset);
-		printRawData(value, ret);
+		printRawData(value, read_length);
 	}
 
-	return ret;
+	return read_length;
 }

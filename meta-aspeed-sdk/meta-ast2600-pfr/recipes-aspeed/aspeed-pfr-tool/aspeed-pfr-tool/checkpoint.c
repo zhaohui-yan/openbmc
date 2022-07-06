@@ -18,25 +18,21 @@
 void checkpointStart(ARGUMENTS args)
 {
 	i2cWriteByteData(args, MB_BMC_CHECKPOINT, MB_CHKPT_START);
-	usleep(60*1000);
 }
 
 void checkpointPause(ARGUMENTS args)
 {
 	i2cWriteByteData(args, MB_BMC_CHECKPOINT, MB_CHKPT_PAUSE);
-	usleep(60*1000);
 }
 
 void checkpointResume(ARGUMENTS args)
 {
 	i2cWriteByteData(args, MB_BMC_CHECKPOINT, MB_CHKPT_RESUME);
-	usleep(60*1000);
 }
 
 void checkpointComplete(ARGUMENTS args)
 {
 	i2cWriteByteData(args, MB_BMC_CHECKPOINT, MB_CHKPT_COMPLETE);
-	usleep(60*1000);
 }
 
 void checkpoint(ARGUMENTS args)
