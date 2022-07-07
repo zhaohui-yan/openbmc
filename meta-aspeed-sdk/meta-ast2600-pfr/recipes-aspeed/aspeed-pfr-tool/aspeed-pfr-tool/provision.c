@@ -339,8 +339,10 @@ int doProvision(ARGUMENTS args)
 		return 1;
 	}
 
-	if (args.debug_flag)
+	if (args.debug_flag) {
+		printf("Root key hash\n");
 		printRawData(write_buffer, hashLen);
+	}
 
 	// Write BMC, PCH region offset
 	if (writeUfmProvBmcPchRegionOffset(args)) {
