@@ -322,8 +322,7 @@ int test_mctp_smbus_recv_data_timeout_raw(struct test_mctp_ctx *ctx, uint8_t dst
 	return -1;
 }
 
-struct test_mctp_ctx *test_mctp_smbus_init(uint8_t bus, uint8_t src_addr, uint8_t dst_addr, uint8_t src_eid,
-					   int pkt_size)
+struct test_mctp_ctx *test_mctp_smbus_init(uint8_t bus, uint8_t src_addr, uint8_t dst_addr, uint8_t src_eid)
 {
 	uint8_t src_addr_7bits = src_addr >> 1;
 	struct mctp_binding_smbus *smbus;
@@ -339,11 +338,6 @@ struct test_mctp_ctx *test_mctp_smbus_init(uint8_t bus, uint8_t src_addr, uint8_
 		mctp_prerr("%s: out of memory(test_mctp_ctx)", __func__);
 		return NULL;
 	}
-
-	if (pkt_size < MCTP_PAYLOAD_SIZE + MCTP_HEADER_SIZE)
-		pkt_size = MCTP_PAYLOAD_SIZE + MCTP_HEADER_SIZE;
-
-	mctp_smbus_set_pkt_size(pkt_size);
 
 	mctp = mctp_init();
 	smbus = mctp_smbus_init();
@@ -426,7 +420,7 @@ int test_send_mctp_cmd(uint8_t bus, uint8_t src_addr, uint8_t dst_addr, uint8_t 
 	uint8_t tag = 0;
 	int ret = -1;
 
-	ctx = test_mctp_smbus_init(bus, src_addr, dst_addr, src_eid, MAX_PAYLOAD_SIZE);
+	ctx = test_mctp_smbus_init(bus, src_addr, dst_addr, src_eid);
 	if (ctx == NULL) {
 		mctp_prerr("%s: Error: mctp binding failed", __func__);
 		return -1;
@@ -464,7 +458,7 @@ int test_mctp_fake_responder(uint8_t bus, uint8_t src_addr, uint8_t dst_addr, ui
 {
 	struct test_mctp_ctx *ctx;
 
-	ctx = test_mctp_smbus_init(bus, src_addr, dst_addr, src_eid, MAX_PAYLOAD_SIZE);
+	ctx = test_mctp_smbus_init(bus, src_addr, dst_addr, src_eid);
 	if (ctx == NULL) {
 		mctp_prerr("%s: Error: mctp binding failed", __func__);
 		return -1;
@@ -479,8 +473,8 @@ int main(int argc, char *argv[])
 {
 	uint8_t msg_hdr_len = sizeof(struct mctp_ctrl_msg_hdr);
 	uint8_t cmd = MCTP_CTRL_CMD_GET_MESSAGE_TYPE_SUPPORT;
-	uint8_t tbuf[MAX_PAYLOAD_SIZE] = { 0 };
-	uint8_t rbuf[MAX_PAYLOAD_SIZE] = { 0 };
+	uint8_t tbuf[SMBUS_TEST_TX_BUFF_SIZE] = { 0 };
+	uint8_t rbuf[SMBUS_TEST_RX_BUFF_SIZE] = { 0 };
 	uint8_t src_eid = REQUESTER_EID;
 	uint8_t dst_eid = RESPONDER_EID;
 	uint8_t rq_dgram_inst = 0x80;
@@ -570,6 +564,12 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
+	if (data_len > MCTP_BTU - msg_hdr_len) {
+		mctp_prerr("length exceeds max payload length %d\n", MCTP_BTU - msg_hdr_len);
+		usage(stdout, argc, argv);
+		exit(EXIT_FAILURE);
+	}
+
 	bus = (uint8_t)strtoul(argv[optind++], NULL, 0);
 	dst_addr = (uint8_t)strtoul(argv[optind++], NULL, 0);
 	src_addr = (uint8_t)strtoul(argv[optind++], NULL, 0);
@@ -578,20 +578,6 @@ int main(int argc, char *argv[])
 
 	// requester
 	if (requester_flag) {
-		// min params: mctp-smbus-test -t <bus> <dst_addr> <src_addr> <dst_eid> <src_eid>
-		// request data should include mctp_type, rq_dgram_inst and cmd
-		if ((argc - minargc) > (SMBUS_TEST_TX_BUFF_SIZE - msg_hdr_len)) {
-			mctp_prerr("data payload=%d exceeds max payload length %d\n", (argc - minargc + msg_hdr_len), SMBUS_TEST_TX_BUFF_SIZE);
-			usage(stdout, argc, argv);
-			exit(EXIT_FAILURE);
-		}
-
-		if (data_len > (SMBUS_TEST_TX_BUFF_SIZE - msg_hdr_len)) {
-			mctp_prerr("length exceeds max payload length %d\n", SMBUS_TEST_TX_BUFF_SIZE - msg_hdr_len);
-			usage(stdout, argc, argv);
-			exit(EXIT_FAILURE);
-		}
-
 		// refer to struct mctp_ctrl_req and struct mctp_ctrl_msg_hdr
 		mctp_type = (uint8_t)strtoul(argv[optind++], NULL, 0);
 		rq_dgram_inst = (uint8_t)strtoul(argv[optind++], NULL, 0);

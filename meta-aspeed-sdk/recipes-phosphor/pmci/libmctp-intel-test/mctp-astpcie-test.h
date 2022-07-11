@@ -18,7 +18,6 @@ extern "C" {
 #define MCTP_MESSAGE_TYPE_ASPEED_CTRL 0x85
 #define MCTP_ASPEED_CTRL_CMD_ECHO 0x00
 #define MCTP_ASPEED_CTRL_CMD_ECHO_LARGE 0x01
-#define MAX_PAYLOAD_SIZE 256  // including Message Header and body
 #define REQUESTER_EID 8
 #define RESPONDER_EID 9
 
@@ -55,7 +54,7 @@ void rx_request_control_handler(mctp_eid_t src, void *data, void *msg, size_t le
 void wait_for_request(struct test_mctp_ctx *ctx);
 int test_mctp_astpcie_recv_data_timeout_raw(struct test_mctp_ctx *ctx, uint8_t dst, int TOsec);
 struct test_mctp_ctx *test_mctp_astpcie_init(uint8_t bus, uint8_t routing, uint8_t dst_dev, uint8_t dst_func,
-					     uint8_t dst_eid, uint8_t src_eid, int pkt_size);
+					     uint8_t dst_eid, uint8_t src_eid);
 int test_mctp_astpcie_send_data(struct test_mctp_ctx *ctx, uint8_t dst, uint8_t flag_tag,
 				void *req, size_t size);
 void test_mctp_astpcie_free(struct test_mctp_ctx *ctx);
@@ -63,7 +62,7 @@ int test_send_mctp_cmd(uint8_t bus, uint8_t routing, uint8_t dst_dev, uint8_t ds
 		       uint8_t *tbuf, int tlen, uint8_t *rbuf, int *rlen);
 int test_mctp_astpcie_get_bdf(uint8_t *src_bus, uint8_t *src_dev, uint8_t *src_func);
 struct test_mctp_ctx *test_mctp_astpcie_init(uint8_t bus, uint8_t routing, uint8_t dst_dev, uint8_t dst_func,
-					     uint8_t dst_eid, uint8_t src_eid, int pkt_size);
+					     uint8_t dst_eid, uint8_t src_eid);
 int test_mctp_fake_responder(uint8_t bus, uint8_t routing, uint8_t dst_dev, uint8_t dst_func,
 			     uint8_t dst_eid, uint8_t src_eid);
 

@@ -361,7 +361,7 @@ bail:
 }
 
 struct test_mctp_ctx *test_mctp_astpcie_init(uint8_t bus, uint8_t routing, uint8_t dst_dev, uint8_t dst_func,
-					     uint8_t dst_eid, uint8_t src_eid, int pkt_size)
+					     uint8_t dst_eid, uint8_t src_eid)
 {
 	struct mctp_binding_astpcie *astpcie;
 	struct mctp_binding *astpcie_binding;
@@ -447,7 +447,7 @@ int test_send_mctp_cmd(uint8_t bus, uint8_t routing, uint8_t dst_dev, uint8_t ds
 	uint8_t tag = 0;
 	int ret = -1;
 
-	ctx = test_mctp_astpcie_init(bus, routing, dst_dev, dst_func, dst_eid, src_eid, MAX_PAYLOAD_SIZE);
+	ctx = test_mctp_astpcie_init(bus, routing, dst_dev, dst_func, dst_eid, src_eid);
 	if (ctx == NULL) {
 		mctp_prerr("%s: Error: mctp binding failed", __func__);
 		return -1;
@@ -486,7 +486,7 @@ int test_mctp_fake_responder(uint8_t bus, uint8_t routing, uint8_t dst_dev, uint
 {
 	struct test_mctp_ctx *ctx;
 
-	ctx = test_mctp_astpcie_init(bus, routing, dst_dev, dst_func, dst_eid, src_eid, MAX_PAYLOAD_SIZE);
+	ctx = test_mctp_astpcie_init(bus, routing, dst_dev, dst_func, dst_eid, src_eid);
 	if (ctx == NULL) {
 		mctp_prerr("%s: Error: mctp binding failed", __func__);
 		return -1;
@@ -501,8 +501,8 @@ int main(int argc, char *argv[])
 {
 	uint8_t msg_hdr_len = sizeof(struct mctp_ctrl_msg_hdr);
 	uint8_t cmd = MCTP_CTRL_CMD_GET_MESSAGE_TYPE_SUPPORT;
-	uint8_t tbuf[MAX_PAYLOAD_SIZE] = { 0 };
-	uint8_t rbuf[MAX_PAYLOAD_SIZE] = { 0 };
+	uint8_t tbuf[MCTP_PACKET_SIZE(MCTP_BTU)] = { 0 };
+	uint8_t rbuf[MCTP_PACKET_SIZE(MCTP_BTU)] = { 0 };
 	uint8_t src_eid = REQUESTER_EID;
 	uint8_t dst_eid = RESPONDER_EID;
 	uint8_t rq_dgram_inst = 0x80;
