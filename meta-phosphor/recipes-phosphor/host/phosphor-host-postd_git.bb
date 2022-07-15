@@ -17,13 +17,15 @@ DEPENDS += "sdbusplus"
 DEPENDS += "sdeventplus"
 DEPENDS += "phosphor-dbus-interfaces"
 DEPENDS += "systemd"
+DEPENDS += "libgpiod"
 
 S = "${WORKDIR}/git"
 SRC_URI = "git://github.com/openbmc/phosphor-host-postd;branch=master;protocol=https"
-SRCREV = "d1ac1977343739e494ff4262e95b3ffc265ac577"
+SRCREV = "5efea6a3060573628cccc0b032a963daa04a4456"
 
 SNOOP_DEVICE ?= "aspeed-lpc-snoop0"
 POST_CODE_BYTES ?= "1"
+7SEG_GPIO ?= "0"
 
 SERVICE_FILE = "lpcsnoop.service"
 SYSTEMD_PACKAGES = "${PN}"
@@ -32,7 +34,6 @@ SYSTEMD_SERVICE:${PN} += "${SERVICE_FILE}"
 EXTRA_OEMESON:append = " \
     -Dsnoop-device=${SNOOP_DEVICE} \
     -Dpost-code-bytes=${POST_CODE_BYTES} \
-    -Dsystemd-target=multi-user.target \
     -Dtests=disabled \
 "
 

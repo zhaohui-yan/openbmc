@@ -4,8 +4,9 @@ PR = "r1"
 PV = "0.1+git${SRCPV}"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=e3fc50a88d0a364313df4b21ef20c29e"
-inherit meson pkgconfig
+inherit meson pkgconfig systemd
 
+DEPENDS += "systemd"
 DEPENDS += "phosphor-dbus-interfaces"
 DEPENDS += "cryptsetup"
 DEPENDS += "openssl"
@@ -15,6 +16,11 @@ DEPENDS += "stdplus"
 
 RDEPENDS:${PN} += "e2fsprogs"
 
+EXTRA_OEMESON = "-Dtests=disabled"
+
 S = "${WORKDIR}/git"
 SRC_URI = "git://github.com/openbmc/estoraged.git;branch=master;protocol=https"
-SRCREV = "605085a6319630441a71fecc897465b419675bf6"
+SRCREV = "49796415d9ead7c8a3fe622727945a501322931d"
+
+SYSTEMD_PACKAGES = "${PN}"
+SYSTEMD_SERVICE:${PN} += "xyz.openbmc_project.eStoraged.service"

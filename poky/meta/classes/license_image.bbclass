@@ -19,8 +19,8 @@ python write_package_manifest() {
 
     pkgs = image_list_installed_packages(d)
     output = format_pkg_list(pkgs)
-    open(os.path.join(license_image_dir, 'package.manifest'),
-        'w+').write(output)
+    with open(os.path.join(license_image_dir, 'package.manifest'), "w+") as package_manifest:
+        package_manifest.write(output)
 }
 
 python license_create_manifest() {
@@ -104,6 +104,8 @@ def write_license_files(d, license_manifest, pkg_dic, rootfs=True):
                                        "The license listed %s was not in the "\
                                        "licenses collected for recipe %s"
                                        % (lic, pkg_dic[pkg]["PN"]), d)
+    oe.qa.exit_if_errors(d)
+
     # Two options here:
     # - Just copy the manifest
     # - Copy the manifest and the license directories

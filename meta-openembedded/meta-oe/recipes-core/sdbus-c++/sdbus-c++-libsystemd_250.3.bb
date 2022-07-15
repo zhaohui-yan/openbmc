@@ -10,7 +10,7 @@ inherit meson pkgconfig
 
 DEPENDS += "gperf-native gettext-native util-linux libcap util-linux python3-jinja2-native"
 
-SRCREV = "1b003bbc806198dbdd57b405d968f30565495e70"
+SRCREV = "73be9643910c3f7f3ff84765d63060846c110016"
 SRCBRANCH = "v250-stable"
 SRC_URI = "git://github.com/systemd/systemd-stable.git;protocol=https;branch=${SRCBRANCH} \
            file://static-libsystemd-pkgconfig.patch \
@@ -58,6 +58,8 @@ CFLAGS:append:libc-musl = " -D__UAPI_DEF_ETHHDR=0 "
 EXTRA_OEMESON += "-Dstatic-libsystemd=pic"
 
 S = "${WORKDIR}/git"
+
+RDEPENDS:${PN}-dev = ""
 
 do_compile() {
     ninja -v ${PARALLEL_MAKE} version.h

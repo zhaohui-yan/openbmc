@@ -11,7 +11,6 @@ inherit meson pkgconfig
 DEPENDS += " \
   fmt \
   liburing \
-  span-lite \
   "
 
 EXTRA_OEMESON = " \
@@ -20,6 +19,6 @@ EXTRA_OEMESON = " \
         "
 
 SRC_URI += "git://github.com/openbmc/stdplus;branch=master;protocol=https"
-SRCREV = "1151c6d3d93369f16ccedd16dbb410ec2c59cfa5"
+SRCREV = "891e6a3d7ae4158444f0c2b32398f121b5ff14a9"
 
 S = "${WORKDIR}/git"

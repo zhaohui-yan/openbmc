@@ -32,6 +32,8 @@ SRC_URI = "http://www.python.org/ftp/python/${PV}/Python-${PV}.tar.xz \
            file://makerace.patch \
            file://0001-sysconfig.py-use-platlibdir-also-for-purelib.patch \
            file://0001-Lib-pty.py-handle-stdin-I-O-errors-same-way-as-maste.patch \
+           file://0001-setup.py-Do-not-detect-multiarch-paths-when-cross-co.patch \
+           file://deterministic_imports.patch \
            "
 
 SRC_URI:append:class-native = " \
@@ -54,6 +56,9 @@ CVE_CHECK_IGNORE += "CVE-2007-4559"
 CVE_CHECK_IGNORE += "CVE-2019-18348"
 # These are specific to Microsoft Windows
 CVE_CHECK_IGNORE += "CVE-2020-15523 CVE-2022-26488"
+# The mailcap module is insecure by design, so this can't be fixed in a meaningful way.
+# The module will be removed in the future and flaws documented.
+CVE_CHECK_IGNORE += "CVE-2015-20107"
 
 PYTHON_MAJMIN = "3.10"
 
@@ -161,6 +166,9 @@ do_install:append:class-native() {
         # tarballs and sysroot creation.
         find ${D} -name *.pyc -delete
 
+        # Nothing should be looking into ${B} for python3-native
+        sed -i -e 's:${B}:/build/path/unavailable/:g' \
+                ${D}/${libdir}/python${PYTHON_MAJMIN}/config-${PYTHON_MAJMIN}${PYTHON_ABI}*/Makefile
 }
 
 do_install:append() {
@@ -171,15 +179,16 @@ do_install:append() {
 
         mkdir -p ${D}${libdir}/python-sysconfigdata
         sysconfigfile=`find ${D} -name _sysconfig*.py`
-        cp $sysconfigfile ${D}${libdir}/python-sysconfigdata/_sysconfigdata.py
-
         sed -i  \
                 -e "s,^ 'LIBDIR'.*, 'LIBDIR': '${STAGING_LIBDIR}'\,,g" \
                 -e "s,^ 'INCLUDEDIR'.*, 'INCLUDEDIR': '${STAGING_INCDIR}'\,,g" \
                 -e "s,^ 'CONFINCLUDEDIR'.*, 'CONFINCLUDEDIR': '${STAGING_INCDIR}'\,,g" \
                 -e "/^ 'INCLDIRSTOMAKE'/{N; s,/usr/include,${STAGING_INCDIR},g}" \
                 -e "/^ 'INCLUDEPY'/s,/usr/include,${STAGING_INCDIR},g" \
-                ${D}${libdir}/python-sysconfigdata/_sysconfigdata.py
+                -e "s,${B},/build/path/unavailable/,g" \
+                $sysconfigfile
+        cp $sysconfigfile ${D}${libdir}/python-sysconfigdata/_sysconfigdata.py
+
 
         # Unfortunately the following pyc files are non-deterministc due to 'frozenset'
         # being written without strict ordering, even with PYTHONHASHSEED = 0
@@ -188,6 +197,11 @@ do_install:append() {
         # More info: http://benno.id.au/blog/2013/01/15/python-determinism
         rm -f ${D}${libdir}/python${PYTHON_MAJMIN}/test/__pycache__/test_range.cpython*
         rm -f ${D}${libdir}/python${PYTHON_MAJMIN}/test/__pycache__/test_xml_etree.cpython*
+
+        # Similar to the above, we're getting reproducibility issues with 
+        # /usr/lib/python3.10/__pycache__/traceback.cpython-310.pyc
+        # so remove it too
+        rm -f ${D}${libdir}/python${PYTHON_MAJMIN}/__pycache__/traceback.cpython*
 
         # Remove the opt-1.pyc and opt-2.pyc files. They effectively waste space on embedded
         # style targets as they're only used when python is called with the -O or -OO options

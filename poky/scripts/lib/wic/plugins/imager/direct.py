@@ -117,7 +117,7 @@ class DirectPlugin(ImagerPlugin):
         updated = False
         for part in self.parts:
             if not part.realnum or not part.mountpoint \
-               or part.mountpoint == "/" or not part.mountpoint.startswith('/'):
+               or not part.mountpoint.startswith('/'):
                 continue
 
             if part.use_uuid:
@@ -138,8 +138,9 @@ class DirectPlugin(ImagerPlugin):
                 device_name = "/dev/%s%s%d" % (part.disk, prefix, part.realnum)
 
             opts = part.fsopts if part.fsopts else "defaults"
+            passno = part.fspassno if part.fspassno else "0"
             line = "\t".join([device_name, part.mountpoint, part.fstype,
-                              opts, "0", "0"]) + "\n"
+                              opts, "0", passno]) + "\n"
 
             fstab_lines.append(line)
             updated = True
@@ -259,7 +260,7 @@ class DirectPlugin(ImagerPlugin):
             if part.mountpoint == "/":
                 if part.uuid:
                     return "PARTUUID=%s" % part.uuid
-                elif part.label:
+                elif part.label and self.ptable_format != 'msdos':
                     return "PARTLABEL=%s" % part.label
                 else:
                     suffix = 'p' if part.disk.startswith('mmcblk') else ''
