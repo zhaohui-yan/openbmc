@@ -1,10 +1,19 @@
+From 7a185558cd8ee8966e650bb0aa91476e3e25a458 Mon Sep 17 00:00:00 2001
+From: Troy Lee <troy_lee@aspeedtech.com>
+Date: Wed, 2 Jun 2021 10:58:33 +0800
+Subject: [PATCH] ncsi-netlink: replace phosphor-network/ncsi-netlink
+
+---
+ src/meson.build | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
 diff --git a/src/meson.build b/src/meson.build
-index 283995a..4edbfdb 100644
+index 08decbd..9311365 100644
 --- a/src/meson.build
 +++ b/src/meson.build
-@@ -17,7 +17,7 @@ executable(
-     phosphor_dbus_interfaces_dep,
-     phosphor_logging_dep,
+@@ -29,7 +29,7 @@ executable(
+     dependency('libnl-3.0'),
+     dependency('libnl-genl-3.0'),
    ],
 -  install: true,
 +  install: false,
