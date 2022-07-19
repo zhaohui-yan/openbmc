@@ -4,7 +4,7 @@ SUMMARY = "At Scale Debug Service"
 DESCRIPTION = "At Scale Debug Service exposes remote JTAG target debug capabilities"
 
 LICENSE = "BSD"
-LIC_FILES_CHKSUM = "file://LICENSE;md5=0d1c657b2ba1e8877940a8d1614ec560"
+LIC_FILES_CHKSUM = "file://LICENSE;md5=8929d33c051277ca2294fe0f5b062f38"
 
 
 inherit cmake
@@ -12,11 +12,10 @@ DEPENDS = "sdbusplus openssl libpam libgpiod safec"
 
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
-SRC_URI = "git://github.com/Intel-BMC/asd;protocol=https;branch=${BRANCH} \
-           file://0001-Fix-build-error-in-kernel-v5.10.patch"
+SRC_URI = "git://github.com/Intel-BMC/asd;protocol=https;branch=master"
+SRCREV = "1cff395337c295dd52b316f301fd2fbd6514a473"
 
-SRCREV = "f31661d92e80b3f097d37055f590595898cef6b6"
-BRANCH = "master"
+SRC_URI += "file://0001-ASD-Fix-sprintf_s-compilation-issue-for-safec-3.5.1.patch"
 
 inherit useradd
 
@@ -32,6 +31,13 @@ SYSTEMD_SERVICE:${PN} += "com.intel.AtScaleDebug.service"
 # Specify any options you want to pass to cmake using EXTRA_OECMAKE:
 EXTRA_OECMAKE = "-DBUILD_UT=OFF"
 
-CFLAGS:append = " -I ${STAGING_KERNEL_BUILDDIR}/include/uapi"
-CFLAGS:append = " -I ${STAGING_KERNEL_BUILDDIR}/arch/arm/include/generated/"
+CFLAGS:append = " -I ${STAGING_KERNEL_DIR}/include/uapi"
+CFLAGS:append = " -I ${STAGING_KERNEL_DIR}/include"
 
+# Copying the depricated header from kernel as a temporary fix to resolve build breaks.
+# It should be removed later after fixing the header dependency in this repository.
+SRC_URI += "file://asm/rwonce.h"
+do_configure:prepend() {
+    cp -r ${WORKDIR}/asm ${S}/asm
+}
+CFLAGS:append = " -I ${S}"
