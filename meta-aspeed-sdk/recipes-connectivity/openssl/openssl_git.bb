@@ -4,31 +4,27 @@ HOMEPAGE = "http://www.openssl.org/"
 BUGTRACKER = "http://www.openssl.org/news/vulnerabilities.html"
 SECTION = "libs/network"
 
-# "openssl" here actually means both OpenSSL and SSLeay licenses apply
-# (see meta/files/common-licenses/OpenSSL to which "openssl" is SPDXLICENSEMAPped)
-LICENSE = "openssl"
-LIC_FILES_CHKSUM = "file://LICENSE;md5=d343e62fc9c833710bbbed25f27364c8"
+LICENSE = "Apache-2.0"
+LIC_FILES_CHKSUM = "file://LICENSE.txt;md5=c75985e733726beaba57bc5253e96d04"
 
-DEPENDS = "hostperl-runtime-native"
-
-BRANCH="aspeed-dev-v1.1.1g"
+BRANCH="aspeed-dev-v3.0.2"
 SRC_URI = "git://gerrit.aspeed.com:29418/openssl.git;protocol=ssh;branch=${BRANCH} \
            file://run-ptest \
-           file://0001-skip-test_symbol_presence.patch \
            file://0001-buildinfo-strip-sysroot-and-debug-prefix-map-from-co.patch \
            file://afalg.patch \
-           file://reproducible.patch \
+           file://0001-Configure-do-not-tweak-mips-cflags.patch \
+           file://770aea88c3888cc5cb3ebc94ffcef706c68bc1d2.patch \
            "
 
 SRC_URI:append:class-nativesdk = " \
            file://environment.d-openssl.sh \
            "
-PV = "1.1.1g+git${SRCPV}"
+PV = "3.0.2+git${SRCPV}"
 SRCREV = "${AUTOREV}"
 
 S = "${WORKDIR}/git"
 
-inherit lib_package multilib_header multilib_script ptest
+inherit lib_package multilib_header multilib_script ptest perlnative
 MULTILIB_SCRIPTS = "${PN}-bin:${bindir}/c_rehash"
 
 PACKAGECONFIG ?= ""
@@ -39,7 +35,10 @@ PACKAGECONFIG:class-nativesdk = ""
 # Change to use cryptodev with ASPEED changes
 # PACKAGECONFIG[cryptodev-linux] = "enable-devcryptoeng,disable-devcryptoeng,cryptodev-linux,,cryptodev-module"
 PACKAGECONFIG[cryptodev-linux] = "enable-devcryptoeng,disable-devcryptoeng,cryptodev,,kernel-module-cryptodev"
-# The following bbappend disable openssl hardware engine support, so remove it to support ASPEED hardware
+PACKAGECONFIG[no-tls1] = "no-tls1"
+PACKAGECONFIG[no-tls1_1] = "no-tls1_1"
+
+# The following bbappend disable openssl hardware engine support, so removes it to support ASPEED hardware
 # crypto engine.
 # meta-phosphor/recipes-connectivity/openssl/openssl_%.bbappend
 EXTRA_OECONF:remove:class-target = "no-hw"
@@ -62,7 +61,20 @@ EXTRA_OECONF:class-nativesdk = "--with-rand-seed=os,devrandom"
 CFLAGS:append:class-native = " -DOPENSSLDIR=/not/builtin -DENGINESDIR=/not/builtin"
 CFLAGS:append:class-nativesdk = " -DOPENSSLDIR=/not/builtin -DENGINESDIR=/not/builtin"
 
+# This allows disabling deprecated or undesirable crypto algorithms.
+# The default is to trust upstream choices.
+DEPRECATED_CRYPTO_FLAGS ?= ""
+
 do_configure () {
+	# When we upgrade glibc but not uninative we see obtuse failures in openssl. Make
+	# the issue really clear that perl isn't functional due to symbol mismatch issues.
+	cat <<- EOF > ${WORKDIR}/perltest
+	#!/usr/bin/env perl
+	use POSIX;
+	EOF
+	chmod a+x ${WORKDIR}/perltest
+	${WORKDIR}/perltest
+
 	os=${HOST_OS}
 	case $os in
 	linux-gnueabi |\
@@ -77,6 +89,9 @@ do_configure () {
 	esac
 	target="$os-${HOST_ARCH}"
 	case $target in
+	linux-arc)
+		target=linux-latomic
+		;;
 	linux-arm*)
 		target=linux-armv4
 		;;
@@ -111,6 +126,9 @@ do_configure () {
 	linux-powerpc64)
 		target=linux-ppc64
 		;;
+	linux-powerpc64le)
+		target=linux-ppc64le
+		;;
 	linux-riscv32)
 		target=linux-generic32
 		;;
@@ -120,6 +138,9 @@ do_configure () {
 	linux-sparc | linux-supersparc)
 		target=linux-sparcv9
 		;;
+	mingw32-x86_64)
+		target=mingw64
+		;;
 	esac
 
 	useprefix=${prefix}
@@ -128,8 +149,8 @@ do_configure () {
 	fi
 	# WARNING: do not set compiler/linker flags (-I/-D etc.) in EXTRA_OECONF, as they will fully replace the
 	# environment variables set by bitbake. Adjust the environment variables instead.
-	PERL5LIB="${S}/external/perl/Text-Template-1.46/lib/" \
-	perl ${S}/Configure ${EXTRA_OECONF} ${PACKAGECONFIG_CONFARGS} --prefix=$useprefix --openssldir=${libdir}/ssl-1.1 --libdir=${libdir} $target
+	HASHBANGPERL="/usr/bin/env perl" PERL=perl PERL5LIB="${S}/external/perl/Text-Template-1.46/lib/" \
+	perl ${S}/Configure ${EXTRA_OECONF} ${PACKAGECONFIG_CONFARGS} ${DEPRECATED_CRYPTO_FLAGS} --prefix=$useprefix --openssldir=${libdir}/ssl-3 --libdir=${libdir} $target
 	perl ${B}/configdata.pm --dump
 }
 
@@ -137,43 +158,50 @@ do_install () {
 	oe_runmake DESTDIR="${D}" MANDIR="${mandir}" MANSUFFIX=ssl install
 
 	oe_multilib_header openssl/opensslconf.h
+	oe_multilib_header openssl/configuration.h
 
 	# Create SSL structure for packages such as ca-certificates which
 	# contain hard-coded paths to /etc/ssl. Debian does the same.
 	install -d ${D}${sysconfdir}/ssl
-	mv ${D}${libdir}/ssl-1.1/certs \
-	   ${D}${libdir}/ssl-1.1/private \
-	   ${D}${libdir}/ssl-1.1/openssl.cnf \
+	mv ${D}${libdir}/ssl-3/certs \
+	   ${D}${libdir}/ssl-3/private \
+	   ${D}${libdir}/ssl-3/openssl.cnf \
 	   ${D}${sysconfdir}/ssl/
 
 	# Although absolute symlinks would be OK for the target, they become
 	# invalid if native or nativesdk are relocated from sstate.
-	ln -sf ${@oe.path.relative('${libdir}/ssl-1.1', '${sysconfdir}/ssl/certs')} ${D}${libdir}/ssl-1.1/certs
-	ln -sf ${@oe.path.relative('${libdir}/ssl-1.1', '${sysconfdir}/ssl/private')} ${D}${libdir}/ssl-1.1/private
-	ln -sf ${@oe.path.relative('${libdir}/ssl-1.1', '${sysconfdir}/ssl/openssl.cnf')} ${D}${libdir}/ssl-1.1/openssl.cnf
+	ln -sf ${@oe.path.relative('${libdir}/ssl-3', '${sysconfdir}/ssl/certs')} ${D}${libdir}/ssl-3/certs
+	ln -sf ${@oe.path.relative('${libdir}/ssl-3', '${sysconfdir}/ssl/private')} ${D}${libdir}/ssl-3/private
+	ln -sf ${@oe.path.relative('${libdir}/ssl-3', '${sysconfdir}/ssl/openssl.cnf')} ${D}${libdir}/ssl-3/openssl.cnf
 }
 
 do_install:append:class-native () {
 	create_wrapper ${D}${bindir}/openssl \
-	    OPENSSL_CONF=${libdir}/ssl-1.1/openssl.cnf \
-	    SSL_CERT_DIR=${libdir}/ssl-1.1/certs \
-	    SSL_CERT_FILE=${libdir}/ssl-1.1/cert.pem \
-	    OPENSSL_ENGINES=${libdir}/engines-1.1
+	    OPENSSL_CONF=${libdir}/ssl-3/openssl.cnf \
+	    SSL_CERT_DIR=${libdir}/ssl-3/certs \
+	    SSL_CERT_FILE=${libdir}/ssl-3/cert.pem \
+	    OPENSSL_ENGINES=${libdir}/engines-3 \
+	    OPENSSL_MODULES=${libdir}/ossl-modules
 }
 
 do_install:append:class-nativesdk () {
 	mkdir -p ${D}${SDKPATHNATIVE}/environment-setup.d
 	install -m 644 ${WORKDIR}/environment.d-openssl.sh ${D}${SDKPATHNATIVE}/environment-setup.d/openssl.sh
-	sed 's|/usr/lib/ssl/|/usr/lib/ssl-1.1/|g' -i ${D}${SDKPATHNATIVE}/environment-setup.d/openssl.sh
+	sed 's|/usr/lib/ssl/|/usr/lib/ssl-3/|g' -i ${D}${SDKPATHNATIVE}/environment-setup.d/openssl.sh
 }
 
 PTEST_BUILD_HOST_FILES += "configdata.pm"
 PTEST_BUILD_HOST_PATTERN = "perl_version ="
 do_install_ptest () {
+	install -d ${D}${PTEST_PATH}/test
+	install -m755 ${B}/test/p_test.so ${D}${PTEST_PATH}/test
+	install -m755 ${B}/test/provider_internal_test.cnf ${D}${PTEST_PATH}/test
+
 	# Prune the build tree
 	rm -f ${B}/fuzz/*.* ${B}/test/*.*
 
 	cp ${S}/Configure ${B}/configdata.pm ${D}${PTEST_PATH}
+	sed 's|${S}|${PTEST_PATH}|g' -i ${D}${PTEST_PATH}/configdata.pm
 	cp -r ${S}/external ${B}/test ${S}/test ${B}/fuzz ${S}/util ${B}/util ${D}${PTEST_PATH}
 
 	# For test_shlibload
@@ -186,7 +214,21 @@ do_install_ptest () {
 	install -m755 ${B}/apps/CA.pl ${D}${PTEST_PATH}/apps
 
 	install -d ${D}${PTEST_PATH}/engines
+	install -m755 ${B}/engines/dasync.so ${D}${PTEST_PATH}/engines
+	install -m755 ${B}/engines/loader_attic.so ${D}${PTEST_PATH}/engines
 	install -m755 ${B}/engines/ossltest.so ${D}${PTEST_PATH}/engines
+
+	install -d ${D}${PTEST_PATH}/providers
+	install -m755 ${B}/providers/legacy.so ${D}${PTEST_PATH}/providers
+
+	install -d ${D}${PTEST_PATH}/Configurations
+	cp -rf ${S}/Configurations/* ${D}${PTEST_PATH}/Configurations/
+
+	# seems to be needed with perl 5.32.1
+	install -d ${D}${PTEST_PATH}/util/perl/recipes
+	cp ${D}${PTEST_PATH}/test/recipes/tconversion.pl ${D}${PTEST_PATH}/util/perl/recipes/
+
+	sed 's|${S}|${PTEST_PATH}|g' -i ${D}${PTEST_PATH}/util/wrap.pl
 }
 
 # Add the openssl.cnf file to the openssl-conf package. Make the libcrypto
@@ -194,24 +236,34 @@ do_install_ptest () {
 # file to be installed for both the openssl-bin package and the libcrypto
 # package since the openssl-bin package depends on the libcrypto package.
 
-PACKAGES =+ "libcrypto libssl openssl-conf ${PN}-engines ${PN}-misc"
+PACKAGES =+ "libcrypto libssl openssl-conf ${PN}-engines ${PN}-misc ${PN}-ossl-module-legacy"
 
 FILES:libcrypto = "${libdir}/libcrypto${SOLIBS}"
 FILES:libssl = "${libdir}/libssl${SOLIBS}"
-FILES:openssl-conf = "${sysconfdir}/ssl/openssl.cnf"
-FILES:${PN}-engines = "${libdir}/engines-1.1"
-FILES:${PN}-misc = "${libdir}/ssl-1.1/misc"
-FILES:${PN} =+ "${libdir}/ssl-1.1/*"
+FILES:openssl-conf = "${sysconfdir}/ssl/openssl.cnf \
+                      ${libdir}/ssl-3/openssl.cnf* \
+                      "
+FILES:${PN}-engines = "${libdir}/engines-3"
+# ${prefix} comes from what we pass into --prefix at configure time (which is used for INSTALLTOP)
+FILES:${PN}-engines:append:mingw32:class-nativesdk = " ${prefix}${libdir}/engines-3"
+FILES:${PN}-misc = "${libdir}/ssl-3/misc ${bindir}/c_rehash"
+FILES:${PN}-ossl-module-legacy = "${libdir}/ossl-modules/legacy.so"
+FILES:${PN} =+ "${libdir}/ssl-3/* ${libdir}/ossl-modules/"
 FILES:${PN}:append:class-nativesdk = " ${SDKPATHNATIVE}/environment-setup.d/openssl.sh"
 
 CONFFILES:openssl-conf = "${sysconfdir}/ssl/openssl.cnf"
 
-RRECOMMENDS:libcrypto += "openssl-conf"
-RDEPENDS:${PN}-ptest += "openssl-bin perl perl-modules bash"
+RRECOMMENDS:libcrypto += "openssl-conf ${PN}-ossl-module-legacy"
+RDEPENDS:${PN}-misc = "perl"
+RDEPENDS:${PN}-ptest += "openssl-bin perl perl-modules bash sed"
+
+RDEPENDS:${PN}-bin += "openssl-conf"
 
 BBCLASSEXTEND = "native nativesdk"
 
 CVE_PRODUCT = "openssl:openssl"
+
+CVE_VERSION_SUFFIX = "alphabetical"
 
 # Only affects OpenSSL >= 1.1.1 in combination with Apache < 2.4.37
 # Apache in meta-webserver is already recent enough
