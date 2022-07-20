@@ -1,25 +1,16 @@
-From d078bbc7ebd2c88ec108b703e8f2116339f82c87 Mon Sep 17 00:00:00 2001
+From c9776635e2a0629ff5d9bd87bf7a84f367ee08f8 Mon Sep 17 00:00:00 2001
 From: Troy Lee <troy_lee@aspeedtech.com>
-Date: Thu, 6 May 2021 14:23:41 +0800
+Date: Wed, 20 Jul 2022 09:45:35 +0800
 Subject: [PATCH] bmcweb: fixes virtual media buffer overflow
 
 ---
- include/vm_websocket.hpp | 23 ++++++++++++++++++++---
- 1 file changed, 20 insertions(+), 3 deletions(-)
+ include/vm_websocket.hpp | 20 ++++++++++++++++++--
+ 1 file changed, 18 insertions(+), 2 deletions(-)
 
 diff --git a/include/vm_websocket.hpp b/include/vm_websocket.hpp
-index 6c97f85..c4f8ffe 100644
+index ebf0a69..1b695f7 100644
 --- a/include/vm_websocket.hpp
 +++ b/include/vm_websocket.hpp
-@@ -19,7 +19,7 @@ static crow::websocket::Connection* session = nullptr;
- // The max network block device buffer size is 128kb plus 16bytes
- // for the message header:
- // https://github.com/NetworkBlockDevice/nbd/blob/master/doc/proto.md#simple-reply-message
--static constexpr auto nbdBufferSize = 131088;
-+static constexpr auto nbdBufferSize = (128*1024+16)*4;
- 
- class Handler : public std::enable_shared_from_this<Handler>
- {
 @@ -46,7 +46,16 @@ class Handler : public std::enable_shared_from_this<Handler>
          {
              return;
@@ -38,11 +29,10 @@ index 6c97f85..c4f8ffe 100644
      }
  
      void connect()
-@@ -203,7 +212,15 @@ inline void requestRoutes(App& app)
+@@ -202,8 +211,15 @@ inline void requestRoutes(App& app)
          })
          .onmessage([](crow::websocket::Connection& conn,
                        const std::string& data, bool) {
--            if (data.length() > handler->inputBuffer->capacity())
 +            if (handler->inputBuffer->size() > 0)
 +            {
 +                BMCWEB_LOG_DEBUG << "Data length " << data.length()
@@ -50,8 +40,10 @@ index 6c97f85..c4f8ffe 100644
 +                                 << " iBuffer.size() " << handler->inputBuffer->size();
 +            }
 +
-+            if (data.length() >
+             if (data.length() >
+-                handler->inputBuffer->capacity() - handler->inputBuffer->size())
 +                    handler->inputBuffer->capacity() - handler->inputBuffer->size())
              {
                  BMCWEB_LOG_ERROR << "Buffer overrun when writing "
                                   << data.length() << " bytes";
+
