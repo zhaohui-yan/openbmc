@@ -7,7 +7,7 @@ SECTION = "libs/network"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE.txt;md5=c75985e733726beaba57bc5253e96d04"
 
-BRANCH="aspeed-dev-v3.0.2"
+BRANCH="aspeed-dev-v3.0.3"
 SRC_URI = "git://gerrit.aspeed.com:29418/openssl.git;protocol=ssh;branch=${BRANCH} \
            file://run-ptest \
            file://0001-buildinfo-strip-sysroot-and-debug-prefix-map-from-co.patch \
@@ -19,7 +19,7 @@ SRC_URI = "git://gerrit.aspeed.com:29418/openssl.git;protocol=ssh;branch=${BRANC
 SRC_URI:append:class-nativesdk = " \
            file://environment.d-openssl.sh \
            "
-PV = "3.0.2+git${SRCPV}"
+PV = "3.0.3+git${SRCPV}"
 SRCREV = "${AUTOREV}"
 
 S = "${WORKDIR}/git"
