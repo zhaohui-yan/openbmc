@@ -1,7 +1,9 @@
 project('aspeed-pfr-tool', 'c', 'cpp',
         version : '1.0',
         meson_version: '>=0.57.0',
-        )
+        default_options: [
+            'werror=true',
+           ])
 
 openssl = dependency('openssl', required : true)
 # i2c-tools doesn't ship a pkg-config file for libi2c
