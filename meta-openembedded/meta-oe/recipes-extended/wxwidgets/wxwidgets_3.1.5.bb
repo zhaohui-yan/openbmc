@@ -10,10 +10,7 @@ LICENSE = "WXwindows"
 LIC_FILES_CHKSUM = "file://docs/licence.txt;md5=981f50a934828620b08f44d75db557c6"
 
 inherit ${@bb.utils.contains('PACKAGECONFIG', 'qt', 'cmake_qt5', 'cmake', d)}
-inherit features_check lib_package binconfig pkgconfig
-
-# All toolkit-configs except 'no_gui' require x11 explicitly (see toolkit.cmake)
-REQUIRED_DISTRO_FEATURES = "${@bb.utils.contains('PACKAGECONFIG', 'no_gui', '', 'x11', d)}"
+inherit lib_package binconfig pkgconfig
 
 DEPENDS += " \
     jpeg \
@@ -22,11 +19,12 @@ DEPENDS += " \
 "
 
 SRC_URI = " \
-    git://github.com/wxWidgets/wxWidgets.git;branch=master;protocol=https \
+    gitsm://github.com/wxWidgets/wxWidgets.git;branch=master;protocol=https \
     file://0001-wx-config.in-Disable-cross-magic-it-does-not-work-fo.patch \
     file://fix-libdir-for-multilib.patch \
     file://respect-DESTDIR-when-create-link.patch \
     file://not-append-system-name-to-lib-name.patch \
+    file://wx-config-fix-libdir-for-multilib.patch \
 "
 SRCREV= "9c0a8be1dc32063d91ed1901fd5fcd54f4f955a1"
 S = "${WORKDIR}/git"
@@ -45,13 +43,18 @@ EXTRA_OECMAKE += " \
 EXTRA_OECMAKE:append:libc-musl = " \
     -DHAVE_LOCALE_T=OFF \
 "
+EXTRA_OECMAKE:append:class-target = ' -DEGREP="/bin/grep -E"'
 
-PACKAGECONFIG ?= "gtk ${@bb.utils.filter('DISTRO_FEATURES', 'opengl', d)}"
+# OpenGL support currently seems tied to using libglu, which requires x11
+PACKAGECONFIG ?= "${@bb.utils.contains_any('DISTRO_FEATURES', 'x11 wayland', 'gtk', 'no_gui', d)} \
+    ${@bb.utils.contains('DISTRO_FEATURES', 'x11 opengl', 'opengl', '', d)} \
+"
+
 PACKAGECONFIG:remove:class-native = "opengl"
 
 # Note on toolkit-PACKAGECONFIGs: select exactly one of 'no_gui' / 'gtk' / 'qt'
 PACKAGECONFIG[no_gui] = "-DwxUSE_GUI=OFF,,,,,qt gtk opengl"
-PACKAGECONFIG[gtk] = "-DwxBUILD_TOOLKIT=gtk3 -DwxUSE_GUI=ON,,gtk+3,,,no_gui qt"
+PACKAGECONFIG[gtk] = "-DwxBUILD_TOOLKIT=gtk3 -DwxUSE_GUI=ON -DwxUSE_PRIVATE_FONTS=ON,,gtk+3,,,no_gui qt"
 PACKAGECONFIG[qt] = "-DwxBUILD_TOOLKIT=qt  -DwxUSE_GUI=ON,,qtbase,,,no_gui gtk"
 python () {
     pkgconfig = d.getVar('PACKAGECONFIG')
@@ -111,5 +114,7 @@ FILES:${PN}-dev += " \
     ${libdir}/wx/include/ \
     ${libdir}/wx/config/ \
 "
+
+RDEPENDS:${PN}-dev += "grep"
 
 BBCLASSEXTEND = "native"

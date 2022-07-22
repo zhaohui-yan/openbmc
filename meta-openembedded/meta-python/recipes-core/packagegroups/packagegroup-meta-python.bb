@@ -12,9 +12,9 @@ PACKAGES = ' \
 # FORTRAN:forcevariable = ",fortran"
 RDEPENDS:packagegroup-meta-python3 = "\
     ${@bb.utils.contains("DISTRO_FEATURES", "systemd", "python3-systemd", "", d)} \
-    ${@bb.utils.contains("DISTRO_FEATURES", "x11", "python3-blivetgui", "", d)} \
+    ${@bb.utils.contains("DISTRO_FEATURES", "x11 systemd", "python3-blivetgui", "", d)} \
     gyp \
-    pamela \
+    ${@bb.utils.contains("DISTRO_FEATURES", "pam", "pamela", "", d)} \
     pyrtm \
     python3-absl \
     python3-aenum \
@@ -52,7 +52,7 @@ RDEPENDS:packagegroup-meta-python3 = "\
     python3-bitstring \
     python3-bitstruct \
     python3-blinker \
-    python3-blivet \
+    ${@bb.utils.contains("DISTRO_FEATURES", "systemd", "python3-blivet", "", d)} \
     python3-booleanpy \
     python3-cachecontrol \
     python3-cached-property \
@@ -84,13 +84,15 @@ RDEPENDS:packagegroup-meta-python3 = "\
     python3-croniter \
     python3-cson \
     python3-custom-inherit \
-    python3-cvxopt \
+    ${@bb.utils.contains_any('FORTRAN', [',fortran',',f77'], 'python3-cvxopt', '', d)} \
     python3-cycler \
+    python3-cytoolz \
     python3-dateparser \
     python3-dateutil \
     python3-dbus-next \
     python3-dbussy \
     python3-decorator \
+    python3-decouple \
     python3-defusedxml \
     python3-dill \
     python3-diskcache \
@@ -104,10 +106,19 @@ RDEPENDS:packagegroup-meta-python3 = "\
     python3-dominate \
     python3-dynamic-dispatch \
     python3-ecdsa \
+    python3-editables \
     python3-editor \
     python3-email-validator \
     python3-engineio \
     python3-et-xmlfile \
+    python3-eth-abi \
+    python3-eth-account \
+    python3-eth-hash \
+    python3-eth-keyfile \
+    python3-eth-keys \
+    python3-eth-rlp \
+    python3-eth-typing \
+    python3-eth-utils \
     python3-evdev \
     python3-execnet \
     python3-fann2 \
@@ -157,6 +168,7 @@ RDEPENDS:packagegroup-meta-python3 = "\
     python3-h11 \
     python3-h2 \
     python3-h5py \
+    python3-hatchling \
     python3-haversine \
     python3-hpack \
     python3-html2text \
@@ -176,6 +188,7 @@ RDEPENDS:packagegroup-meta-python3 = "\
     python3-imgtool \
     python3-incremental \
     python3-inflection \
+    python3-inotify \
     python3-intelhex \
     python3-intervals \
     python3-ipaddress \
@@ -209,9 +222,11 @@ RDEPENDS:packagegroup-meta-python3 = "\
     python3-lazy-object-proxy \
     python3-libconf \
     python3-license-expression \
+    python3-ldap \
     python3-lockfile \
     python3-lorem \
     python3-lrparsing \
+    python3-lru-dict \
     python3-luma-core \
     python3-luma-oled \
     python3-lxml \
@@ -252,9 +267,11 @@ RDEPENDS:packagegroup-meta-python3 = "\
     python3-paramiko \
     python3-parse \
     python3-parse-type \
+    python3-parsimonious \
     python3-parso \
     python3-passlib \
     python3-pastedeploy \
+    python3-pathspec \
     python3-pathtools3 \
     python3-pep8 \
     python3-periphery \
@@ -300,6 +317,7 @@ RDEPENDS:packagegroup-meta-python3 = "\
     python3-pydicti \
     python3-pyephem \
     python3-pyexpect \
+    python3-pyfanotify \
     python3-pyfirmata \
     python3-pyflakes \
     python3-pyhamcrest \
@@ -327,7 +345,7 @@ RDEPENDS:packagegroup-meta-python3 = "\
     python3-pyscaffold \
     python3-pyserial \
     python3-pysonos \
-    python3-pystemd \
+    ${@bb.utils.contains("DISTRO_FEATURES", "systemd", "python3-pystemd", "", d)} \
     python3-pytest-asyncio \
     python3-pytest-benchmark \
     python3-pytest-cache \
@@ -363,6 +381,7 @@ RDEPENDS:packagegroup-meta-python3 = "\
     python3-rfc3339-validator \
     python3-rfc3986-validator \
     python3-rfc3987 \
+    python3-rlp \
     python3-robotframework \
     python3-robotframework-seriallibrary \
     python3-rsa \
@@ -373,6 +392,8 @@ RDEPENDS:packagegroup-meta-python3 = "\
     python3-send2trash \
     python3-sentry-sdk \
     python3-serpent \
+    python3-setuptools-declarative-requirements \
+    python3-setuptools-scm-git-archive \
     python3-sh \
     python3-sijax \
     python3-simpleeval \
@@ -403,6 +424,7 @@ RDEPENDS:packagegroup-meta-python3 = "\
     python3-thrift \
     python3-tinyrecord \
     python3-tornado \
+    python3-toolz \
     python3-tqdm \
     python3-trafaret \
     python3-trafaret-config \
@@ -419,6 +441,7 @@ RDEPENDS:packagegroup-meta-python3 = "\
     python3-typeguard \
     python3-tzlocal \
     python3-u-msgpack-python \
+    python3-uinput \
     python3-ujson \
     python3-unidiff \
     python3-uritemplate \
@@ -427,6 +450,7 @@ RDEPENDS:packagegroup-meta-python3 = "\
     python3-visitor \
     python3-waitress \
     python3-watchdog \
+    python3-web3 \
     python3-webcolors \
     python3-webencodings \
     python3-websocket-client \
@@ -464,6 +488,7 @@ RDEPENDS:packagegroup-meta-python3-ptest = "\
     python3-dominate-ptest \
     python3-geojson-ptest \
     python3-gunicorn-ptest \
+    python3-hexbytes \
     python3-html2text-ptest \
     python3-inflection-ptest \
     python3-intervals-ptest \

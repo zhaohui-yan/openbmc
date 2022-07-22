@@ -8,7 +8,7 @@ DEPENDS = " \
 
 inherit pkgconfig gsettings gobject-introspection features_check cmake gtk-doc gettext perlnative vala
 
-REQUIRED_DISTRO_FEATURES = "x11"
+ANY_OF_DISTRO_FEATURES = "${GTK3DISTROFEATURES}"
 
 SRC_URI += " \
     file://0001-cmake-Do-not-export-CC-into-gir-compiler.patch \
@@ -21,7 +21,6 @@ SRC_URI += " \
 
 LKSTRFTIME = "HAVE_LKSTRFTIME=ON"
 LKSTRFTIME:libc-musl = "HAVE_LKSTRFTIME=OFF"
-GI_DATA_ENABLED="False"
 
 EXTRA_OECMAKE = " \
     -DSYSCONF_INSTALL_DIR=${sysconfdir} \
@@ -48,6 +47,9 @@ PACKAGECONFIG[openldap] = "-DWITH_OPENLDAP=ON,-DWITH_OPENLDAP=OFF,openldap"
 
 # -ldb needs this on some platforms
 LDFLAGS += "-lpthread -lgmodule-2.0 -lgthread-2.0"
+
+# invokes libraries from build host
+GI_DATA_ENABLED:libc-musl="False"
 
 do_configure:append () {
     cp ${WORKDIR}/iconv-detect.h ${S}/src

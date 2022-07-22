@@ -11,9 +11,7 @@ RDEPENDS:${PN}:append:libc-glibc = " glibc-gconv-utf-16"
 
 inherit autotools pkgconfig
 
-SRC_URI = "git://github.com/libusb/hidapi.git;protocol=https;branch=master \
-           file://0001-configure.ac-remove-duplicate-AC_CONFIG_MACRO_DIR-22.patch \
-"
-PV = "0.10.1"
-SRCREV = "f6d0073fcddbdda24549199445e844971d3c9cef"
+SRC_URI = "git://github.com/libusb/hidapi.git;protocol=https;branch=master"
+PV = "0.12.0"
+SRCREV = "76108294092c023a4ece99eb3219559cea0d5066"
 S = "${WORKDIR}/git"

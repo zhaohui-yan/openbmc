@@ -192,7 +192,7 @@ do_kernel_metadata() {
 	if [ -n "$in_tree_defconfig" ]; then
 		sccs_defconfig=$in_tree_defconfig
 		if [ -n "$src_uri_defconfig" ]; then
-			bbwarn "[NOTE]: defconfig was supplied both via KBUILD_DEFCONFIG and SRC_URI. Dropping SRC_URI defconfig"
+			bbwarn "[NOTE]: defconfig was supplied both via KBUILD_DEFCONFIG and SRC_URI. Dropping SRC_URI entry $src_uri_defconfig"
 		fi
 	else
 		# if we didn't have an in-tree one, make our defconfig the one
@@ -310,6 +310,8 @@ do_kernel_metadata() {
 		bbnote "KERNEL_FEATURES: $KERNEL_FEATURES_FINAL"
 		bbnote "Final scc/cfg list: $sccs_defconfig $bsp_definition $sccs $KERNEL_FEATURES_FINAL"
 	fi
+
+	set -e
 }
 
 do_patch() {
@@ -320,7 +322,11 @@ do_patch() {
 	meta_dir=$(kgit --meta)
 	(cd ${meta_dir}; ln -sf patch.queue series)
 	if [ -f "${meta_dir}/series" ]; then
-		kgit-s2q --gen -v --patches .kernel-meta/
+		kgit_extra_args=""
+		if [ "${KERNEL_DEBUG_TIMESTAMPS}" != "1" ]; then
+		    kgit_extra_args="--commit-sha author"
+		fi
+		kgit-s2q --gen -v $kgit_extra_args --patches .kernel-meta/
 		if [ $? -ne 0 ]; then
 			bberror "Could not apply patches for ${KMACHINE}."
 			bbfatal_log "Patch failures can be resolved in the linux source directory ${S})"
@@ -339,6 +345,8 @@ do_patch() {
 			fi
 		done
 	fi
+
+	set -e
 }
 
 do_kernel_checkout() {
@@ -397,6 +405,8 @@ do_kernel_checkout() {
 		git commit -q -m "baseline commit: creating repo for ${PN}-${PV}"
 		git clean -d -f
 	fi
+
+	set -e
 }
 do_kernel_checkout[dirs] = "${S} ${WORKDIR}"
 
@@ -521,14 +531,14 @@ python do_config_analysis() {
 python do_kernel_configcheck() {
     import re, string, sys, subprocess
 
-    # if KMETA isn't set globally by a recipe using this routine, we need to
-    # set the default to 'meta'. Otherwise, kconf_check is not passed a valid
-    # meta-series for processing
-    kmeta = d.getVar("KMETA") or "meta"
-    if not os.path.exists(kmeta):
-        kmeta = subprocess.check_output(['kgit', '--meta'], cwd=d.getVar('S')).decode('utf-8').rstrip()
-
     s = d.getVar('S')
+
+    # if KMETA isn't set globally by a recipe using this routine, use kgit to
+    # locate or create the meta directory. Otherwise, kconf_check is not
+    # passed a valid meta-series for processing
+    kmeta = d.getVar("KMETA")
+    if not kmeta or not os.path.exists('{}/{}'.format(s,kmeta)):
+        kmeta = subprocess.check_output(['kgit', '--meta'], cwd=d.getVar('S')).decode('utf-8').rstrip()
 
     env = os.environ.copy()
     env['PATH'] = "%s:%s%s" % (d.getVar('PATH'), s, "/scripts/util/")
@@ -691,6 +701,8 @@ do_validate_branches() {
 			kgit-s2q --clean
 		fi
 	fi
+
+	set -e
 }
 
 OE_TERMINAL_EXPORTS += "KBUILD_OUTPUT"

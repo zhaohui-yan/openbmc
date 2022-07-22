@@ -22,6 +22,7 @@ STATE_MGR_PACKAGES = " \
     ${PN}-obmc-targets \
     ${PN}-scheduled-host-transition \
     ${PN}-chassis-check-power-status \
+    ${PN}-secure-check \
 "
 PACKAGE_BEFORE_PN += "${STATE_MGR_PACKAGES}"
 ALLOW_EMPTY:${PN} = "1"
@@ -62,7 +63,7 @@ RDEPENDS:${PN}-chassis += "bash"
 EXTRA_OEMESON:append = " -Dtests=disabled"
 
 FILES:${PN}-host = "${bindir}/phosphor-host-state-manager"
-DBUS_SERVICE:${PN}-host += "xyz.openbmc_project.State.Host.service"
+DBUS_SERVICE:${PN}-host += "xyz.openbmc_project.State.Host@.service"
 DBUS_SERVICE:${PN}-host += "phosphor-reboot-host@.service"
 SYSTEMD_SERVICE:${PN}-host += "phosphor-reset-host-reboot-attempts@.service"
 SYSTEMD_SERVICE:${PN}-host += "phosphor-clear-one-time@.service"
@@ -70,7 +71,7 @@ SYSTEMD_SERVICE:${PN}-host += "phosphor-set-host-transition-to-running@.service"
 SYSTEMD_SERVICE:${PN}-host += "phosphor-set-host-transition-to-off@.service"
 
 FILES:${PN}-chassis = "${bindir}/phosphor-chassis-state-manager"
-DBUS_SERVICE:${PN}-chassis += "xyz.openbmc_project.State.Chassis.service"
+DBUS_SERVICE:${PN}-chassis += "xyz.openbmc_project.State.Chassis@.service"
 
 FILES:${PN}-chassis += "${bindir}/obmcutil"
 
@@ -78,6 +79,9 @@ FILES:${PN}-bmc = "${bindir}/phosphor-bmc-state-manager"
 FILES:${PN}-bmc += "${sysconfdir}/phosphor-systemd-target-monitor/phosphor-service-monitor-default.json"
 DBUS_SERVICE:${PN}-bmc += "xyz.openbmc_project.State.BMC.service"
 DBUS_SERVICE:${PN}-bmc += "obmc-bmc-service-quiesce@.target"
+
+FILES:${PN}-secure-check = "${bindir}/phosphor-secure-boot-check"
+SYSTEMD_SERVICE:${PN}-secure-check += "phosphor-bmc-security-check.service"
 
 FILES:${PN}-hypervisor = "${bindir}/phosphor-hypervisor-state-manager"
 DBUS_SERVICE:${PN}-hypervisor += "xyz.openbmc_project.State.Hypervisor.service"
@@ -100,7 +104,7 @@ FILES:${PN}-systemd-target-monitor = " \
 SYSTEMD_SERVICE:${PN}-systemd-target-monitor += "phosphor-systemd-target-monitor.service"
 
 FILES:${PN}-scheduled-host-transition = "${bindir}/phosphor-scheduled-host-transition"
-DBUS_SERVICE:${PN}-scheduled-host-transition += "xyz.openbmc_project.State.ScheduledHostTransition.service"
+DBUS_SERVICE:${PN}-scheduled-host-transition += "xyz.openbmc_project.State.ScheduledHostTransition@.service"
 
 FILES:${PN}-chassis-check-power-status = "${bindir}/phosphor-chassis-check-power-status"
 SYSTEMD_SERVICE:${PN}-chassis-check-power-status += "phosphor-chassis-check-power-status@.service"
@@ -119,7 +123,8 @@ CHASSIS_SYNCH_TARGETS = "start-pre start on stop-pre stop off reset-on"
 # - powered-off: Services to run once chassis power is off
 # - reset: Services to check chassis power state and update chassis "on" target
 # - hard-off: Services to force an immediate power off of the chassis
-CHASSIS_ACTION_TARGETS = "poweron poweroff powered-off powerreset hard-poweroff"
+# - blackout: Target to enter when chassis experiences blackout
+CHASSIS_ACTION_TARGETS = "poweron poweroff powered-off powerreset hard-poweroff blackout"
 
 # Track all host synchronization point targets
 # - start-pre:                 Services to run before we start host boot
@@ -138,6 +143,7 @@ HOST_SYNCH_TARGETS = "start-pre starting started stop-pre stopping stopped reset
 #             be called by reboot and start target.
 # - stop:     Services to run to shutdown the host
 # - quiesce:  Target to enter on host boot failure
+# - graceful-quiesce:  Target to enter on host boot failure (allow host graceful shutdown)
 # - shutdown: Tell host to shutdown, then stop system
 # - reset:   Services to check if host is running and update host "start" target
 # - crash:   Target to run when host crashes. it is very much similar to
@@ -150,7 +156,7 @@ HOST_SYNCH_TARGETS = "start-pre starting started stop-pre stopping stopped reset
 #                      notifying the host.
 # - diagnostic-mode: This will be entered when the host is collecting diagnostic
 #                    data for itself.
-HOST_ACTION_TARGETS = "start startmin stop quiesce reset shutdown crash timeout "
+HOST_ACTION_TARGETS = "start startmin stop quiesce graceful-quiesce reset shutdown crash timeout "
 HOST_ACTION_TARGETS += "reboot warm-reboot force-warm-reboot diagnostic-mode"
 
 CHASSIS_SYNCH_FMT = "obmc-power-{0}@.target"
@@ -193,6 +199,6 @@ SYSTEMD_LINK:${PN}-obmc-targets += "${@compose_list(d, 'QUIESCE_FMT', 'HOST_ERRO
 
 
 SRC_URI += "git://github.com/openbmc/phosphor-state-manager;branch=master;protocol=https"
-SRCREV = "1ab2b6cea615419da0cb3e1900297ab694dc45ae"
+SRCREV = "b4cbfac10b490cd2a8ca83bfd139fe07bf1fe5a7"
 
 S = "${WORKDIR}/git"

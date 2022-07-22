@@ -134,6 +134,8 @@ concat_dtb_helper() {
 
 			if [ -n "${UBOOT_CONFIG}" ]
 			then
+				i=0
+				j=0
 				for config in ${UBOOT_MACHINE}; do
 					i=$(expr $i + 1);
 					for type in ${UBOOT_CONFIG}; do
@@ -250,7 +252,7 @@ do_install:append() {
 					[ -n "${UBOOT_DTB_BINARY}" ]; then
 					install_helper
 				fi
-				if [ "${SPL_SIGN_ENABLE}" = "1" -a -n "${SPL_DTB_BINARY}" ]; then
+				if [ "${UBOOT_FITIMAGE_ENABLE}" = "1" -a -n "${SPL_DTB_BINARY}" ]; then
 					install_spl_helper
 				fi
 			done

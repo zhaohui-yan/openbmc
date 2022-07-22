@@ -14,9 +14,6 @@ DEPENDS += "m4-native"
 DEPENDS += "systemd"
 RDEPENDS:${PN} += "bash"
 
-SYSTEMD_PACKAGES = "${PN}"
-SYSTEMD_SERVICE:${PN} = "usb_network.service"
-
 BMC_USB_ECM_PRODUCT_ID ??= ""
 BMC_USB_ECM_PRODUCT_NAME ??= "${MACHINE} BMC"
 BMC_USB_ECM_HOST_MAC ??= "invalid"
@@ -28,8 +25,11 @@ BMC_USB_IFACE ??= "gusb0"
 SRC_URI += "file://usb_network.service.m4"
 SRC_URI += "file://usb_network.sh"
 
-do_compile() {
-    test "X${BMC_USB_ECM_PRODUCT_ID}" != "X" || bberror "Please define BMC_USB_ECM_PRODUCT_ID"
+SYSTEMD_PACKAGES = "${PN}"
+SYSTEMD_SERVICE:${PN} = "${@'usb_network.service' if d.getVar('BMC_USB_ECM_PRODUCT_ID') else ''}"
+
+do_compile:append() {
+  if [ -n "${BMC_USB_ECM_PRODUCT_ID}" ]; then
     test "X${BMC_USB_ECM_PRODUCT_NAME}" != "X" || bberror "Please define BMC_USB_ECM_PRODUCT_NAME"
     test "X${BMC_USB_ECM_BIND_DEV}" != "X" || bberror "Please define BMC_USB_ECM_BIND_DEV"
 
@@ -42,13 +42,16 @@ do_compile() {
         -DM_BMC_USB_IFACE="${BMC_USB_IFACE}" \
         -DM_BMC_USB_BIND_DEV="${BMC_USB_ECM_BIND_DEV}" \
         -DM_SCRIPT_INSTALL_DIR="${bindir}" \
-        ${WORKDIR}/usb_network.service.m4 > ${S}/usb_network.service
+        ${WORKDIR}/usb_network.service.m4 > ${WORKDIR}/usb_network.service
+  fi
 }
 
-do_install() {
+do_install:append() {
   install -d ${D}/${bindir}
   install -m 0755 ${WORKDIR}/usb_network.sh ${D}/${bindir}
 
-  install -d ${D}${systemd_system_unitdir}
-  install -m 0644 ${S}/usb_network.service ${D}${systemd_system_unitdir}
+  if [ -n "${BMC_USB_ECM_PRODUCT_ID}" ]; then
+    install -d ${D}${systemd_system_unitdir}
+    install -m 0644 ${WORKDIR}/usb_network.service ${D}${systemd_system_unitdir}
+  fi
 }

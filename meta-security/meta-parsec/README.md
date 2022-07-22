@@ -43,20 +43,34 @@ local.conf:
     IMAGE_INSTALL:append = " parsec-service"
 
   By default the Parsec service will be deployed into the image with
-TPM, PKCS11, MBED-CRYPTO and CRYPTOAUTHLIB providers build in
-and with the default config file from the Parsec repository:
+PKCS11 and MBED-CRYPTO providers build-in.
+  The TPM provider will also be built by default if:
+- DISTRO_FEATURES contains "tmp2" and
+- "tpm-layer" (meta-tpm) is included in BBLAYERS
+
+
+You can use PACKAGECONFIG for Parsec servic recipe to define
+what providers should be built in. For example:
+
+    PACKAGECONFIG:pn-parsec-service = "TS"
+
+
+The default Parsec service config file is taken from the Parsec repository:
 https://github.com/parallaxsecond/parsec/blob/main/config.toml
+This config file contains the MbedCrypto provider enabled.
+The config needs to be updated to use the Parsec service
+with other providers like TPM or PKCS11. The required changes are
+covered in Parsec documentation https://parallaxsecond.github.io/parsec-book/
 
-  You can use PACKAGECONFIG for Parsec servic recipe to define
-what providers should be built in. For example,
+  PARSEC_CONFIG can be used in a bbappend file to replace the default config.
+For example:
 
-    PACKAGECONFIG:pn-parsec-service = "TPM"
-
-  The default Parsec service config file contains the MbedCrypto provider
-enabled. The config file needs to be updated to use the Parsec service
-with other providers like TPM or PKCS11. The required procedures are
-covered in Parsec documentation.
-https://parallaxsecond.github.io/parsec-book/
+```
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+SRC_URI += "file://config-TS.toml \
+           "
+PARSEC_CONFIG = "${WORKDIR}/config-TS.toml"
+```
 
 Updating recipes
 ================
@@ -73,6 +87,71 @@ https://github.com/meta-rust/cargo-bitbake
 1. Checkout the required version of parsec repository.
 2. Run cargo-bitbake inside the repository. It will produce a BB file.
 3. Create a new include file with SRC_URI and LIC_FILES_CHKSUM from the BB file.
+
+Automated Parsec testing with runqemu
+=====================================
+
+ The Yocto build system has the ability to run a series of automated tests for qemu images.
+All the tests are actually commands run on the target system over ssh.
+
+ Meta-parsec includes automated unittests which run end to end Parsec tests.
+The tests are run against:
+- all providers pre-configured in the Parsec config file included in the image.
+- PKCS11 and TPM providers with software backends if softhsm and
+  swtpm packages included in the image.
+
+Meta-parsec also contains a recipe for `security-parsec-image` image with Parsec,
+softhsm and swtpm included.
+
+ Please notice that the account you use to run bitbake should have access to `/dev/kvm`.
+You might need to change permissions or add the account into `kvm` unix group.
+
+1. Testing Parsec with your own image where `parsec-service` and `parsec-tool` are already included.
+
+- Add into your `local.conf`:
+```
+INHERIT += "testimage"
+TEST_SUITES = "ping ssh parsec"
+```
+- Build your image
+```bash
+bitbake <your-image>
+```
+- Run tests
+```bash
+bitbake <your-image> -c testimage
+```
+
+2. Testing Parsec with pre-defined `security-parsec-image` image.
+
+- Add into your `local.conf`:
+```
+DISTRO_FEATURES += " tpm2"
+INHERIT += "testimage"
+TEST_SUITES = "ping ssh parsec"
+```
+- Build security-parsec-image image
+```bash
+bitbake security-parsec-image
+```
+- Run tests
+```bash
+bitbake security-parsec-image -c testimage
+```
+
+Output of a successfull tests run should look similar to:
+```
+RESULTS:
+RESULTS - ping.PingTest.test_ping: PASSED (0.05s)
+RESULTS - ssh.SSHTest.test_ssh: PASSED (0.25s)
+RESULTS - parsec.ParsecTest.test_all_providers: PASSED (1.84s)
+RESULTS - parsec.ParsecTest.test_pkcs11_provider: PASSED (2.91s)
+RESULTS - parsec.ParsecTest.test_tpm_provider: PASSED (3.33s)
+SUMMARY:
+security-parsec-image () - Ran 5 tests in 8.386s
+security-parsec-image - OK - All required tests passed (successes=5, skipped=0, failures=0, errors=0)
+```
+
 
 Manual testing with runqemu
 ===========================

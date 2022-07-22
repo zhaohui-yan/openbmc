@@ -2,7 +2,7 @@ SUMMARY = "dbus-sensors"
 DESCRIPTION = "Dbus Sensor Services Configured from D-Bus"
 
 SRC_URI = "git://github.com/openbmc/dbus-sensors.git;branch=master;protocol=https"
-SRCREV = "a7afacc4fa5ee4da5b10b2fd47e29a6342460a99"
+SRCREV = "193105f125318c901518dacd0a6d562c53c4e923"
 
 PV = "0.1+git${SRCPV}"
 
@@ -69,6 +69,7 @@ DEPENDS = " \
     boost \
     i2c-tools \
     libgpiod \
+    liburing \
     nlohmann-json \
     phosphor-logging \
     sdbusplus \

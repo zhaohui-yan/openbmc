@@ -24,6 +24,7 @@ from collections.abc import Mapping
 import bb.utils
 from bb import PrefixLoggerAdapter
 import re
+import shutil
 
 logger = logging.getLogger("BitBake.Cache")
 
@@ -619,7 +620,7 @@ class Cache(NoCache):
                 for f in flist:
                     if not f:
                         continue
-                    f, exist = f.split(":")
+                    f, exist = f.rsplit(":", 1)
                     if (exist == "True" and not os.path.exists(f)) or (exist == "False" and os.path.exists(f)):
                         self.logger.debug2("%s's file checksum list file %s changed",
                                              fn, f)
@@ -997,4 +998,12 @@ class SimpleCache(object):
             p = pickle.Pickler(f, -1)
             p.dump([data, self.cacheversion])
 
+        bb.utils.unlockfile(glf)
+
+    def copyfile(self, target):
+        if not self.cachefile:
+            return
+
+        glf = bb.utils.lockfile(self.cachefile + ".lock")
+        shutil.copy(self.cachefile, target)
         bb.utils.unlockfile(glf)

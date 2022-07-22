@@ -8,7 +8,7 @@ LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=e3fc50a88d0a364313df4b21ef20c29e"
 SRC_URI = "git://github.com/openbmc/telemetry;branch=master;protocol=https"
 
 PV = "1.0+git${SRCPV}"
-SRCREV = "620c65ad386ea542bcc18122577a3aab6dbac96d"
+SRCREV = "aa4a9dc5ccae9f210d0d63f99b22154c97e53c19"
 
 S = "${WORKDIR}/git"
 

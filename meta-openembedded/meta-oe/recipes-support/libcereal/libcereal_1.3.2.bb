@@ -26,7 +26,8 @@ S = "${WORKDIR}/git"
 
 inherit cmake pkgconfig ptest
 
-LIBATOMIC:mips:toolchain-clang = "${@bb.utils.contains('PTEST_ENABLED', '1', '-DCEREAL_THREAD_LIBS="-latomic"', '', d)}"
+LIBATOMIC:mips = "${@bb.utils.contains('PTEST_ENABLED', '1', '-DCEREAL_THREAD_LIBS="-latomic"', '', d)}"
+LIBATOMIC:riscv32 = "${@bb.utils.contains('PTEST_ENABLED', '1', '-DCEREAL_THREAD_LIBS="-latomic"', '', d)}"
 
 PACKAGECONFIG ??= "${@bb.utils.contains('PTEST_ENABLED', '1', 'with-tests', '', d)}"
 PACKAGECONFIG[with-tests] = "-DWITH_WERROR=OFF -DBUILD_TESTS=ON ${LIBATOMIC},,"
@@ -43,3 +44,7 @@ ALLOW_EMPTY:${PN} = "1"
 RDEPENDS:${PN}-dev = ""
 
 BBCLASSEXTEND = "native nativesdk"
+
+#it needs to work with CXXFLAGS += " -mlong-double-64" but ppc only supports 128bit long double
+COMPATIBLE_HOST:powerpc:libc-musl = "null"
+COMPATIBLE_HOST:powerpc64le:libc-musl = "null"
