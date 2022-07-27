@@ -14,7 +14,7 @@
 
 struct mctp_astpcie_pkt_private *astpcie_extra_params = NULL;
 uint8_t enable_response = 1;
-static const char short_options[] = "htrdgnl:c:";
+static const char short_options[] = "htrdgno:l:c:";
 static const struct option
 	long_options[] = {
 	{ "help",   no_argument,        NULL,   'h' },
@@ -25,6 +25,7 @@ static const struct option
 	{ "noresp", no_argument,        NULL,   'n' },
 	{ "len",    required_argument,  NULL,   'l' },
 	{ "count",  required_argument,  NULL,   'c' },
+	{ "node",   optional_argument,  NULL,   'o' },
 	{ 0, 0, 0, 0 }
 };
 
@@ -42,6 +43,7 @@ void usage(FILE *fp, int argc, char **argv)
 		" -c | --count      test times\n"
 		" -g | --gbdf       get BDF information\n"
 		" -n | --noresp     no response\n"
+		" -o | --node       mctp device node(defalut: /dev/aspeed-mctp)\n"
 		"Command fields\n"
 		" <bus_num>         destination PCIE bus number\n"
 		" <routing_type>    PCIE routing type 0: route to RC, 2: route by ID, 3: Broadcast from RC\n"
@@ -319,7 +321,7 @@ int test_mctp_astpcie_recv_data_timeout_raw(struct test_mctp_ctx *ctx, uint8_t d
 	return -1;
 }
 
-int test_mctp_astpcie_get_bdf(uint8_t *src_bus, uint8_t *src_dev, uint8_t *src_func)
+int test_mctp_astpcie_get_bdf(char *mctp_dev, uint8_t *src_bus, uint8_t *src_dev, uint8_t *src_func)
 {
 	struct mctp_binding_astpcie *astpcie;
 	struct mctp_binding *astpcie_binding;
@@ -331,6 +333,7 @@ int test_mctp_astpcie_get_bdf(uint8_t *src_bus, uint8_t *src_dev, uint8_t *src_f
 
 	mctp = mctp_init();
 	astpcie = mctp_astpcie_init();
+	mctp_astpcie_mctp_dev_name(astpcie, mctp_dev);
 	astpcie_binding = mctp_astpcie_core(astpcie);
 	if (mctp == NULL || astpcie == NULL || astpcie_binding == NULL || mctp_register_bus_dynamic_eid(mctp, astpcie_binding) < 0) {
 		mctp_prerr("%s: MCTP init failed", __func__);
@@ -360,7 +363,7 @@ bail:
 	return -1;
 }
 
-struct test_mctp_ctx *test_mctp_astpcie_init(uint8_t bus, uint8_t routing, uint8_t dst_dev, uint8_t dst_func,
+struct test_mctp_ctx *test_mctp_astpcie_init(char *mctp_dev, uint8_t bus, uint8_t routing, uint8_t dst_dev, uint8_t dst_func,
 					     uint8_t dst_eid, uint8_t src_eid)
 {
 	struct mctp_binding_astpcie *astpcie;
@@ -377,6 +380,7 @@ struct test_mctp_ctx *test_mctp_astpcie_init(uint8_t bus, uint8_t routing, uint8
 
 	mctp = mctp_init();
 	astpcie = mctp_astpcie_init();
+	mctp_astpcie_mctp_dev_name(astpcie, mctp_dev);
 	astpcie_binding = mctp_astpcie_core(astpcie);
 	if (mctp == NULL || astpcie == NULL || astpcie_binding == NULL || mctp_register_bus_dynamic_eid(mctp, astpcie_binding) < 0) {
 		mctp_prerr("%s: MCTP init failed", __func__);
@@ -440,14 +444,14 @@ void test_mctp_astpcie_free(struct test_mctp_ctx *ctx)
 	free(astpcie_extra_params);
 }
 
-int test_send_mctp_cmd(uint8_t bus, uint8_t routing, uint8_t dst_dev, uint8_t dst_func, uint8_t dst_eid, uint8_t src_eid,
+int test_send_mctp_cmd(char *mctp_dev,uint8_t bus, uint8_t routing, uint8_t dst_dev, uint8_t dst_func, uint8_t dst_eid, uint8_t src_eid,
 		       uint8_t *tbuf, int tlen, uint8_t *rbuf, int *rlen)
 {
 	struct test_mctp_ctx *ctx;
 	uint8_t tag = 0;
 	int ret = -1;
 
-	ctx = test_mctp_astpcie_init(bus, routing, dst_dev, dst_func, dst_eid, src_eid);
+	ctx = test_mctp_astpcie_init(mctp_dev, bus, routing, dst_dev, dst_func, dst_eid, src_eid);
 	if (ctx == NULL) {
 		mctp_prerr("%s: Error: mctp binding failed", __func__);
 		return -1;
@@ -481,12 +485,12 @@ bail:
 	return ret;
 }
 
-int test_mctp_fake_responder(uint8_t bus, uint8_t routing, uint8_t dst_dev, uint8_t dst_func,
+int test_mctp_fake_responder(char *mctp_dev, uint8_t bus, uint8_t routing, uint8_t dst_dev, uint8_t dst_func,
 			     uint8_t dst_eid, uint8_t src_eid)
 {
 	struct test_mctp_ctx *ctx;
 
-	ctx = test_mctp_astpcie_init(bus, routing, dst_dev, dst_func, dst_eid, src_eid);
+	ctx = test_mctp_astpcie_init(mctp_dev, bus, routing, dst_dev, dst_func, dst_eid, src_eid);
 	if (ctx == NULL) {
 		mctp_prerr("%s: Error: mctp binding failed", __func__);
 		return -1;
@@ -527,6 +531,7 @@ int main(int argc, char *argv[])
 	int rlen = 0;
 	int ret = -1;
 	int i = 0;
+	char dev_name[100] = "";
 
 	if (!argv[1]) {
 		usage(stdout, argc, argv);
@@ -569,6 +574,14 @@ int main(int argc, char *argv[])
 			enable_response = 0;
 			minargc += 1;
 			break;
+		case 'o':
+			strcpy(dev_name, optarg);
+			if (!strcmp(dev_name, "")) {
+				printf("No dev file name!\n");
+				usage(stdout, argc, argv);
+				exit(EXIT_FAILURE);
+			}
+			break;
 		default:
 			usage(stdout, argc, argv);
 			exit(EXIT_FAILURE);
@@ -584,7 +597,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (getbdf_flag) {
-		ret = test_mctp_astpcie_get_bdf(&src_bus, &src_dev, &src_func);
+		ret = test_mctp_astpcie_get_bdf(dev_name, &src_bus, &src_dev, &src_func);
 		if (ret < 0)
 			mctp_prerr("Error get BDF failed");
 		else
@@ -666,7 +679,7 @@ int main(int argc, char *argv[])
 		}
 
 		for (i = 0; i < loop_count; i++) {
-			ret = test_send_mctp_cmd(dst_bus, routing, dst_dev, dst_func, dst_eid, src_eid,
+			ret = test_send_mctp_cmd(dev_name, dst_bus, routing, dst_dev, dst_func, dst_eid, src_eid,
 						 tbuf, tlen, rbuf, &rlen);
 			if (ret < 0) {
 				mctp_prerr("Error sending MCTP cmd, ret = %d\n count = %d\n", ret, i);
@@ -686,7 +699,7 @@ int main(int argc, char *argv[])
 			       argc, dst_bus, dst_dev, dst_func, dst_eid, src_eid);
 		}
 
-		ret = test_mctp_fake_responder(dst_bus, routing, dst_dev, dst_func, dst_eid, src_eid);
+		ret = test_mctp_fake_responder(dev_name, dst_bus, routing, dst_dev, dst_func, dst_eid, src_eid);
 		if (ret < 0) {
 			mctp_prerr("Error run fake responder failed");
 			return -1;
