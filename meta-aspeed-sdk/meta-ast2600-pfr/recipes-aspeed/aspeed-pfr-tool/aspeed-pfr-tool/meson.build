@@ -24,6 +24,7 @@ executable(
       'provision.c',
       'checkpoint.c',
       'status.c',
+      'info.c',
       'main.c'
     ],
     include_directories : incdir,

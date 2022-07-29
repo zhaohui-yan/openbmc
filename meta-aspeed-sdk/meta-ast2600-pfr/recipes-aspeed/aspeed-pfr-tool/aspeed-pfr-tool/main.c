@@ -18,8 +18,9 @@
 #include "arguments.h"
 #include "config.h"
 #include "status.h"
+#include "info.h"
 
-static const char short_options[] = "hvb:a:c:p:uk:w:r:d:s";
+static const char short_options[] = "hvb:a:c:p:uk:w:r:dsi";
 static const struct option
 	long_options[] = {
 	{ "help", no_argument, NULL, 'h' },
@@ -34,6 +35,7 @@ static const struct option
 	{ "read_reg", required_argument, NULL, 'r' },
 	{ "debug", no_argument, NULL, 'd' },
 	{ "status", no_argument, NULL, 's' },
+	{ "info", no_argument, NULL, 'i' },
 	{ 0, 0, 0, 0 }
 };
 
@@ -55,6 +57,7 @@ static void usage(FILE *fp, int argc, char **argv)
 		" -r | --read_reg       read register\n"
 		" -d | --debug          debug mode\n"
 		" -s | --status         show rot status\n"
+		" -i | --info           show bmc/pch version info\n"
 		"example:\n"
 		"--provision /usr/share/pfrconfig/rk_pub.pem\n"
 		"--provision show\n"
@@ -68,6 +71,7 @@ static void usage(FILE *fp, int argc, char **argv)
 		"--read_reg <rf_addr> (byte mode)\n"
 		"--read_reg <rf_addr> <length> (block mode)\n"
 		"--status\n"
+		"--info\n"
 		"",
 		argv[0]);
 }
@@ -135,6 +139,7 @@ int main(int argc, char *argv[])
 	uint8_t read_reg_flag = 0;
 	uint8_t bus_flag = 0;
 	uint8_t status_flag = 0;
+	uint8_t info_flag = 0;
 	ARGUMENTS args = {0};
 	uint8_t rot_addr;
 	char option = 0;
@@ -198,6 +203,9 @@ int main(int argc, char *argv[])
 		case 's':
 			status_flag = 1;
 			break;
+		case 'i':
+			info_flag = 1;
+			break;
 		default:
 			usage(stdout, argc, argv);
 			exit(EXIT_FAILURE);
@@ -259,6 +267,9 @@ int main(int argc, char *argv[])
 
 	if (status_flag)
 		show_status(args);
+
+	if (info_flag)
+		show_info(args);
 
 	if (args.i2c_fd >= 0)
 		close(args.i2c_fd);

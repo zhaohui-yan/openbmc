@@ -7,6 +7,7 @@ SRC_URI = " file://include/provision.h;subdir=${S} \
             file://include/checkpoint.h;subdir=${S} \
             file://include/i2c_utils.h;subdir=${S} \
             file://include/status.h;subdir=${S} \
+            file://include/info.h;subdir=${S} \
             file://include/mailbox_enums.h;subdir=${S} \
             file://include/arguments.h;subdir=${S} \
             file://include/config.h;subdir=${S} \
@@ -14,6 +15,7 @@ SRC_URI = " file://include/provision.h;subdir=${S} \
             file://checkpoint.c;subdir=${S} \
             file://i2c_utils.c;subdir=${S} \
             file://status.c;subdir=${S} \
+            file://info.c;subdir=${S} \
             file://main.c;subdir=${S} \
             file://meson.build;subdir=${S} \
             file://meson_options.txt;subdir=${S} \
