@@ -383,31 +383,31 @@ void show_status(ARGUMENTS args)
 
 	printf("\nCPLD Rot Static Identifier : 0x%02x\n", get_cpld_id(args));
 	printf("CPLD Rot Release Version   : 0x%02x\n", get_cpld_ver(args));
-	printf("CPLD Rot SVN               : 0x%02x\n", get_cpld_svn(args));
+	printf("CPLD Rot SVN               : 0x%02x\n\n", get_cpld_svn(args));
 
 	plat_state = get_plat_state(args, &pstate_code);
-	printf("Platform State             : 0x%02x\n", pstate_code);
-	printf("   %s\n\n", plat_state);
+	printf("Platform State Code        : 0x%02x\n", pstate_code);
+	printf("Platform State             : %s\n\n", plat_state);
 
 	printf("Recovery Count             : %d\n", get_recovery_count(args));
 
 	last_rc_reason = get_last_recovery_reason(args, &rc_reason_code);
-	printf("Last Recovery Reason       : 0x%02x\n", rc_reason_code);
-	printf("    %s\n\n", last_rc_reason);
+	printf("Last Recovery Reason Code  : 0x%02x\n", rc_reason_code);
+	printf("Last Recovery Reason       : %s\n\n", last_rc_reason);
 
 	printf("Panic Event Count          : %d\n", get_panic_event_count(args));
 	panic_reason = get_last_panic_reason(args, &panic_reason_code);
-	printf("Last Panic Reason          : 0x%02x\n", panic_reason_code);
-	printf("    %s\n\n", panic_reason);
+	printf("Last Panic Reason Code     : 0x%02x\n", panic_reason_code);
+	printf("Last Panic Reason          : %s\n\n", panic_reason);
 
 	major_err = get_major_err(args, &major_err_code);
-	printf("Major Error                : 0x%02x\n", major_err_code);
-	printf("    %s\n\n", major_err);
+	printf("Major Error Code           : 0x%02x\n", major_err_code);
+	printf("Major Error                : %s\n\n", major_err);
 
 	if (major_err_code <= 2)
 		minor_err = get_minor_auth_err(args, &minor_err_code);
 	else
 		minor_err = get_minor_update_err(args, &minor_err_code);
-	printf("Minor Error                : 0x%02x\n", minor_err_code);
-	printf("    %s\n\n", minor_err);
+	printf("Minor Error Code           : 0x%02x\n", minor_err_code);
+	printf("Minor Error                : %s\n\n", minor_err);
 }
