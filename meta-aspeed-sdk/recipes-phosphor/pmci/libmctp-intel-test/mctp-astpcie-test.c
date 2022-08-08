@@ -94,7 +94,7 @@ void test_pattern_prepare(uint8_t *pattern, int size)
 	int j;
 
 	for (i = 0; i < size; i++) {
-		j = i % 0xff;
+		j = i % 0x100;
 		pattern[i] = j;
 	}
 }
@@ -107,11 +107,10 @@ void test_pattern_prepare(uint8_t *pattern, int size)
 void rx_response_handler(uint8_t eid, void *data, void *msg, size_t len,
 			 bool tag_owner, uint8_t tag, void *prv)
 {
-	// TODO:
-	//    We should send device the response according to the EID
 	struct test_mctp_ctx *p = (struct test_mctp_ctx *)data;
 
 	mctp_prinfo("%s: Received a response", __func__);
+	mctp_prinfo("Received length = %d", len);
 
 	// notify test_mctp_astpcie_recv_data_timeout_raw
 	p->len = len;
@@ -131,8 +130,7 @@ void rx_request_handler(mctp_eid_t src, void *data, void *msg, size_t len,
 	struct test_mctp_ctx *ctx = (struct test_mctp_ctx *)data;
 	struct mctp_ctrl_req *req = (struct mctp_ctrl_req *)msg;
 	uint8_t msg_hdr_len = sizeof(struct mctp_ctrl_msg_hdr);
-	struct mctp_ctrl_resp resp = { 0 };
-
+	struct mctp_echo_resp resp = { 0 };
 	uint16_t resp_len = 0;
 	uint8_t mctp_type;
 	uint8_t cmd;
@@ -155,8 +153,10 @@ void rx_request_handler(mctp_eid_t src, void *data, void *msg, size_t len,
 
 	mctp_type = req->hdr.ic_msg_type;
 	cmd = req->hdr.command_code;
+
 	mctp_prinfo("Received Message Type: %d", mctp_type);
 	mctp_prinfo("Received Command: %d", cmd);
+	mctp_prinfo("Received Message length: %d", len);
 
 	if (mctp_type != MCTP_MESSAGE_TYPE_ASPEED_CTRL) {
 		mctp_prwarn("%s: Not support message type 0x%X\n", __func__, mctp_type);
@@ -187,6 +187,8 @@ void rx_request_handler(mctp_eid_t src, void *data, void *msg, size_t len,
 
 		if (rc < 0)
 			mctp_prerr("%s: send response failed", __func__);
+		else
+			mctp_prinfo("%s: send response length %d", __func__, resp_len);
 	}
 }
 
@@ -224,6 +226,7 @@ void rx_request_control_handler(mctp_eid_t src, void *data, void *msg, size_t le
 
 	cmd = req->hdr.command_code;
 	mctp_prinfo("Received Control Command: %d", cmd);
+	mctp_prinfo("Received Message length: %d", len);
 
 	memcpy(&resp.hdr, &req->hdr, sizeof(struct mctp_ctrl_msg_hdr));
 	resp.hdr.rq_dgram_inst &= ~(MCTP_CTRL_HDR_FLAG_REQUEST);
@@ -258,24 +261,32 @@ void wait_for_request(struct test_mctp_ctx *ctx)
 {
 	struct mctp_binding_astpcie *astpcie = (struct mctp_binding_astpcie *)ctx->prot;
 	struct mctp *mctp = ctx->mctp;
+	struct pollfd pfd = { 0 };
 	int count = 0;
 	int r;
 
+	pfd.fd = astpcie->fd;
+	pfd.events = POLLIN;
 	mctp_set_rx_all(mctp, rx_request_handler, ctx);
 	mctp_set_rx_ctrl(mctp, rx_request_control_handler, ctx);
 
 	while (count <= 10000) {
-		r = mctp_astpcie_poll(astpcie, 1000);
+		r = poll(&pfd, 1, 5000);
 
-		if (r & POLLIN) {
-			r = mctp_astpcie_rx(astpcie);
+		if (r < 0)
+			break;
 
-			if (r < 0) {
-				mctp_prerr("%s: MCTP RX read error", __func__);
-				break;
-			}
+		if (r == 0 || !(pfd.revents & POLLIN))
+			continue;
 
+		if (mctp_astpcie_rx(astpcie) < 0) {
+			mctp_prerr("%s: MCTP RX read error", __func__);
+			break;
+		}
+
+		if (ctx->len > 0) {
 			count++;
+			ctx->len = 0;
 			mctp_prinfo("%s: MCTP RX count = %d", __func__, count);
 		}
 	}
@@ -288,33 +299,32 @@ int test_mctp_astpcie_recv_data_timeout_raw(struct test_mctp_ctx *ctx, uint8_t d
 	struct mctp_binding_astpcie *astpcie = (struct mctp_binding_astpcie *)ctx->prot;
 	struct test_mctp_ctx *p = (struct test_mctp_ctx *)ctx;
 	struct mctp *mctp = ctx->mctp;
-	int retry = 6 * 10; // Default 6 secs
+	struct pollfd pfd = { 0 };
+	int retry = 500; //Default 5 secs (10ms * 500)
 	int r;
 
+	pfd.fd = astpcie->fd;
+	pfd.events = POLLIN;
 	mctp_set_rx_all(mctp, rx_response_handler, ctx);
 
-	if (TOsec > 0)
-		retry = TOsec * 10;
-
 	while (retry--) {
-		usleep(100 * 1000);
+		mctp_prdebug("%s: MCTP retry %d", __func__, retry);
+		r = poll(&pfd, 1, 10);
 
-		r = mctp_astpcie_poll(astpcie, 1000);
+		if (r < 0)
+			break;
 
-		if (r & POLLIN) {
-			r = mctp_astpcie_rx(astpcie);
+		if (r == 0 || !(pfd.revents & POLLIN))
+			continue;
 
-			if (r < 0) {
-				mctp_prerr("%s: MCTP RX read error", __func__);
-				break;
-			}
-
-			mctp_prdebug("%s: MCTP Rx received response", __func__);
-			// Total size of raw message
-			return p->len;
+		if (mctp_astpcie_rx(astpcie) < 0) {
+			mctp_prerr("%s: MCTP RX read error", __func__);
+			break;
 		}
 
-		mctp_prdebug("%s: MCTP retry %d", __func__, retry);
+		// Total size of raw message
+		if (p->len > 0)
+			return p->len;
 	}
 
 	mctp_prerr("%s: MCTP timeout", __func__);
@@ -444,7 +454,7 @@ void test_mctp_astpcie_free(struct test_mctp_ctx *ctx)
 	free(astpcie_extra_params);
 }
 
-int test_send_mctp_cmd(char *mctp_dev,uint8_t bus, uint8_t routing, uint8_t dst_dev, uint8_t dst_func, uint8_t dst_eid, uint8_t src_eid,
+int test_send_mctp_cmd(char *mctp_dev, uint8_t bus, uint8_t routing, uint8_t dst_dev, uint8_t dst_func, uint8_t dst_eid, uint8_t src_eid,
 		       uint8_t *tbuf, int tlen, uint8_t *rbuf, int *rlen)
 {
 	struct test_mctp_ctx *ctx;
@@ -505,8 +515,8 @@ int main(int argc, char *argv[])
 {
 	uint8_t msg_hdr_len = sizeof(struct mctp_ctrl_msg_hdr);
 	uint8_t cmd = MCTP_CTRL_CMD_GET_MESSAGE_TYPE_SUPPORT;
-	uint8_t tbuf[MCTP_PACKET_SIZE(MCTP_BTU)] = { 0 };
-	uint8_t rbuf[MCTP_PACKET_SIZE(MCTP_BTU)] = { 0 };
+	uint8_t tbuf[PCIE_TEST_TX_BUFF_SIZE] = { 0 };
+	uint8_t rbuf[PCIE_TEST_RX_BUFF_SIZE] = { 0 };
 	uint8_t src_eid = REQUESTER_EID;
 	uint8_t dst_eid = RESPONDER_EID;
 	uint8_t rq_dgram_inst = 0x80;
@@ -624,8 +634,8 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	if (data_len > MCTP_BTU - msg_hdr_len) {
-		mctp_prerr("length exceeds max payload length %d\n", MCTP_BTU - msg_hdr_len);
+	if (data_len > (PCIE_TEST_TX_BUFF_SIZE - msg_hdr_len)) {
+		mctp_prerr("length exceeds max payload length %d\n", (PCIE_TEST_TX_BUFF_SIZE - msg_hdr_len));
 		usage(stdout, argc, argv);
 		exit(EXIT_FAILURE);
 	}

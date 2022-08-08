@@ -18,21 +18,28 @@ extern "C" {
 #define MCTP_MESSAGE_TYPE_ASPEED_CTRL 0x85
 #define MCTP_ASPEED_CTRL_CMD_ECHO 0x00
 #define MCTP_ASPEED_CTRL_CMD_ECHO_LARGE 0x01
-#define SMBUS_TEST_TX_BUFF_SIZE MCTP_PACKET_SIZE(MCTP_BTU)
-#define SMBUS_TEST_RX_BUFF_SIZE	MCTP_PACKET_SIZE(MCTP_BTU)
+#define SMBUS_TEST_BUFF_SIZE 2048
+#define SMBUS_TEST_TX_BUFF_SIZE (SMBUS_TEST_BUFF_SIZE + sizeof(struct mctp_ctrl_msg_hdr))
+#define SMBUS_TEST_RX_BUFF_SIZE	(SMBUS_TEST_BUFF_SIZE + sizeof(struct mctp_ctrl_msg_hdr) + 1)
 
 #define REQUESTER_EID 8
 #define RESPONDER_EID 9
 
 struct mctp_ctrl_req {
 	struct mctp_ctrl_msg_hdr hdr;
-	uint8_t data[SMBUS_TEST_TX_BUFF_SIZE];
+	uint8_t data[MCTP_BTU];
 };
 
 struct mctp_ctrl_resp {
 	struct mctp_ctrl_msg_hdr hdr;
 	uint8_t completion_code;
-	uint8_t data[SMBUS_TEST_RX_BUFF_SIZE];
+	uint8_t data[MCTP_BTU];
+};
+
+struct mctp_echo_resp {
+	struct mctp_ctrl_msg_hdr hdr;
+	uint8_t completion_code;
+	uint8_t data[SMBUS_TEST_BUFF_SIZE];
 };
 
 /* Test MCTP ctx */
