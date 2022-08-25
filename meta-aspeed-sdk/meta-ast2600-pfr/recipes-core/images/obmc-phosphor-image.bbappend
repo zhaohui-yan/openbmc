@@ -1,47 +1,7 @@
-FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
-
-DEPENDS:append = " obmc-pfr-image-native intel-pfr-signing-utility-native "
 IMAGE_INSTALL:append = " packagegroup-aspeed-pfr-apps "
 
-IMAGE_INSTALL:remove:ast2600-pfr = " \
-        webui-vue \
-        libmctp \
-        entity-manager \
-        dbus-sensors \
-        "
-
-IMAGE_INSTALL:remove:ast2600-pfr = " \
-        packagegroup-oss-apps \
-        packagegroup-oss-libs \
-        packagegroup-oss-intel-pmci \
-        packagegroup-aspeed-obmc-apps \
-        packagegroup-aspeed-apps \
-        packagegroup-aspeed-crypto \
-        packagegroup-aspeed-ssif \
-        packagegroup-aspeed-obmc-inband \
-        ${@bb.utils.contains('MACHINE_FEATURES', 'ast-ssp', 'packagegroup-aspeed-ssp', '', d)} \
-        packagegroup-aspeed-mtdtest \
-        packagegroup-aspeed-usbtools \
-        ${@bb.utils.contains('DISTRO_FEATURES', 'tpm', \
-            bb.utils.contains('MACHINE_FEATURES', 'tpm2', 'packagegroup-security-tpm2', '', d), \
-            '', d)} \
-        "
-
-# Only install in AST26xx series rofs as the free space of AST2500 rofs is not enough.
-IMAGE_INSTALL:remove:ast2600-pfr = " \
-        packagegroup-aspeed-ktools \
-       "
-
-EXTRA_IMAGE_FEATURES:remove:ast2600-pfr = " \
-        nfs-client \
-        ${@bb.utils.contains('DISTRO_FEATURES', 'obmc-ubi-fs', 'read-only-rootfs-delayed-postinsts', '', d)} \
-        ${@bb.utils.contains('DISTRO_FEATURES', 'phosphor-mmc', 'read-only-rootfs-delayed-postinsts', '', d)} \
-        "
-
-inherit image_types_phosphor_aspeed
-
-do_generate_static[depends] += " obmc-phosphor-image:do_generate_static"
-
+# The offset of RWFS is smaller than ROFS, so creates do_generate_static task
+# to overwrite the default setting which is from image_types_phosphor.bbclass
 python do_generate_static() {
     import subprocess
 
@@ -77,6 +37,13 @@ python do_generate_static() {
     _append_image(os.path.join(d.getVar('DEPLOY_DIR_IMAGE', True),
                                'u-boot.%s' % d.getVar('UBOOT_SUFFIX',True)),
                   uboot_offset,
+                  int(d.getVar('FLASH_RWFS_OFFSET', True)))
+
+    _append_image(os.path.join(d.getVar('IMGDEPLOYDIR', True),
+                               '%s.%s' % (
+                                    d.getVar('IMAGE_LINK_NAME', True),
+                                    d.getVar('OVERLAY_BASETYPE', True))),
+                  int(d.getVar('FLASH_RWFS_OFFSET', True)),
                   int(d.getVar('FLASH_KERNEL_OFFSET', True)))
 
     _append_image(os.path.join(d.getVar('DEPLOY_DIR_IMAGE', True),
@@ -94,130 +61,6 @@ python do_generate_static() {
     bb.build.exec_func("do_mk_static_symlinks", d)
 }
 
-do_generate_static:append() {
-    bb.build.exec_func("do_generate_pfr_image", d)
-    bb.build.exec_func("do_generate_signed_pfr_image", d)
-    bb.build.exec_func("do_generate_pfr_capsule_tar", d)
-}
+PFR_IMAGE_MODE = "${@bb.utils.contains('MACHINE_FEATURES', 'cerberus-pfr', 'cerberus-pfr-image', 'intel-pfr-image', d)}"
+inherit ${PFR_IMAGE_MODE}
 
-mk_nor_image() {
-    image_dst="$1"
-    image_size_kb=$2
-    dd if=/dev/zero bs=1k count=$image_size_kb \
-        | tr '\000' '\377' > $image_dst
-}
-
-do_generate_pfr_image(){
-    # Assemble the flash image
-    mk_nor_image ${IMGDEPLOYDIR}/image-mtd ${PFR_IMAGE_SIZE}
-
-    dd bs=1k conv=notrunc seek=0 \
-        if=${IMGDEPLOYDIR}/${IMAGE_NAME}.static.mtd \
-        of=${IMGDEPLOYDIR}/image-mtd
-}
-
-# PFR images directory
-PFR_IMAGES_DIR = "${DEPLOY_DIR_IMAGE}/pfr_images"
-
-# PFR image generation script directory
-PFR_SCRIPT_DIR = "${STAGING_DIR_NATIVE}${bindir}"
-
-# PFR image config directory
-PFR_CFG_DIR = "${STAGING_DIR_NATIVE}${datadir}/pfrconfig"
-
-# Temporary hardcode
-PFR_BUILD_VER ?= "1"
-PFR_BUILD_NUM ?= "2"
-PFR_BUILD_HASH ?= "565566"
-# 1 = SHA256
-# 2 = SHA384
-PFR_SHA ?= "2"
-
-make_sig_capsule() {
-	signature_files=""
-	for file in "$@"; do
-		openssl dgst -sha256 -sign ${SIGNING_KEY} -out "${file}.sig" $file
-		signature_files="${signature_files} ${file}.sig"
-	done
-}
-
-make_tar_capsule() {
-    files="$@"
-    tar -h -cvf signed_cap.tar ${files}
-}
-
-do_generate_signed_pfr_image(){
-    local manifest_json=${PFR_MANIFEST}
-    local pfmconfig_xml=""
-    local bmcconfig_xml=""
-    local pfm_signed_bin="pfm_signed.bin"
-    local signed_cap_bin="bmc_signed_cap.bin"
-    local unsigned_cap_bin="bmc_unsigned_cap.bin"
-    local unsigned_cap_align_bin="bmc_unsigned_cap.bin_aligned"
-    local output_bin="image-mtd-pfr"
-    local SIGN_UTILITY=${PFR_SCRIPT_DIR}/intel-pfr-signing-utility
-
-    if [ "${PFR_SHA}" == "1" ]; then
-        pfmconfig_xml="pfm_config.xml"
-        bmcconfig_xml="bmc_config.xml"
-    else
-        pfmconfig_xml="pfm_config_secp384r1.xml"
-        bmcconfig_xml="bmc_config_secp384r1.xml"
-    fi
-
-    rm -f ${PFR_IMAGES_DIR}/${unsigned_cap_bin}
-    mkdir -p "${PFR_IMAGES_DIR}"
-    cd "${PFR_IMAGES_DIR}"
-
-    ${PFR_SCRIPT_DIR}/pfr_image.py -m ${PFR_CFG_DIR}/${manifest_json} \
-        -i ${IMGDEPLOYDIR}/image-mtd \
-        -n ${PFR_BUILD_VER} \
-        -b ${PFR_BUILD_NUM} \
-        -h ${PFR_BUILD_HASH} \
-        -s ${PFR_SHA} \
-        -o ${output_bin}
-
-    # sign the PFM region
-    ${SIGN_UTILITY} -c ${PFR_CFG_DIR}/${pfmconfig_xml} -o ${PFR_IMAGES_DIR}/${pfm_signed_bin} ${PFR_IMAGES_DIR}/pfm.bin -v
-
-    # Parsing and Verifying the PFM
-    echo "Parsing and Verifying the PFM"
-    ${SIGN_UTILITY} -p ${PFR_IMAGES_DIR}/${pfm_signed_bin} -c ${PFR_CFG_DIR}/${pfmconfig_xml}
-    #if [ $(${SIGN_UTILITY} -p ${PFR_IMAGES_DIR}/${pfm_signed_bin} -c ${PFR_CFG_DIR}/${pfmconfig_xml} 2>&1 | grep "ERR" | wc -c) -gt 0 ]; then
-    #    bbfatal "Verify the PFM failed."
-    #fi
-
-    # Add the signed PFM to rom image
-    dd bs=1k conv=notrunc seek=${PFM_OFFSET_PAGE} if=${PFR_IMAGES_DIR}/${pfm_signed_bin} of=${PFR_IMAGES_DIR}/${output_bin}
-
-    # Create unsigned BMC update capsule - append with 1. pfm_signed, 2. pbc, 3. bmc compressed
-    dd if=${PFR_IMAGES_DIR}/${pfm_signed_bin} bs=1k >> ${PFR_IMAGES_DIR}/${unsigned_cap_bin}
-
-    dd if=${PFR_IMAGES_DIR}/pbc.bin bs=1k >> ${PFR_IMAGES_DIR}/${unsigned_cap_bin}
-
-    dd if=${PFR_IMAGES_DIR}/bmc_compressed.bin bs=1k >> ${PFR_IMAGES_DIR}/${unsigned_cap_bin}
-
-    # Sign the BMC update capsule
-    ${SIGN_UTILITY} -c ${PFR_CFG_DIR}/${bmcconfig_xml} -o ${PFR_IMAGES_DIR}/${signed_cap_bin} ${PFR_IMAGES_DIR}/${unsigned_cap_bin} -v
-
-    # Parsing and Verifying the BMC update capsule
-    echo "Parsing and Verifying the BMC update capsule"
-    ${SIGN_UTILITY} -p ${PFR_IMAGES_DIR}/${signed_cap_bin} -c ${PFR_CFG_DIR}/${bmcconfig_xml}
-    #if [ $(${SIGN_UTILITY} -p ${PFR_IMAGES_DIR}/${signed_cap_bin} -c ${PFR_CFG_DIR}/${bmcconfig_xml} 2>&1 | grep "ERR" | wc -c) -gt 0 ]; then
-    #    bbfatal "Verify the BMC update capsule failed."
-    #fi
-
-    # Add the signed bmc update capsule to full rom image
-    dd bs=1k conv=notrunc seek=${RC_IMAGE_PAGE} if=${PFR_IMAGES_DIR}/${signed_cap_bin} of=${PFR_IMAGES_DIR}/${output_bin}
-}
-
-do_generate_pfr_capsule_tar[depends] += \
-    " obmc-phosphor-image:do_generate_static_tar"
-
-do_generate_pfr_capsule_tar() {
-    ln -sf ${S}/MANIFEST MANIFEST
-    ln -sf ${S}/publickey publickey
-    cp ${PFR_IMAGES_DIR}/bmc_signed_cap.bin image-img-stg
-    make_sig_capsule MANIFEST publickey image-img-stg
-    make_tar_capsule MANIFEST publickey image-img-stg ${signature_files}
-}

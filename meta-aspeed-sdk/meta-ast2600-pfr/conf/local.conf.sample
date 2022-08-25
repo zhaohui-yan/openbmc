@@ -1,5 +1,6 @@
 MACHINE ??= "ast2600-pfr"
 #MACHINE ??= "ast2600-dcscm"
+#MACHINE ??= "ast2600-dcscm-amd"
 
 DISTRO ?= "openbmc-phosphor"
 PACKAGE_CLASSES ?= "package_ipk"
