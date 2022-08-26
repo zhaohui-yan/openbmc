@@ -61,6 +61,6 @@ python do_generate_static() {
     bb.build.exec_func("do_mk_static_symlinks", d)
 }
 
-PFR_IMAGE_MODE = "${@bb.utils.contains('MACHINE_FEATURES', 'cerberus-pfr', 'cerberus-pfr-image', 'intel-pfr-image', d)}"
+PFR_IMAGE_MODE = "${@bb.utils.contains('MACHINE_FEATURES', 'cerberus-pfr', 'cerberus-pfr-signing-image', 'intel-pfr-signing-image', d)}"
 inherit ${PFR_IMAGE_MODE}
 
