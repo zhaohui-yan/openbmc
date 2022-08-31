@@ -11,10 +11,16 @@ RPROVIDES:${PN} = "${PACKAGES}"
 
 PACKAGES:append = " \
     ${PN}-apps \
+    ${PN}-cerberus \
     "
 
 SUMMARY:${PN}-apps = "AspeedTech PFR App package"
 RDEPENDS:${PN}-apps = " \
     aspeed-pfr-tool \
+    "
+
+SUMMARY:${PN}-cerberus = "AspeedTech Cerberus PFR package"
+RDEPENDS:${PN}-cerberus = " \
+    cerberus-pfr-provision-image \
     "
 

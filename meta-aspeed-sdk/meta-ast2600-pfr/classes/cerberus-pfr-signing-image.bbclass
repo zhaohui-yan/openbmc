@@ -1,3 +1,5 @@
+IMAGE_INSTALL:append = " packagegroup-aspeed-pfr-cerberus "
+
 inherit python3native setuptools3
 
 DEPENDS:append = " cerberus-pfr-signing-utility-native \

@@ -32,6 +32,12 @@ do_install() {
     install -m 0644 ${S}/tools/recovery_tools/*.xml ${D}${datadir}/cerberus/recovery_tools/.
     install -m 0644 ${S}/tools/recovery_tools/*.config ${D}${datadir}/cerberus/recovery_tools/.
     install -m 0644 ${S}/tools/recovery_tools/*.pem ${D}${datadir}/cerberus/recovery_tools/.
+    # provision tools
+    install -d -m 0755 ${D}${datadir}/cerberus/provision_tools
+    install -m 0644 ${S}/tools/provision_tools/*.py ${D}${datadir}/cerberus/provision_tools/.
+    install -m 0644 ${S}/tools/provision_tools/*.json ${D}${datadir}/cerberus/provision_tools/.
+    install -m 0644 ${S}/tools/provision_tools/*.ini ${D}${datadir}/cerberus/provision_tools/.
+    install -m 0644 ${S}/tools/provision_tools/*.pem ${D}${datadir}/cerberus/provision_tools/.
 }
 
 BBCLASSEXTEND = "native nativesdk"
