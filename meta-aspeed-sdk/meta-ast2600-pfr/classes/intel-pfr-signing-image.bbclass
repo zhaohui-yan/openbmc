@@ -2,6 +2,10 @@ DEPENDS:append = " obmc-pfr-image-native \
                    intel-pfr-signing-utility-native \
                  "
 
+IMAGE_INSTALL:append = " packagegroup-aspeed-pfr-apps \
+                         packagegroup-intel-pfr-apps \
+                       "
+
 do_generate_static:append() {
     bb.build.exec_func("do_generate_signed_pfr_image", d)
 }

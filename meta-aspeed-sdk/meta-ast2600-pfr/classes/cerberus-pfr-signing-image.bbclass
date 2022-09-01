@@ -1,10 +1,12 @@
-IMAGE_INSTALL:append = " packagegroup-aspeed-pfr-cerberus "
-
 inherit python3native setuptools3
 
 DEPENDS:append = " cerberus-pfr-signing-utility-native \
                    ${PYTHON_PN}-pycryptodome-native \
                  "
+
+IMAGE_INSTALL:append = " packagegroup-aspeed-pfr-apps \
+                         packagegroup-cerberus-pfr-apps \
+                       "
 
 do_generate_static:append() {
     bb.build.exec_func("do_generate_signed_pfr_image", d)

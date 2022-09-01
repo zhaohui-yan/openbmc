@@ -23,8 +23,8 @@ SRC_URI = " file://include/provision.h;subdir=${S} \
             file://BootCompleted.service;subdir=${S} \
           "
 
-DEPENDS = "openssl i2c-tools obmc-pfr-image"
-RDEPENDS:${PN} = "openssl i2c-tools obmc-pfr-image"
+DEPENDS = "openssl i2c-tools"
+RDEPENDS:${PN} = "openssl i2c-tools"
 
 EXTRA_OEMESON:ast2600-pfr = " \
     -Di2c_bus=14 \

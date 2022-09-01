@@ -1,4 +1,4 @@
-SUMMARY = "AspeedTech BMC PFR Package Group"
+SUMMARY = "Intel PFR Package Group"
 
 PR = "r1"
 
@@ -13,8 +13,8 @@ PACKAGES = " \
     ${PN}-apps \
     "
 
-SUMMARY:${PN}-apps = "AspeedTech PFR App package"
+SUMMARY:${PN}-apps = "Intel PFR App package"
 RDEPENDS:${PN}-apps = " \
-    aspeed-pfr-tool \
+    obmc-pfr-image \
     "
 

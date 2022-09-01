@@ -1,5 +1,3 @@
-IMAGE_INSTALL:append = " packagegroup-aspeed-pfr-apps "
-
 # The offset of RWFS is smaller than ROFS, so creates do_generate_static task
 # to overwrite the default setting which is from image_types_phosphor.bbclass
 python do_generate_static() {
