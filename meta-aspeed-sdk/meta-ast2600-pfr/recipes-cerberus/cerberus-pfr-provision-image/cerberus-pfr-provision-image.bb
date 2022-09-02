@@ -7,8 +7,8 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 inherit python3native setuptools3
 
 DEPENDS:append = " ${PYTHON_PN}-pycryptodome-native \
-                    cerberus-pfr-signing-utility-native \
-                  "
+                   cerberus-pfr-signing-utility-native \
+                 "
 
 do_fetch[noexec] = "1"
 do_unpack[noexec] = "1"
