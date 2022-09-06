@@ -4,7 +4,12 @@ DESCRIPTION = "Cerberus PFR signing utility for manifest and recovery image crea
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE.txt;md5=323954e5c90a1cc83ee74a3797f8d988"
 
-SRC_URI = " git://gerrit.aspeed.com:29418/cerberus;protocol=ssh;branch=${BRANCH} "
+SRC_URI = " git://gerrit.aspeed.com:29418/cerberus;protocol=ssh;branch=${BRANCH} \
+            file://keys \
+            file://manifest_tools \
+            file://recovery_tools \
+            file://provision_tools \
+          "
 
 PV = "1.0+git${SRCPV}"
 SRCREV = "${AUTOREV}"
@@ -26,18 +31,32 @@ do_install() {
     install -m 0644 ${S}/tools/manifest_tools/*.xml ${D}${datadir}/cerberus/manifest_tools/.
     install -m 0644 ${S}/tools/manifest_tools/*.config ${D}${datadir}/cerberus/manifest_tools/.
     install -m 0644 ${S}/tools/manifest_tools/*.pem ${D}${datadir}/cerberus/manifest_tools/.
+    # install config, xml and key
+    install -m 0644 ${WORKDIR}/keys/*.pem ${D}${datadir}/cerberus/manifest_tools/.
+    install -m 0644 ${WORKDIR}/manifest_tools/*.xml ${D}${datadir}/cerberus/manifest_tools/.
+    install -m 0644 ${WORKDIR}/manifest_tools/*.config ${D}${datadir}/cerberus/manifest_tools/.
+
     # recovery tools
     install -d -m 0755 ${D}${datadir}/cerberus/recovery_tools
     install -m 0644 ${S}/tools/recovery_tools/*.py ${D}${datadir}/cerberus/recovery_tools/.
     install -m 0644 ${S}/tools/recovery_tools/*.xml ${D}${datadir}/cerberus/recovery_tools/.
     install -m 0644 ${S}/tools/recovery_tools/*.config ${D}${datadir}/cerberus/recovery_tools/.
     install -m 0644 ${S}/tools/recovery_tools/*.pem ${D}${datadir}/cerberus/recovery_tools/.
+    # install config, xml and key
+    install -m 0644 ${WORKDIR}/keys/*.pem ${D}${datadir}/cerberus/recovery_tools/.
+    install -m 0644 ${WORKDIR}/recovery_tools/*.xml ${D}${datadir}/cerberus/recovery_tools/.
+    install -m 0644 ${WORKDIR}/recovery_tools/*.config ${D}${datadir}/cerberus/recovery_tools/.
+
     # provision tools
     install -d -m 0755 ${D}${datadir}/cerberus/provision_tools
     install -m 0644 ${S}/tools/provision_tools/*.py ${D}${datadir}/cerberus/provision_tools/.
     install -m 0644 ${S}/tools/provision_tools/*.json ${D}${datadir}/cerberus/provision_tools/.
     install -m 0644 ${S}/tools/provision_tools/*.ini ${D}${datadir}/cerberus/provision_tools/.
     install -m 0644 ${S}/tools/provision_tools/*.pem ${D}${datadir}/cerberus/provision_tools/.
+    # install json, ini and key
+    install -m 0644 ${WORKDIR}/keys/*.pem ${D}${datadir}/cerberus/provision_tools/.
+    install -m 0644 ${WORKDIR}/provision_tools/*.json ${D}${datadir}/cerberus/provision_tools/.
+    install -m 0644 ${WORKDIR}/provision_tools/*.ini ${D}${datadir}/cerberus/provision_tools/.
 }
 
 BBCLASSEXTEND = "native nativesdk"
