@@ -27,36 +27,24 @@ do_compile[noexec] = "1"
 do_install() {
     # manifest tools
     install -d -m 0755 ${D}${datadir}/cerberus/manifest_tools
-    install -m 0644 ${S}/tools/manifest_tools/*.py ${D}${datadir}/cerberus/manifest_tools/.
-    install -m 0644 ${S}/tools/manifest_tools/*.xml ${D}${datadir}/cerberus/manifest_tools/.
-    install -m 0644 ${S}/tools/manifest_tools/*.config ${D}${datadir}/cerberus/manifest_tools/.
-    install -m 0644 ${S}/tools/manifest_tools/*.pem ${D}${datadir}/cerberus/manifest_tools/.
+    install -m 0644 ${S}/tools/manifest_tools/*.* ${D}${datadir}/cerberus/manifest_tools/.
     # install config, xml and key
-    install -m 0644 ${WORKDIR}/keys/*.pem ${D}${datadir}/cerberus/manifest_tools/.
-    install -m 0644 ${WORKDIR}/manifest_tools/*.xml ${D}${datadir}/cerberus/manifest_tools/.
-    install -m 0644 ${WORKDIR}/manifest_tools/*.config ${D}${datadir}/cerberus/manifest_tools/.
+    install -m 0644 ${WORKDIR}/keys/*.* ${D}${datadir}/cerberus/manifest_tools/.
+    install -m 0644 ${WORKDIR}/manifest_tools/*.* ${D}${datadir}/cerberus/manifest_tools/.
 
     # recovery tools
     install -d -m 0755 ${D}${datadir}/cerberus/recovery_tools
-    install -m 0644 ${S}/tools/recovery_tools/*.py ${D}${datadir}/cerberus/recovery_tools/.
-    install -m 0644 ${S}/tools/recovery_tools/*.xml ${D}${datadir}/cerberus/recovery_tools/.
-    install -m 0644 ${S}/tools/recovery_tools/*.config ${D}${datadir}/cerberus/recovery_tools/.
-    install -m 0644 ${S}/tools/recovery_tools/*.pem ${D}${datadir}/cerberus/recovery_tools/.
+    install -m 0644 ${S}/tools/recovery_tools/*.* ${D}${datadir}/cerberus/recovery_tools/.
     # install config, xml and key
-    install -m 0644 ${WORKDIR}/keys/*.pem ${D}${datadir}/cerberus/recovery_tools/.
-    install -m 0644 ${WORKDIR}/recovery_tools/*.xml ${D}${datadir}/cerberus/recovery_tools/.
-    install -m 0644 ${WORKDIR}/recovery_tools/*.config ${D}${datadir}/cerberus/recovery_tools/.
+    install -m 0644 ${WORKDIR}/keys/*.* ${D}${datadir}/cerberus/recovery_tools/.
+    install -m 0644 ${WORKDIR}/recovery_tools/*.* ${D}${datadir}/cerberus/recovery_tools/.
 
     # provision tools
     install -d -m 0755 ${D}${datadir}/cerberus/provision_tools
-    install -m 0644 ${S}/tools/provision_tools/*.py ${D}${datadir}/cerberus/provision_tools/.
-    install -m 0644 ${S}/tools/provision_tools/*.json ${D}${datadir}/cerberus/provision_tools/.
-    install -m 0644 ${S}/tools/provision_tools/*.ini ${D}${datadir}/cerberus/provision_tools/.
-    install -m 0644 ${S}/tools/provision_tools/*.pem ${D}${datadir}/cerberus/provision_tools/.
+    install -m 0644 ${S}/tools/provision_tools/*.* ${D}${datadir}/cerberus/provision_tools/.
     # install json, ini and key
-    install -m 0644 ${WORKDIR}/keys/*.pem ${D}${datadir}/cerberus/provision_tools/.
-    install -m 0644 ${WORKDIR}/provision_tools/*.json ${D}${datadir}/cerberus/provision_tools/.
-    install -m 0644 ${WORKDIR}/provision_tools/*.ini ${D}${datadir}/cerberus/provision_tools/.
+    install -m 0644 ${WORKDIR}/keys/*.* ${D}${datadir}/cerberus/provision_tools/.
+    install -m 0644 ${WORKDIR}/provision_tools/*.* ${D}${datadir}/cerberus/provision_tools/.
 }
 
 BBCLASSEXTEND = "native nativesdk"
