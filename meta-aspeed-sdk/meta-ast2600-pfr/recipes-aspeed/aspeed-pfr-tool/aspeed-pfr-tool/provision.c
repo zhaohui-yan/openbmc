@@ -155,11 +155,12 @@ int getRootKeyHash(const char *file, uint8_t *hash, int *len)
 int waitUntilUfmCmdTriggerExec(ARGUMENTS args)
 {
 	uint8_t read_reg_value;
+	uint8_t mask = MB_UFM_CMD_EXECUTE_MASK | MB_UFM_CMD_FLUSH_WR_FIFO_MASK | MB_UFM_CMD_FLUSH_RD_FIFO_MASK;
 	int i = 0;
 
 	while (i < 100) {
 		read_reg_value = i2cReadByteData(args, MB_UFM_CMD_TRIGGER);
-		if (read_reg_value & MB_UFM_CMD_EXECUTE_MASK) {
+		if (read_reg_value & mask) {
 			if (args.debug_flag)
 				printf("UFM Command Trigger: Not execute, wait 20ms %d time\n", i);
 		} else
@@ -280,13 +281,6 @@ int writeUfmProvBmcPchRegionOffset(ARGUMENTS args)
 
 int provisionLock(ARGUMENTS args)
 {
-	uint8_t read_reg_value = i2cReadByteData(args, MB_PROVISION_STATUS);
-
-	if (read_reg_value & MB_UFM_PROV_UFM_LOCKED_MASK) {
-		printf("UFM Locked: Drop this command\n");
-		return 1;
-	}
-
 	i2cWriteByteData(args, MB_PROVISION_CMD, MB_UFM_PROV_END);
 	i2cWriteByteData(args, MB_UFM_CMD_TRIGGER, MB_UFM_CMD_EXECUTE_MASK);
 	if (waitUntilUfmCmdTriggerExec(args) || waitUntilUfmProvStatusCmdDone(args)) {
@@ -334,22 +328,10 @@ int provisionShow(ARGUMENTS args)
 int doProvision(ARGUMENTS args)
 {
 	uint8_t write_buffer[64];
-	uint8_t read_reg_value;
 	int hashLen = 0;
 
 	if (getRootKeyHash(args.provision_cmd, write_buffer, &hashLen)) {
 		printf("Get root key hash failed\n");
-		return 1;
-	}
-
-	read_reg_value = i2cReadByteData(args, MB_PROVISION_STATUS);
-	if (read_reg_value & MB_UFM_PROV_UFM_LOCKED_MASK) {
-		printf("UFM Locked: Drop this command\n");
-		return 1;
-	}
-
-	if (read_reg_value & MB_UFM_PROV_UFM_PROVISIONED_MASK) {
-		printf("Provisioned: Drop this command\n");
 		return 1;
 	}
 
@@ -386,13 +368,6 @@ int provision(ARGUMENTS args)
 
 int unprovision(ARGUMENTS args)
 {
-	uint8_t read_reg_value = i2cReadByteData(args, MB_PROVISION_STATUS);
-
-	if (read_reg_value & MB_UFM_PROV_UFM_LOCKED_MASK) {
-		printf("UFM Locked: Drop this command\n");
-		return 1;
-	}
-
 	i2cWriteByteData(args, MB_PROVISION_CMD, MB_UFM_PROV_ERASE);
 	i2cWriteByteData(args, MB_UFM_CMD_TRIGGER, MB_UFM_CMD_EXECUTE_MASK);
 	if (waitUntilUfmCmdTriggerExec(args) || waitUntilUfmProvStatusCmdDone(args)) {

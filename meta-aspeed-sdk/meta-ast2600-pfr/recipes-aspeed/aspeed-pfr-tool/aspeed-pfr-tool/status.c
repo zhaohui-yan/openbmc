@@ -41,7 +41,7 @@ static const char *g_plat_state[256] = {
 	"Debug CPLD booted from Active CFM1/2",
 	"SCM/CPU/Debug CPLD image update",
 	// 1Ah - 1Fh Reserved
-	"","","","","","",
+	"", "", "", "", "", "",
 	// 20 - 2Fh Reserved
 	"", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
 	// 30 - 3Fh Reserved
@@ -307,6 +307,17 @@ static const char *g_minor_update_err[256] = {
 	"", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
 };
 
+static const char *g_ufm_provisioning_status[8] = {
+	"Bit[0]: Command Busy",
+	"Bit[1]: Command Done",
+	"Bit[2]: Command Error",
+	"Bit[3]: Reserved",
+	"Bit[4]: UFM locked",
+	"Bit[5]: UFM Provisioned",
+	"Bit[6]: PIT Level-1 enforced",
+	"Bit[7]: PIT Level-2 has been completed successfully",
+};
+
 static uint8_t get_cpld_id(ARGUMENTS args)
 {
 	return i2cReadByteData(args, MB_CPLD_STATIC_ID);
@@ -368,6 +379,24 @@ static const char *get_minor_update_err(ARGUMENTS args, uint8_t *minor_err)
 	return g_minor_update_err[*minor_err];
 }
 
+static void get_ufm_provisioning_status(ARGUMENTS args, uint8_t *ufm_provisioning_status_code, char *ufm_provisioning_status)
+{
+	uint8_t status;
+	int i;
+
+	*ufm_provisioning_status_code = i2cReadByteData(args, MB_PROVISION_STATUS);
+	status = *ufm_provisioning_status_code;
+
+	for (i = 0; i < 8; i++) {
+		if (status & 0x01) {
+			strcat(ufm_provisioning_status, g_ufm_provisioning_status[i]);
+			strcat(ufm_provisioning_status, "\n");
+			strcat(ufm_provisioning_status, "                               ");
+		}
+		status >>= 1;
+	}
+}
+
 void show_status(ARGUMENTS args)
 {
 	uint8_t pstate_code;
@@ -375,39 +404,45 @@ void show_status(ARGUMENTS args)
 	uint8_t panic_reason_code;
 	uint8_t major_err_code;
 	uint8_t minor_err_code;
+	uint8_t ufm_provisioning_status_code;
 	const char *plat_state;
 	const char *last_rc_reason;
 	const char *panic_reason;
 	const char *major_err;
 	const char *minor_err;
+	char ufm_provisioning_status[2048] = { 0 };
 
-	printf("\nCPLD Rot Static Identifier : 0x%02x\n", get_cpld_id(args));
-	printf("CPLD Rot Release Version   : 0x%02x\n", get_cpld_ver(args));
-	printf("CPLD Rot SVN               : 0x%02x\n\n", get_cpld_svn(args));
+	printf("\nCPLD Rot Static Identifier   : 0x%02x\n", get_cpld_id(args));
+	printf("CPLD Rot Release Version     : 0x%02x\n", get_cpld_ver(args));
+	printf("CPLD Rot SVN                 : 0x%02x\n\n", get_cpld_svn(args));
 
 	plat_state = get_plat_state(args, &pstate_code);
-	printf("Platform State Code        : 0x%02x\n", pstate_code);
-	printf("Platform State             : %s\n\n", plat_state);
+	printf("Platform State Code          : 0x%02x\n", pstate_code);
+	printf("Platform State               : %s\n\n", plat_state);
 
-	printf("Recovery Count             : %d\n", get_recovery_count(args));
+	printf("Recovery Count               : %d\n", get_recovery_count(args));
 
 	last_rc_reason = get_last_recovery_reason(args, &rc_reason_code);
-	printf("Last Recovery Reason Code  : 0x%02x\n", rc_reason_code);
-	printf("Last Recovery Reason       : %s\n\n", last_rc_reason);
+	printf("Last Recovery Reason Code    : 0x%02x\n", rc_reason_code);
+	printf("Last Recovery Reason         : %s\n\n", last_rc_reason);
 
-	printf("Panic Event Count          : %d\n", get_panic_event_count(args));
+	printf("Panic Event Count            : %d\n", get_panic_event_count(args));
 	panic_reason = get_last_panic_reason(args, &panic_reason_code);
-	printf("Last Panic Reason Code     : 0x%02x\n", panic_reason_code);
-	printf("Last Panic Reason          : %s\n\n", panic_reason);
+	printf("Last Panic Reason Code       : 0x%02x\n", panic_reason_code);
+	printf("Last Panic Reason            : %s\n\n", panic_reason);
 
 	major_err = get_major_err(args, &major_err_code);
-	printf("Major Error Code           : 0x%02x\n", major_err_code);
-	printf("Major Error                : %s\n\n", major_err);
+	printf("Major Error Code             : 0x%02x\n", major_err_code);
+	printf("Major Error                  : %s\n\n", major_err);
 
 	if (major_err_code <= 2)
 		minor_err = get_minor_auth_err(args, &minor_err_code);
 	else
 		minor_err = get_minor_update_err(args, &minor_err_code);
-	printf("Minor Error Code           : 0x%02x\n", minor_err_code);
-	printf("Minor Error                : %s\n\n", minor_err);
+	printf("Minor Error Code             : 0x%02x\n", minor_err_code);
+	printf("Minor Error                  : %s\n\n", minor_err);
+
+	get_ufm_provisioning_status(args, &ufm_provisioning_status_code, ufm_provisioning_status);
+	printf("UFM/Provisioning Status Code : 0x%02x\n", ufm_provisioning_status_code);
+	printf("UFM/Provisioning Status      : %s\n\n", ufm_provisioning_status);
 }

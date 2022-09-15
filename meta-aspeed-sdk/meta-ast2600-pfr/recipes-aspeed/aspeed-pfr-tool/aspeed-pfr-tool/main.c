@@ -239,9 +239,13 @@ int main(int argc, char *argv[])
 				read_reg_value = i2cReadByteData(args, args.tx_msg[0]);
 				printf("%02x\n", read_reg_value);
 			} else {
-				args.rx_msg_len = i2cReadBlockData(args, args.tx_msg[0], args.tx_msg[1], args.rx_msg);
-				if (args.rx_msg_len > 0)
-					printRawData(args.rx_msg, args.rx_msg_len);
+				if (args.tx_msg[1] < 1) {
+					printf("invalid length %02x\n", args.tx_msg[1]);
+				} else {
+					args.rx_msg_len = i2cReadBlockData(args, args.tx_msg[0], args.tx_msg[1], args.rx_msg);
+					if (args.rx_msg_len > 0)
+						printRawData(args.rx_msg, args.rx_msg_len);
+				}
 			}
 		}
 	}
