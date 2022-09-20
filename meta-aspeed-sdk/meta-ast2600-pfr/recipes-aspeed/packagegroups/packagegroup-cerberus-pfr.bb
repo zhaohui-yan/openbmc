@@ -16,5 +16,6 @@ PACKAGES = " \
 SUMMARY:${PN}-apps = "Cerberus PFR App package"
 RDEPENDS:${PN}-apps = " \
     cerberus-pfr-provision-image \
+    cerberus-pfr-key-cancellation-image \
     "
 

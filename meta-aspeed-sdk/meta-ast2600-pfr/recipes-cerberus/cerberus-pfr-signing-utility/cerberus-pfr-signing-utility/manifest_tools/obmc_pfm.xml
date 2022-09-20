@@ -22,7 +22,7 @@
   </ReadWrite>
 
   <SignedImage>
-    <PrivateKey>prikey_2048.pem</PrivateKey>
+    <PrivateKey>pricsk0_2048.pem</PrivateKey>
     <HashType>SHA256</HashType>
     <Region>
       <StartAddr>0x00000000</StartAddr> <!-- u-boot -->
@@ -32,7 +32,7 @@
   </SignedImage>
 
   <SignedImage>
-    <PrivateKey>prikey_2048.pem</PrivateKey>
+    <PrivateKey>pricsk1_2048.pem</PrivateKey>
     <HashType>SHA256</HashType>
     <Region>
       <StartAddr>0x01100000</StartAddr> <!-- fit-image -->

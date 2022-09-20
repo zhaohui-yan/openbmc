@@ -8,7 +8,6 @@ SRC_URI = " git://gerrit.aspeed.com:29418/cerberus;protocol=ssh;branch=${BRANCH}
             file://keys \
             file://manifest_tools \
             file://recovery_tools \
-            file://provision_tools \
           "
 
 PV = "1.0+git${SRCPV}"
@@ -42,9 +41,14 @@ do_install() {
     # provision tools
     install -d -m 0755 ${D}${datadir}/cerberus/provision_tools
     install -m 0644 ${S}/tools/provision_tools/*.* ${D}${datadir}/cerberus/provision_tools/.
-    # install json, ini and key
+    # install key
     install -m 0644 ${WORKDIR}/keys/*.* ${D}${datadir}/cerberus/provision_tools/.
-    install -m 0644 ${WORKDIR}/provision_tools/*.* ${D}${datadir}/cerberus/provision_tools/.
+
+    # key management
+    install -d -m 0755 ${D}${datadir}/cerberus/key_management_tools
+    install -m 0644 ${S}/tools/key_management_tools/*.* ${D}${datadir}/cerberus/key_management_tools/.
+    # install key
+    install -m 0644 ${WORKDIR}/keys/*.* ${D}${datadir}/cerberus/key_management_tools/.
 }
 
 BBCLASSEXTEND = "native nativesdk"

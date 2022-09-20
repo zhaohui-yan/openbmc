@@ -10,8 +10,8 @@ DEPENDS:append = " ${PYTHON_PN}-pycryptodome-native \
                    cerberus-pfr-signing-utility-native \
                  "
 
-do_fetch[noexec] = "1"
-do_unpack[noexec] = "1"
+SRC_URI = " file://provision_tools;subdir=${S} "
+
 do_patch[noexec] = "1"
 do_configure[noexec] = "1"
 do_compile[noexec] = "1"
@@ -20,6 +20,10 @@ PFR_PROVISION_TOOLS_DIR = "${STAGING_DIR_NATIVE}${datadir}/cerberus/provision_to
 
 do_install() {
     rm -f ${PFR_PROVISION_TOOLS_DIR}/*.bin
+
+    # install json and ini
+    install -m 0644 ${S}/provision_tools/*.* ${PFR_PROVISION_TOOLS_DIR}/.
+
     cd ${PFR_PROVISION_TOOLS_DIR}
     python3 provisioning_image_generator.py provisioning_image_generator_rootkey.ini
     cd ${S}
