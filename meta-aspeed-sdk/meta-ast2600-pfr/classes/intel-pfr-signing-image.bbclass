@@ -21,9 +21,12 @@ PFR_SCRIPT_DIR = "${STAGING_DIR_NATIVE}${bindir}"
 PFR_CFG_DIR = "${STAGING_DIR_NATIVE}${datadir}/pfrconfig"
 
 # Temporary hardcode
-PFR_BUILD_VER ?= "1"
-PFR_BUILD_NUM ?= "2"
-PFR_BUILD_HASH ?= "565566"
+PFR_PLATFORM ?= "obmc"
+PFR_SVN ?= "1"
+PFR_BKC_VER ?= "1"
+PFR_BUILD_VER_MAJ ?= "1"
+PFR_BUILD_VER_MIN ?= "0"
+PFR_BUILD_NUM ?= "565566"
 # 1 = SHA256
 # 2 = SHA384
 PFR_SHA ?= "2"
@@ -59,15 +62,18 @@ do_generate_signed_pfr_image(){
         of=${PFR_IMAGES_DIR}/image-mtd
 
     python3 ${PFR_SCRIPT_DIR}/pfr_image.py -m ${PFR_CFG_DIR}/${manifest_json} \
+        -p ${PFR_PLATFORM} \
         -i ${PFR_IMAGES_DIR}/image-mtd \
-        -n ${PFR_BUILD_VER} \
+        -j ${PFR_BUILD_VER_MAJ} \
+        -n ${PFR_BUILD_VER_MIN} \
         -b ${PFR_BUILD_NUM} \
-        -h ${PFR_BUILD_HASH} \
-        -s ${PFR_SHA} \
+        -v ${PFR_BKC_VER} \
+        -s ${PFR_SVN} \
+        -a ${PFR_SHA} \
         -o ${output_bin}
 
     # sign the PFM region
-    ${SIGN_UTILITY} -c ${PFR_CFG_DIR}/${pfmconfig_xml} -o ${PFR_IMAGES_DIR}/${pfm_signed_bin} ${PFR_IMAGES_DIR}/pfm.bin -v
+    ${SIGN_UTILITY} -c ${PFR_CFG_DIR}/${pfmconfig_xml} -o ${PFR_IMAGES_DIR}/${pfm_signed_bin} ${PFR_IMAGES_DIR}/obmc-pfm.bin -v
 
     # Parsing and Verifying the PFM
     echo "Parsing and Verifying the PFM"
@@ -84,9 +90,9 @@ do_generate_signed_pfr_image(){
     # Create unsigned BMC update capsule - append with 1. pfm_signed, 2. pbc, 3. bmc compressed
     dd if=${PFR_IMAGES_DIR}/${pfm_signed_bin} bs=1k >> ${PFR_IMAGES_DIR}/${unsigned_cap_bin}
 
-    dd if=${PFR_IMAGES_DIR}/pbc.bin bs=1k >> ${PFR_IMAGES_DIR}/${unsigned_cap_bin}
+    dd if=${PFR_IMAGES_DIR}/obmc-pbc.bin bs=1k >> ${PFR_IMAGES_DIR}/${unsigned_cap_bin}
 
-    dd if=${PFR_IMAGES_DIR}/bmc_compressed.bin bs=1k >> ${PFR_IMAGES_DIR}/${unsigned_cap_bin}
+    dd if=${PFR_IMAGES_DIR}/obmc-bmc_compressed.bin bs=1k >> ${PFR_IMAGES_DIR}/${unsigned_cap_bin}
 
     # Sign the BMC update capsule
     ${SIGN_UTILITY} -c ${PFR_CFG_DIR}/${bmcconfig_xml} -o ${PFR_IMAGES_DIR}/${signed_cap_bin} ${PFR_IMAGES_DIR}/${unsigned_cap_bin} -v
