@@ -1,6 +1,6 @@
-From 83af96b38c28524a43045d45e403680662d72e50 Mon Sep 17 00:00:00 2001
-From: Troy Lee <troy_lee@aspeedtech.com>
-Date: Thu, 19 Aug 2021 18:03:00 +0800
+From 09993de2e4c101ebfa860f0e06f1f58f2a269c0a Mon Sep 17 00:00:00 2001
+From: Jamin Lin <jamin_lin@aspeedtech.com>
+Date: Wed, 20 Jul 2022 10:18:22 +0800
 Subject: [PATCH] Support websocket control frame callback
 
 boost::beast::websocket provide control_callback() to register control
@@ -18,10 +18,10 @@ Change-Id: I912cd6ff823e938cc429e75ff635b8d8fad17876
  2 files changed, 63 insertions(+), 4 deletions(-)
 
 diff --git a/http/routing.hpp b/http/routing.hpp
-index 29ae22b..35ed648 100644
+index 3a7b9c2..aa9c91a 100644
 --- a/http/routing.hpp
 +++ b/http/routing.hpp
-@@ -349,7 +349,7 @@ class WebSocketRule : public BaseRule
+@@ -350,7 +350,7 @@ class WebSocketRule : public BaseRule
              myConnection = std::make_shared<
                  crow::websocket::ConnectionImpl<boost::asio::ip::tcp::socket>>(
                  req, std::move(adaptor), openHandler, messageHandler,
@@ -30,7 +30,7 @@ index 29ae22b..35ed648 100644
          myConnection->start();
      }
  #ifdef BMCWEB_ENABLE_SSL
-@@ -363,7 +363,7 @@ class WebSocketRule : public BaseRule
+@@ -364,7 +364,7 @@ class WebSocketRule : public BaseRule
              myConnection = std::make_shared<crow::websocket::ConnectionImpl<
                  boost::beast::ssl_stream<boost::asio::ip::tcp::socket>>>(
                  req, std::move(adaptor), openHandler, messageHandler,
@@ -39,7 +39,7 @@ index 29ae22b..35ed648 100644
          myConnection->start();
      }
  #endif
-@@ -396,6 +396,20 @@ class WebSocketRule : public BaseRule
+@@ -397,6 +397,20 @@ class WebSocketRule : public BaseRule
          return *this;
      }
  
@@ -60,7 +60,7 @@ index 29ae22b..35ed648 100644
    protected:
      std::function<void(crow::websocket::Connection&)> openHandler;
      std::function<void(crow::websocket::Connection&, const std::string&, bool)>
-@@ -403,6 +417,10 @@ class WebSocketRule : public BaseRule
+@@ -404,6 +418,10 @@ class WebSocketRule : public BaseRule
      std::function<void(crow::websocket::Connection&, const std::string&)>
          closeHandler;
      std::function<void(crow::websocket::Connection&)> errorHandler;
@@ -72,27 +72,27 @@ index 29ae22b..35ed648 100644
  
  template <typename T>
 diff --git a/http/websocket.hpp b/http/websocket.hpp
-index b2c24c4..ac09bbb 100644
+index 3aa8554..c773e2b 100644
 --- a/http/websocket.hpp
 +++ b/http/websocket.hpp
 @@ -74,14 +74,18 @@ class ConnectionImpl : public Connection
          std::function<void(Connection&, const std::string&, bool)>
-             messageHandler,
-         std::function<void(Connection&, const std::string&)> closeHandler,
--        std::function<void(Connection&)> errorHandler) :
-+        std::function<void(Connection&)> errorHandler,
-+        std::function<void(Connection&, const std::string&)> pingHandler,
-+        std::function<void(Connection&, const std::string&)> pongHandler) :
+             messageHandlerIn,
+         std::function<void(Connection&, const std::string&)> closeHandlerIn,
+-        std::function<void(Connection&)> errorHandlerIn) :
++        std::function<void(Connection&)> errorHandlerIn,
++        std::function<void(Connection&, const std::string&)> pingHandlerIn,
++        std::function<void(Connection&, const std::string&)> pongHandlerIn) :
          Connection(reqIn, reqIn.session == nullptr ? std::string{}
                                                     : reqIn.session->username),
          ws(std::move(adaptorIn)), inBuffer(inString, 131088),
-         openHandler(std::move(openHandler)),
-         messageHandler(std::move(messageHandler)),
-         closeHandler(std::move(closeHandler)),
--        errorHandler(std::move(errorHandler)), session(reqIn.session)
-+        errorHandler(std::move(errorHandler)),
-+        pingHandler(std::move(pingHandler)),
-+        pongHandler(std::move(pongHandler)), session(reqIn.session)
+         openHandler(std::move(openHandlerIn)),
+         messageHandler(std::move(messageHandlerIn)),
+         closeHandler(std::move(closeHandlerIn)),
+-        errorHandler(std::move(errorHandlerIn)), session(reqIn.session)
++        errorHandler(std::move(errorHandlerIn)),
++        pingHandler(std::move(pingHandlerIn)),
++        pongHandler(std::move(pongHandlerIn)), session(reqIn.session)
      {
          /* Turn on the timeouts on websocket stream to server role */
          ws.set_option(boost::beast::websocket::stream_base::timeout::suggested(
@@ -147,3 +147,4 @@ index b2c24c4..ac09bbb 100644
      std::shared_ptr<persistent_data::UserSession> session;
  };
  } // namespace websocket
+

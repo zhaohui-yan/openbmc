@@ -91,7 +91,7 @@ void test_pattern_prepare(uint8_t *pattern, int size)
 	int j;
 
 	for (i = 0; i < size; i++) {
-		j = i % 0xff;
+		j = i % 0x100;
 		pattern[i] = j;
 	}
 }
@@ -104,11 +104,10 @@ void test_pattern_prepare(uint8_t *pattern, int size)
 void rx_response_handler(uint8_t eid, void *data, void *msg, size_t len,
 			 bool tag_owner, uint8_t tag, void *prv)
 {
-	// TODO:
-	//    We should send device the response according to the EID
 	struct test_mctp_ctx *p = (struct test_mctp_ctx *)data;
 
 	mctp_prinfo("%s: Received a response", __func__);
+	mctp_prinfo("Received length = %d", len);
 
 	// notify test_mctp_smbus_recv_data_timeout_raw
 	p->len = len;
@@ -128,7 +127,7 @@ void rx_request_handler(mctp_eid_t src, void *data, void *msg, size_t len,
 	struct test_mctp_ctx *ctx = (struct test_mctp_ctx *)data;
 	struct mctp_ctrl_req *req = (struct mctp_ctrl_req *)msg;
 	uint8_t msg_hdr_len = sizeof(struct mctp_ctrl_msg_hdr);
-	struct mctp_ctrl_resp resp = { 0 };
+	struct mctp_echo_resp resp = { 0 };
 	uint16_t resp_len = 0;
 	uint8_t mctp_type;
 	uint8_t cmd;
@@ -151,9 +150,10 @@ void rx_request_handler(mctp_eid_t src, void *data, void *msg, size_t len,
 
 	mctp_type = req->hdr.ic_msg_type;
 	cmd = req->hdr.command_code;
+
 	mctp_prinfo("Received Message Type: %d", mctp_type);
 	mctp_prinfo("Received Command: %d", cmd);
-
+	mctp_prinfo("Received Message length: %d", len);
 
 	if (mctp_type != MCTP_MESSAGE_TYPE_ASPEED_CTRL) {
 		mctp_prwarn("%s: Not support message type 0x%X\n", __func__, mctp_type);
@@ -184,6 +184,8 @@ void rx_request_handler(mctp_eid_t src, void *data, void *msg, size_t len,
 
 		if (rc < 0)
 			mctp_prerr("%s: send response failed", __func__);
+		else
+			mctp_prinfo("%s: send response length %d", __func__, resp_len);
 	}
 }
 
@@ -221,6 +223,7 @@ void rx_request_control_handler(mctp_eid_t src, void *data, void *msg, size_t le
 
 	cmd = req->hdr.command_code;
 	mctp_prinfo("Received Control Command: %d", cmd);
+	mctp_prinfo("Received Message length: %d", len);
 
 	memcpy(&resp.hdr, &req->hdr, sizeof(struct mctp_ctrl_msg_hdr));
 	resp.hdr.rq_dgram_inst &= ~(MCTP_CTRL_HDR_FLAG_REQUEST);
@@ -255,7 +258,7 @@ void wait_for_request(struct test_mctp_ctx *ctx)
 {
 	struct mctp_binding_smbus *smbus = (struct mctp_binding_smbus *)ctx->prot;
 	struct mctp *mctp = ctx->mctp;
-	struct pollfd pfd;
+	struct pollfd pfd = { 0 };
 	int count = 0;
 	int r;
 
@@ -296,15 +299,25 @@ int test_mctp_smbus_recv_data_timeout_raw(struct test_mctp_ctx *ctx, uint8_t dst
 	struct mctp_binding_smbus *smbus = (struct mctp_binding_smbus *)ctx->prot;
 	struct test_mctp_ctx *p = (struct test_mctp_ctx *)ctx;
 	struct mctp *mctp = ctx->mctp;
-	int retry = 6 * 10; // Default 6 secs
+	struct pollfd pfd;
+	int retry = 500; //Default 5 secs (10ms * 500)
+	int r;
 
+	pfd.fd = smbus->in_fd;
+	pfd.events = POLLPRI;
 	mctp_set_rx_all(mctp, rx_response_handler, ctx);
 
-	if (TOsec > 0)
-		retry = TOsec * 10;
-
 	while (retry--) {
-		usleep(100 * 1000);
+		mctp_prdebug("%s: MCTP retry %d", __func__, retry);
+		r = poll(&pfd, 1, 10);
+
+		if (r < 0) {
+			mctp_prwarn("Poll returned error status (errno=%d)", errno);
+			return -1;
+		}
+
+		if (r == 0 || !(pfd.revents & POLLPRI))
+			continue;
 
 		if (mctp_smbus_read(smbus) < 0) {
 			mctp_prerr("%s: MCTP RX error", __func__);
@@ -314,16 +327,14 @@ int test_mctp_smbus_recv_data_timeout_raw(struct test_mctp_ctx *ctx, uint8_t dst
 		// Total size of raw message
 		if (p->len > 0)
 			return p->len;
-
-		mctp_prdebug("%s: MCTP retry %d", __func__, retry);
 	}
 
 	mctp_prerr("%s: MCTP timeout", __func__);
 	return -1;
+
 }
 
-struct test_mctp_ctx *test_mctp_smbus_init(uint8_t bus, uint8_t src_addr, uint8_t dst_addr, uint8_t src_eid,
-					   int pkt_size)
+struct test_mctp_ctx *test_mctp_smbus_init(uint8_t bus, uint8_t src_addr, uint8_t dst_addr, uint8_t src_eid)
 {
 	uint8_t src_addr_7bits = src_addr >> 1;
 	struct mctp_binding_smbus *smbus;
@@ -339,11 +350,6 @@ struct test_mctp_ctx *test_mctp_smbus_init(uint8_t bus, uint8_t src_addr, uint8_
 		mctp_prerr("%s: out of memory(test_mctp_ctx)", __func__);
 		return NULL;
 	}
-
-	if (pkt_size < MCTP_PAYLOAD_SIZE + MCTP_HEADER_SIZE)
-		pkt_size = MCTP_PAYLOAD_SIZE + MCTP_HEADER_SIZE;
-
-	mctp_smbus_set_pkt_size(pkt_size);
 
 	mctp = mctp_init();
 	smbus = mctp_smbus_init();
@@ -362,7 +368,7 @@ struct test_mctp_ctx *test_mctp_smbus_init(uint8_t bus, uint8_t src_addr, uint8_
 	}
 
 	snprintf(dev, sizeof(dev), "/dev/i2c-%d", bus);
-	fd = open(dev, O_RDWR);
+	fd = open(dev, O_RDWR | O_NONBLOCK);
 	if (fd < 0) {
 		mctp_prerr("%s: open %s failed", __func__, dev);
 		goto bail;
@@ -375,7 +381,7 @@ struct test_mctp_ctx *test_mctp_smbus_init(uint8_t bus, uint8_t src_addr, uint8_
 	smbus_extra_params->slave_addr = dst_addr;
 
 	snprintf(slave_queue, sizeof(slave_queue), SYSFS_SLAVE_QUEUE, bus, src_addr_7bits);
-	fd = open(slave_queue, O_RDONLY);
+	fd = open(slave_queue, O_RDONLY | O_NONBLOCK);
 	if (fd < 0) {
 		mctp_prerr("%s: open %s failed", __func__, slave_queue);
 		goto bail;
@@ -398,9 +404,6 @@ int test_mctp_smbus_send_data(struct test_mctp_ctx *ctx, uint8_t dst, uint8_t fl
 	bool tag_owner = flag_tag & MCTP_HDR_FLAG_TO ? true : false;
 	uint8_t tag = MCTP_HDR_GET_TAG(flag_tag);
 	struct mctp *mctp = ctx->mctp;
-
-	// TODO:
-	//  Function overloading
 
 	if (mctp_message_tx(mctp, dst, req, size,
 			    tag_owner, tag, smbus_extra_params) < 0) {
@@ -426,7 +429,7 @@ int test_send_mctp_cmd(uint8_t bus, uint8_t src_addr, uint8_t dst_addr, uint8_t 
 	uint8_t tag = 0;
 	int ret = -1;
 
-	ctx = test_mctp_smbus_init(bus, src_addr, dst_addr, src_eid, MAX_PAYLOAD_SIZE);
+	ctx = test_mctp_smbus_init(bus, src_addr, dst_addr, src_eid);
 	if (ctx == NULL) {
 		mctp_prerr("%s: Error: mctp binding failed", __func__);
 		return -1;
@@ -464,7 +467,7 @@ int test_mctp_fake_responder(uint8_t bus, uint8_t src_addr, uint8_t dst_addr, ui
 {
 	struct test_mctp_ctx *ctx;
 
-	ctx = test_mctp_smbus_init(bus, src_addr, dst_addr, src_eid, MAX_PAYLOAD_SIZE);
+	ctx = test_mctp_smbus_init(bus, src_addr, dst_addr, src_eid);
 	if (ctx == NULL) {
 		mctp_prerr("%s: Error: mctp binding failed", __func__);
 		return -1;
@@ -479,8 +482,8 @@ int main(int argc, char *argv[])
 {
 	uint8_t msg_hdr_len = sizeof(struct mctp_ctrl_msg_hdr);
 	uint8_t cmd = MCTP_CTRL_CMD_GET_MESSAGE_TYPE_SUPPORT;
-	uint8_t tbuf[MAX_PAYLOAD_SIZE] = { 0 };
-	uint8_t rbuf[MAX_PAYLOAD_SIZE] = { 0 };
+	uint8_t tbuf[SMBUS_TEST_TX_BUFF_SIZE] = { 0 };
+	uint8_t rbuf[SMBUS_TEST_RX_BUFF_SIZE] = { 0 };
 	uint8_t src_eid = REQUESTER_EID;
 	uint8_t dst_eid = RESPONDER_EID;
 	uint8_t rq_dgram_inst = 0x80;
@@ -570,6 +573,12 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
+	if (data_len > (SMBUS_TEST_TX_BUFF_SIZE - msg_hdr_len)) {
+		mctp_prerr("length exceeds max payload length %d\n", (SMBUS_TEST_TX_BUFF_SIZE - msg_hdr_len));
+		usage(stdout, argc, argv);
+		exit(EXIT_FAILURE);
+	}
+
 	bus = (uint8_t)strtoul(argv[optind++], NULL, 0);
 	dst_addr = (uint8_t)strtoul(argv[optind++], NULL, 0);
 	src_addr = (uint8_t)strtoul(argv[optind++], NULL, 0);
@@ -578,20 +587,6 @@ int main(int argc, char *argv[])
 
 	// requester
 	if (requester_flag) {
-		// min params: mctp-smbus-test -t <bus> <dst_addr> <src_addr> <dst_eid> <src_eid>
-		// request data should include mctp_type, rq_dgram_inst and cmd
-		if ((argc - minargc) > (SMBUS_TEST_TX_BUFF_SIZE - msg_hdr_len)) {
-			mctp_prerr("data payload=%d exceeds max payload length %d\n", (argc - minargc + msg_hdr_len), SMBUS_TEST_TX_BUFF_SIZE);
-			usage(stdout, argc, argv);
-			exit(EXIT_FAILURE);
-		}
-
-		if (data_len > (SMBUS_TEST_TX_BUFF_SIZE - msg_hdr_len)) {
-			mctp_prerr("length exceeds max payload length %d\n", SMBUS_TEST_TX_BUFF_SIZE - msg_hdr_len);
-			usage(stdout, argc, argv);
-			exit(EXIT_FAILURE);
-		}
-
 		// refer to struct mctp_ctrl_req and struct mctp_ctrl_msg_hdr
 		mctp_type = (uint8_t)strtoul(argv[optind++], NULL, 0);
 		rq_dgram_inst = (uint8_t)strtoul(argv[optind++], NULL, 0);

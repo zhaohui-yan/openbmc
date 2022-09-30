@@ -1,6 +1,6 @@
-From 64c6b512c21b9c2680f5d8fc151ab2ba14d9208e Mon Sep 17 00:00:00 2001
+From ccab1c21803a0a6790c2844c64ab9629b0cd5f66 Mon Sep 17 00:00:00 2001
 From: zhanghch05 <zhanghch05@inspur.com>
-Date: Wed, 17 Nov 2021 15:15:12 +0800
+Date: Wed, 20 Jul 2022 10:36:41 +0800
 Subject: [PATCH] Change the completionhandler to accept Res
 
 These modifications are from WIP:Redfish:Query parameters:Only
@@ -31,10 +31,10 @@ Change-Id: I45e152afae29737986648da495b28badfd9e4cf7
  1 file changed, 1 insertion(+), 18 deletions(-)
 
 diff --git a/http/http_response.hpp b/http/http_response.hpp
-index 3c2a3f9..9da34ad 100644
+index d06c65d..41b4737 100644
 --- a/http/http_response.hpp
 +++ b/http/http_response.hpp
-@@ -46,24 +46,7 @@ struct Response
+@@ -47,24 +47,7 @@ struct Response
  
      Response& operator=(const Response& r) = delete;
  

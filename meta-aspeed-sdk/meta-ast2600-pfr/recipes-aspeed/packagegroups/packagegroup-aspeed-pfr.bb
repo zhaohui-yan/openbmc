@@ -2,14 +2,14 @@ SUMMARY = "AspeedTech BMC PFR Package Group"
 
 PR = "r1"
 
-PACKAGE_ARCH="${TUNE_PKGARCH}"
+PACKAGE_ARCH = "${TUNE_PKGARCH}"
 
 inherit packagegroup
 
 PROVIDES = "${PACKAGES}"
 RPROVIDES:${PN} = "${PACKAGES}"
 
-PACKAGES:append = " \
+PACKAGES = " \
     ${PN}-apps \
     "
 

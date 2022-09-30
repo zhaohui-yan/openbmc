@@ -26,10 +26,7 @@
 # and the actual signature data as well, for both active
 # and recovery images
 
-# TODO: figure out if active and recovery actually have different sigs
-# TODO: build hashmap from payload manifest
-# TODO: figure out exact struct layout for PFR metadata
-import os, hashlib, struct, json, sys, subprocess, mmap, io, array, binascii, copy, shutil, re, getopt
+import os, hashlib, struct, json, sys, subprocess, mmap, io, array, binascii, copy, shutil, re, getopt, argparse
 from array import array
 from binascii import unhexlify
 from hashlib import sha1, sha256, sha384, sha512
@@ -48,23 +45,16 @@ from shutil import copyfile
 # * partially signed (not full 64k page)
 # + unsigned, owned by pfr
 
-# TODO: The below defines should go to manifest files.
-# Keeping it here hard coded for now.
-# The pages to be skipped for HASH and PBC
-# Pages: 0xe0 to 0xff - starting PFM region until end of pfm
-# Pages: 0x2a00 to 0x7FFF - starting RC-image until end of flash
-
-# Commented it as we already added "exclude-pages" json property in
-# pfr_manifest.json
-#EXCLUDE_PAGES =[[0xe0, 0xff],[0x2a00,0x7fff]]
-
-# SPI PFM globals
-PFM_OFFSET = 0xe0000
-PFM_SPI = 0x1
-PFM_I2C = 0x2
+# define constants
+PFM_SPI = 0x1  # SPI rule Type
+PFM_I2C = 0x2  # I2C rule type
+SHA256  = 0x1  # hash256 present
+SHA384  = 0x2  # hash384 present
+SHA256_SIZE = 32  # Hash 256 size
 PFM_DEF_SIZE = 32 # 32 bytes of PFM header
 PFM_SPI_SIZE_DEF = 16 # 16 bytes of SPI PFM
-PFM_I2C_SIZE = 40 # 40 bytes of i2c rules region in PFM
+PFM_SPI_SIZE_HASH = 32 # 32 bytes of SPI region HASH
+PFM_I2C_SIZE = 40  # 40 bytes of i2c rules region in PFM
 PAGE_SIZE = 0x1000 # 4KB size of page
 
 def load_manifest(fname):
@@ -81,8 +71,8 @@ class pfm_spi(object):
         self.spi_hash_pres = hash_pres
         print("hash_pres={}".format(self.spi_hash_pres))
         print("spi_hash={}".format(hash))
-        print("spi_start_addr={}".format(start_addr))
-        print("spi_end_addr={}".format(end_addr))
+        print("spi_start_addr={}".format(hex(start_addr)))
+        print("spi_end_addr={}".format(hex(end_addr)))
         if hash_pres != 0:
             self.spi_hash = hash
         self.spi_pfm_rsvd = 0xffffffff        # b'\xff'*4
@@ -100,16 +90,20 @@ class pfm_i2c(object):
         self.i2c_cmd_whitelist = cmd_map
 
 class pfr_bmc_image(object):
+    """class of PFR bmc to create pfm, and capsule """
+    # json_file, firmware_file
+    def __init__(self, platform, manifest, firmware_file, build_maj, build_min, build_num, svn=1, bkc_ver=1, sha_algo="2", output_filename="image-mtd-pfr"):
 
-# json_file, firmware_file
-    def __init__(self, manifest, firmware_file, build_ver, build_num, build_hash, sha, output_filename):
-
+        self.platform_name = platform
         self.manifest = load_manifest(manifest)
         self.firmware_file = firmware_file
-        self.build_version = build_ver
+        self.build_ver_maj = build_maj
+        self.build_ver_min = build_min
         self.build_number = build_num
-        self.build_hash = build_hash
-        self.sha = sha
+        self.sec_rev = svn
+        self.bkc_ver = bkc_ver
+        self.sha = sha_algo
+
         if self.sha == "2":
             self.sha_version = 0x2
             self.pfm_spi_size_hash = 48
@@ -139,7 +133,7 @@ class pfr_bmc_image(object):
         self.pbc_comp_bitmap = bytearray(4096)
 
         self.pbc_comp_payload = 0
-        self.sec_rev = 1
+        #self.sec_rev = 1
 
         # fill in the calculated data
         self.hash_and_map()
@@ -185,6 +179,27 @@ class pfr_bmc_image(object):
         index = p[1]              # image part index
         # 1 page is 4KB
         page = start_addr >> 12
+
+        # find skip ranges in page # in 'pfm' and 'rc-image' area
+        # The pages to be skipped for HASH and PBC
+        # Pages: 0x80 to 0x9f - starting PFM region until end of pfm
+        # Pages: 0x2a00 to 0x7FFF - starting RC-image until end of flash
+        # in reference design: EXCLUDE_PAGES =[[0x80, 0x9f],[0x2a00,0x7fff]]
+        '''
+        for i in self.manifest['image-parts']:
+            if i['name']=='pfm':
+                idx = i['index']
+                pfm_st = int(i['offset'], 16)
+                pfm_end= int(i['offset'], 16) + int(i['size'], 16)
+            if i['name']=='rc-image':
+                idx = i['index']
+                rcimg_st = int(i['offset'], 16)
+                rcimg_end= int(i['offset'], 16) + int(i['size'], 16)
+
+        exclude_pages =[[pfm_st//0x1000, (pfm_end-0x1000)//0x1000],[rcimg_st//0x1000, (rcimg_end-0x1000)//0x1000]]
+        '''
+
+        print("exclude_pages = ", self.manifest["exclude-pages"])
 
         with open(self.firmware_file, "rb") as f:
             f.seek(start_addr)
@@ -271,7 +286,7 @@ class pfr_bmc_image(object):
 
         # have copy of the update file for appending with PFR meta and compression
         copyfile(self.firmware_file, self.pfr_rom_file)
-        with open("bmc_compressed.bin", "wb+") as upd:
+        with open("%s-bmc_compressed.bin" % self.platform_name, "wb+") as upd:
             for p in self.image_parts:
                 #filename, index, offset, size, protection.
                 print(p[0], p[1], p[2], p[3], p[4])
@@ -309,42 +324,25 @@ class pfr_bmc_image(object):
             'comp_bitmap': bytes(self.pbc_comp_bitmap),
             }
 
-        with open("pbc.bin", "wb+") as pbf:
+        with open("%s-pbc.bin" % self.platform_name, "wb+") as pbf:
             pbf.write(b''.join([parts[n] for n in names]))
             pbf.seek(0) # rewind to beginning of PBC file
             self.act_dgst.update(pbf.read()) # add up PBC data for hashing
 
     def build_pfm(self):
-        '''
-        typedef struct {
-            uint32_t tag;             /* PFM_HDR_TAG above, no terminating null */
-            uint8_t SVN;     /* SVN- security revision of associated image data */
-            uint8_t bkc;              /* bkc */
-            uint8_t pfm_ver_major;    /* PFM revision */
-            uint8_t pfm_ver_minor;
-            uint8_t reserved0[4];
-            uint8_t build_num;
-            uint8_t build_hash[3];
-            uint8_t  reserved1[12];       /* reserved */
-            uint32_t pfm_length;      /* PFM size in bytes */
-            pfm_spi  pfm_spi[2];          /* PFM SPI regions - u-boot & fit-image */
-            pfm_smbus pfm_smbus[4];       /*  defined smbus rules for PSUs and HSBP */
-        } __attribute__((packed)) pfm_hdr;
-        '''
+        """ build PFM following PFR structure """
         names = [
-            'tag', 'sec_rev', 'bkc', 'pfm_ver_major', 'pfm_ver_minor', 'resvd0', 'build_num', 'build_hash1', 'build_hash2', 'build_hash3', 'resvd1', 'pfm_len',
+            'tag', 'sec_rev', 'bkc', 'pfm_ver_major', 'pfm_ver_minor', 'resvd0', 'build_num', 'resvd1', 'pfm_len',
             ]
+        #print("self.build_number: %s, self.build_version: %s"%(self.build_number, self.build_version))
         parts = {
             'tag': struct.pack("<I", 0x02b3ce1d),
-            'sec_rev': struct.pack('<B', self.sec_rev),
-            'bkc': struct.pack('<B', 0x01),
-            'pfm_ver_major': struct.pack('<B', ((int(self.build_version) >> 8) & 0xff)),
-            'pfm_ver_minor': struct.pack('<B', (int(self.build_version) & 0x00ff)),
+            'sec_rev': struct.pack('<B', int(self.sec_rev, 0)),
+            'bkc': struct.pack('<B', int(self.bkc_ver, 0)),
+            'pfm_ver_major': struct.pack('<B', int(self.build_ver_maj, 0)),
+            'pfm_ver_minor': struct.pack('<B', int(self.build_ver_min, 0)),
             'resvd0': b'\xff'* 4,
-            'build_num': struct.pack('<B', int(self.build_number,16)),
-            'build_hash1': struct.pack('<B', (int(self.build_hash) & 0xff)),
-            'build_hash2': struct.pack('<B', ((int(self.build_hash) >> 8) & 0xff)),
-            'build_hash3': struct.pack('<B', ((int(self.build_hash) >> 16) & 0xff)),
+            'build_num': struct.pack('<I', int(self.build_number, 0)),
             'resvd1': b'\xff'* 12,
             'pfm_len': ''
             }
@@ -360,7 +358,7 @@ class pfr_bmc_image(object):
         parts['pfm_len'] = struct.pack('<I', self.pfm_bytes)
         print("PFM size2={}".format(self.pfm_bytes))
 
-        with open("pfm.bin", "wb+") as f:
+        with open("%s-pfm.bin" % self.platform_name, "wb+") as f:
             f.write(b''.join([parts[n] for n in names]))
             for i in self.pfm_spi_regions:
                 f.write(struct.pack('<B', int(i.spi_pfm)))
@@ -384,59 +382,21 @@ class pfr_bmc_image(object):
             # write the padding bytes at the end
             f.write(b'\xff' * padding_bytes)
 
-def usage(prog):
-    sys.stderr.write(prog +
-        " -m manifest -i rom-image -n build_version -b build_number -h build_hash -s sha -o output_file_name\n")
-
-def main():
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], "m:i:n:b:h:s:o:",
-                     ["manifest=", "image=", "build_version=","build_number=","build_hash=","sha=", "output_file_name="])
-    except getopt.GetoptError as err:
-        sys.stderr.write(str(err) + "\n")
-        sys.exit(2)
-    json_file = None
-    firmware_file = None
-    build_ver = None
-    build_num = None
-    build_hash = None
-    sha = None
-    output_filename = None
-
-    for o, a in opts:
-        if o in ("-m", "--manifest"):
-            json_file = a
-        elif o in ("-i", "--image"):
-            firmware_file = a
-        elif o in ("-n", "--build_version"):
-            build_ver = a
-        elif o in ("-b", "--build_number"):
-            build_num = a
-        elif o in ("-h", "--build_hash"):
-            build_hash = a
-        elif o in ("-s", "--sha"):
-            sha = a
-        elif o in ("-o", "--output_file_name"):
-            output_filename = a
-        else:
-            usage(sys.argv[0])
-            assert False, "unhandled argument: " + o
-
-    if json_file is None or firmware_file is None or build_ver is None or build_num is None or build_hash is None or sha is None or output_filename is None:
-        usage(sys.argv[0])
-        sys.exit(-1)
-
-    print("manifest: %s" % json_file)
-    print("image: %s" % firmware_file)
-    print("build_ver: %s" % build_ver)
-    print("build_number: %s" % build_num)
-    print("build_hash: %s" % build_hash)
-    print("Sha: %s" % sha)
-    print("output_filename: %s" % output_filename)
-
-
-    # function to generate BMC PFM, PBC header and BMC compressed image
-    pfr_bmc_image(json_file, firmware_file, build_ver, build_num, build_hash, sha ,output_filename)
+def main(args):
+    parser = argparse.ArgumentParser(description='build bmc pfr image, pfm and capsule, from image manifest json file.')
+    parser.add_argument('-p', '--platform',         metavar="[platform]",     dest='platform',       default=None,   help='platform name')
+    parser.add_argument('-m', '--manifest',         metavar="[manifest json file]", dest='manifest', default=None,   help='manifest json file name')
+    parser.add_argument('-i', '--image',            metavar="[platform_active_image]",   dest='image',   default=None,   help='platform_active_image'  )
+    parser.add_argument('-j', '--build_ver_maj',    metavar="[build ver max]",  dest='build_ver_maj', default=None,   help='build major version-offset 06')
+    parser.add_argument('-n', '--build_ver_min',    metavar="[build ver min]",  dest='build_ver_min', default=None,   help='build minor version-offset 07')
+    parser.add_argument('-b', '--build_num',        metavar="[build number]", dest='build_num', default=None,   help='build number tracked in oem bytes, 4 bytes')
+    parser.add_argument('-s', '--svn',              metavar="[svn]", dest='svn', default=None,   help='SVN in PFM, 0x0-0x40, greater than 64 is invalid')
+    parser.add_argument('-v', '--bkc_ver',          metavar="[BKC version]", dest='bkc_ver', default=None,   help='bkc version')
+    parser.add_argument('-a', '--sha_algo',         metavar="[sha algorithm]", dest='sha_algo', default=None,   help='sha algorithm')
+    parser.add_argument('-o', '--output_file_name', metavar="[output file name]", dest='output_filename', default=None,   help='output file name')
+    args = parser.parse_args(args)
+    print(args)
+    pfr_bmc_image(args.platform, args.manifest, args.image, args.build_ver_maj, args.build_ver_min, args.build_num, args.svn, args.bkc_ver, args.sha_algo, args.output_filename)
 
 if __name__ == '__main__':
-    main()
+  main(sys.argv[1:])

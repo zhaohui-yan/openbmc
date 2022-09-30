@@ -17,8 +17,10 @@
 #include "i2c_utils.h"
 #include "arguments.h"
 #include "config.h"
+#include "status.h"
+#include "info.h"
 
-static const char short_options[] = "hvb:a:c:p:uk:w:r:d";
+static const char short_options[] = "hvb:a:c:p:uk:w:r:dsi";
 static const struct option
 	long_options[] = {
 	{ "help", no_argument, NULL, 'h' },
@@ -32,6 +34,8 @@ static const struct option
 	{ "write_reg", required_argument, NULL, 'w' },
 	{ "read_reg", required_argument, NULL, 'r' },
 	{ "debug", no_argument, NULL, 'd' },
+	{ "status", no_argument, NULL, 's' },
+	{ "info", no_argument, NULL, 'i' },
 	{ 0, 0, 0, 0 }
 };
 
@@ -52,6 +56,8 @@ static void usage(FILE *fp, int argc, char **argv)
 		" -w | --write_reg      write register\n"
 		" -r | --read_reg       read register\n"
 		" -d | --debug          debug mode\n"
+		" -s | --status         show rot status\n"
+		" -i | --info           show bmc/pch version info\n"
 		"example:\n"
 		"--provision /usr/share/pfrconfig/rk_pub.pem\n"
 		"--provision show\n"
@@ -64,6 +70,8 @@ static void usage(FILE *fp, int argc, char **argv)
 		"--write_reg <rf_addr> <data1> <data2>... (block mode)\n"
 		"--read_reg <rf_addr> (byte mode)\n"
 		"--read_reg <rf_addr> <length> (block mode)\n"
+		"--status\n"
+		"--info\n"
 		"",
 		argv[0]);
 }
@@ -125,11 +133,13 @@ int main(int argc, char *argv[])
 	uint8_t rot_address_flag = 0;
 	uint8_t unprovision_flag = 0;
 	uint8_t checkpoint_flag = 0;
+	uint8_t read_reg_value = 0;
 	uint8_t provision_flag = 0;
 	uint8_t write_reg_flag = 0;
 	uint8_t read_reg_flag = 0;
-	int read_reg_value = 0;
 	uint8_t bus_flag = 0;
+	uint8_t status_flag = 0;
+	uint8_t info_flag = 0;
 	ARGUMENTS args = {0};
 	uint8_t rot_addr;
 	char option = 0;
@@ -190,6 +200,12 @@ int main(int argc, char *argv[])
 			args.tx_msg_len += 1;
 			write_reg_flag = 1;
 			break;
+		case 's':
+			status_flag = 1;
+			break;
+		case 'i':
+			info_flag = 1;
+			break;
 		default:
 			usage(stdout, argc, argv);
 			exit(EXIT_FAILURE);
@@ -221,12 +237,15 @@ int main(int argc, char *argv[])
 		else {
 			if (args.tx_msg_len == 1) {
 				read_reg_value = i2cReadByteData(args, args.tx_msg[0]);
-				if (read_reg_value >= 0)
-					printf("%02x\n", (uint8_t)read_reg_value);
+				printf("%02x\n", read_reg_value);
 			} else {
-				args.rx_msg_len = i2cReadBlockData(args, args.tx_msg[0], args.tx_msg[1], args.rx_msg);
-				if (args.rx_msg_len > 0)
-					printRawData(args.rx_msg, args.rx_msg_len);
+				if (args.tx_msg[1] < 1) {
+					printf("invalid length %02x\n", args.tx_msg[1]);
+				} else {
+					args.rx_msg_len = i2cReadBlockData(args, args.tx_msg[0], args.tx_msg[1], args.rx_msg);
+					if (args.rx_msg_len > 0)
+						printRawData(args.rx_msg, args.rx_msg_len);
+				}
 			}
 		}
 	}
@@ -249,6 +268,12 @@ int main(int argc, char *argv[])
 
 	if (checkpoint_flag)
 		checkpoint(args);
+
+	if (status_flag)
+		show_status(args);
+
+	if (info_flag)
+		show_info(args);
 
 	if (args.i2c_fd >= 0)
 		close(args.i2c_fd);
