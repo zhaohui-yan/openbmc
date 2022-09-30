@@ -6,8 +6,8 @@ inherit pkgconfig meson
 SRC_URI = " git://github.com/AspeedTech-BMC/aspeed_app.git;protocol=https;branch=${BRANCH} "
 PV = "1.0+git${SRCPV}"
 
-# Tag for v00.01.07
-SRCREV = "22fc1decc8189e6f53070d18ca05857b7eefef79"
+# Tag for v00.01.08
+SRCREV = "7245d73f53097e9b9ffc75d1fda88d18072974d9"
 BRANCH = "master"
 
 S = "${WORKDIR}/git"

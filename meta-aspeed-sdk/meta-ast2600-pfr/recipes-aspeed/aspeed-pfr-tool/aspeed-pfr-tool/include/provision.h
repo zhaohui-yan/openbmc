@@ -19,6 +19,6 @@ typedef enum {
 	Sha512
 } HashAlg;
 
-void provision(ARGUMENTS args);
-void unprovision(ARGUMENTS args);
+int provision(ARGUMENTS args);
+int unprovision(ARGUMENTS args);
 
