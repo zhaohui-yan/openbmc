@@ -4,7 +4,7 @@ DESCRIPTION = "Cerberus PFR signing utility for manifest and recovery image crea
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE.txt;md5=323954e5c90a1cc83ee74a3797f8d988"
 
-SRC_URI = " git://gerrit.aspeed.com:29418/cerberus;protocol=ssh;branch=${BRANCH} \
+SRC_URI = " git://github.com/AspeedTech-BMC/cerberus.git;protocol=ssh;branch=${BRANCH} \
             file://keys \
             file://manifest_tools \
             file://recovery_tools \
