@@ -11,8 +11,8 @@ SRC_URI = " git://gerrit.aspeed.com:29418/cerberus;protocol=ssh;branch=${BRANCH}
           "
 
 PV = "1.0+git${SRCPV}"
-SRCREV = "${AUTOREV}"
-BRANCH = "aspeed-dev"
+SRCREV = "ce159bc451ab06ad9fe4ed760a7ef1f54510c995"
+BRANCH = "aspeed-master"
 
 S = "${WORKDIR}/git"
 
