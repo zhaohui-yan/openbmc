@@ -268,7 +268,7 @@ void wait_for_request(struct test_mctp_ctx *ctx)
 	mctp_set_rx_all(mctp, rx_request_handler, ctx);
 	mctp_set_rx_ctrl(mctp, rx_request_control_handler, ctx);
 
-	while (count <= 10000) {
+	while (1) {
 		r = poll(&pfd, 1, 5000);
 
 		if (r < 0) {
