@@ -435,15 +435,25 @@ int test_mctp_astpcie_send_data(struct test_mctp_ctx *ctx, uint8_t dst, uint8_t 
 	bool tag_owner = flag_tag & MCTP_HDR_FLAG_TO ? true : false;
 	uint8_t tag = MCTP_HDR_GET_TAG(flag_tag);
 	struct mctp *mctp = ctx->mctp;
+	int retry = 5;
+	int ret = -1;
+	int i;
 
 	mctp_binding_set_tx_enabled(astpcie_binding, true);
-	if (mctp_message_tx(mctp, dst, req, size,
-			    tag_owner, tag, astpcie_extra_params) < 0) {
-		mctp_prerr("%s: MCTP TX error", __func__);
-		return -1;
+
+	for (i = 0; i <= retry; i++) {
+		ret = mctp_message_tx(mctp, dst, req, size,
+			    tag_owner, tag, astpcie_extra_params);
+		if (ret == 0)
+			break;
+		mctp_prerr("%s: MCTP retry %d", __func__, i);
+		usleep(10*1000);
 	}
 
-	return 0;
+	if (i > retry)
+		mctp_prerr("%s: MCTP TX error", __func__);
+
+	return ret;
 }
 
 void test_mctp_astpcie_free(struct test_mctp_ctx *ctx)
@@ -694,9 +704,10 @@ int main(int argc, char *argv[])
 			if (ret < 0) {
 				mctp_prerr("Error sending MCTP cmd, ret = %d\n count = %d\n", ret, i);
 				test_status = -1;
-			} else   {
-				print_raw_resp(rbuf, rlen);
+				break;
 			}
+
+			print_raw_resp(rbuf, rlen);
 		}
 
 		return test_status;
