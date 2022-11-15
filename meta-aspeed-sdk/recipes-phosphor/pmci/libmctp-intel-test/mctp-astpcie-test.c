@@ -59,7 +59,7 @@ void usage(FILE *fp, int argc, char **argv)
 		" example: tx :\n"
 		"   MCTP Control Message\n"
 		"       GET MESSAGE TYPE SUPPORT : mctp-astpcie-test -t 10 2 0 0 9 8 0x00 0x80 0x05\n"
-		"   MCTP ASPEED Control Message\n"
+		"   MCTP ASPEED Echo Message\n"
 		"       ECHO : mctp-astpcie-test -t 10 2 0 0 9 8 0x7c 0x80 0x00 0x01 0x02 0x03 0x04 0x05\n"
 		"       ECHO LARGE: mctp-astpcie-test -t -l 32 10 2 0 0 9 8 0x7c 0x80 0x01\n"
 		"",

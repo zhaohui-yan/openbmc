@@ -114,13 +114,13 @@ Command fields
  <src_eid>         source EID
  <type>            MCTP message type
    0x00                - MCTP Control Message
-   0x7c                - ASPEED Control Message
+   0x7c                - ASPEED Echo Message
  example: get BDF: mctp-astpcie-test -g
  example: rx : mctp-astpcie-test -r 2 2 0 0 8 9
  example: tx :
    MCTP Control Message
        GET MESSAGE TYPE SUPPORT : mctp-astpcie-test -t 10 2 0 0 9 8 0x00 0x80 0x05
-   MCTP ASPEED Control Message
+   MCTP ASPEED Echo Message
        ECHO : mctp-astpcie-test -t 10 2 0 0 9 8 0x7c 0x80 0x00 0x01 0x02 0x03 0x04 0x05
        ECHO LARGE: mctp-astpcie-test -t -l 32 10 2 0 0 9 8 0x7c 0x80 0x01
 ```
@@ -237,12 +237,12 @@ Command fields
  <src_eid>         source EID
  <type>            MCTP message type
    0x00                - MCTP Control Message
-   0x7c                - ASPEED Control Message
+   0x7c                - ASPEED Echo Message
  example: rx : mctp-smbus-test -r 8 0x24 0x28 8 9
  example: tx :
    MCTP Control Message
        GET MESSAGE TYPE SUPPORT : mctp-smbus-test -t 8 0x28 0x24 9 8 0x00 0x80 0x05
-   MCTP ASPEED Control Message
+   MCTP ASPEED Echo Message
        ECHO : mctp-smbus-test -t 8 0x28 0x24 9 8 0x7c 0x80 0x00 0x01 0x02 0x03 0x04 0x05
        ECHO LARGE: mctp-smbus-test -t -l 32 8 0x28 0x24 9 8 0x7c 0x80 0x01
 ```
