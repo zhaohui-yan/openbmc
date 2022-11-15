@@ -46,7 +46,7 @@ User should get the unsupported command completion code, 0x05
 0x05
 ```
 
-## ASPEED control messages (0x85)
+## ASPEED echo messages type (0x7c)
 To test loopback mode for the request data, creates a new MCTP message type.
 ### Supported command
 - ECHO (0x00)
@@ -114,15 +114,15 @@ Command fields
  <src_eid>         source EID
  <type>            MCTP message type
    0x00                - MCTP Control Message
-   0x85                - ASPEED Control Message
+   0x7c                - ASPEED Control Message
  example: get BDF: mctp-astpcie-test -g
  example: rx : mctp-astpcie-test -r 2 2 0 0 8 9
  example: tx :
    MCTP Control Message
        GET MESSAGE TYPE SUPPORT : mctp-astpcie-test -t 10 2 0 0 9 8 0x00 0x80 0x05
    MCTP ASPEED Control Message
-       ECHO : mctp-astpcie-test -t 10 2 0 0 9 8 0x85 0x80 0x00 0x01 0x02 0x03 0x04 0x05
-       ECHO LARGE: mctp-astpcie-test -t -l 32 10 2 0 0 9 8 0x85 0x80 0x01
+       ECHO : mctp-astpcie-test -t 10 2 0 0 9 8 0x7c 0x80 0x00 0x01 0x02 0x03 0x04 0x05
+       ECHO LARGE: mctp-astpcie-test -t -l 32 10 2 0 0 9 8 0x7c 0x80 0x01
 ```
 
 ### Get PCIE BDF
@@ -175,31 +175,31 @@ The response data is:
 00 00 02 05
 ```
 
-Step 3: Send ASPEED control message (0x85) with ECHO command (0x00)
-- mctp-astpcie-test -t 10 2 0 0 9 8 0x85 0x80 0x00 0x01 0x02 0x03 0x04 0x05
+Step 3: Send ASPEED echo message type (0x7c) with ECHO command (0x00)
+- mctp-astpcie-test -t 10 2 0 0 9 8 0x7c 0x80 0x00 0x01 0x02 0x03 0x04 0x05
 
 The response data is:
 
 ```
-85 00 00 00 01 02 03 04 05
+7c 00 00 00 01 02 03 04 05
 ```
 
-Step 4: Send ASPEED control message (0x85) with ECHO_LARGE command (0x01)
-- mctp-astpcie-test -t -l 32 10 2 0 0 9 8 0x85 0x80 0x01
+Step 4: Send ASPEED echo message type (0x7c) with ECHO_LARGE command (0x01)
+- mctp-astpcie-test -t -l 32 10 2 0 0 9 8 0x7c 0x80 0x01
 
 The response data is:
 
 ```
-85 00 01 00 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
+7c 00 01 00 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
 ```
 
-Step 5: Send ASPEED control message (0x85) with unsupported command (0x03)
-- mctp-astpcie-test -t 10 2 0 0 9 8 0x85 0x80 0x03 (Note, it should use 8-bits slave address)
+Step 5: Send ASPEED echo message type (0x7c) with unsupported command (0x03)
+- mctp-astpcie-test -t 10 2 0 0 9 8 0x7c 0x80 0x03 (Note, it should use 8-bits slave address)
 
 The response data is:
 
 ```
-85 00 03 05
+7c 00 03 05
 ```
 
 # MCTP over SMBUS
@@ -237,14 +237,14 @@ Command fields
  <src_eid>         source EID
  <type>            MCTP message type
    0x00                - MCTP Control Message
-   0x85                - ASPEED Control Message
+   0x7c                - ASPEED Control Message
  example: rx : mctp-smbus-test -r 8 0x24 0x28 8 9
  example: tx :
    MCTP Control Message
        GET MESSAGE TYPE SUPPORT : mctp-smbus-test -t 8 0x28 0x24 9 8 0x00 0x80 0x05
    MCTP ASPEED Control Message
-       ECHO : mctp-smbus-test -t 8 0x28 0x24 9 8 0x85 0x80 0x00 0x01 0x02 0x03 0x04 0x05
-       ECHO LARGE: mctp-smbus-test -t -l 32 8 0x28 0x24 9 8 0x85 0x80 0x01
+       ECHO : mctp-smbus-test -t 8 0x28 0x24 9 8 0x7c 0x80 0x00 0x01 0x02 0x03 0x04 0x05
+       ECHO LARGE: mctp-smbus-test -t -l 32 8 0x28 0x24 9 8 0x7c 0x80 0x01
 ```
 
 ### Responder (EVB A)
@@ -308,29 +308,29 @@ The response data is:
 00 00 02 05
 ```
 
-Step 4: Send ASPEED control message (0x85) with ECHO command (0x00)
-- mctp-smbus-test -t 8 0x28 0x24 9 8 0x85 0x80 0x00 0x01 0x02 0x03 0x04 0x05 (Note, it should use 8-bits slave address)
+Step 4: Send ASPEED echo message type (0x7c) with ECHO command (0x00)
+- mctp-smbus-test -t 8 0x28 0x24 9 8 0x7c 0x80 0x00 0x01 0x02 0x03 0x04 0x05 (Note, it should use 8-bits slave address)
 
 The response data is:
 
 ```
-85 00 00 00 01 02 03 04 05
+7c 00 00 00 01 02 03 04 05
 ```
 
-Step 5: Send ASPEED control message (0x85) with ECHO_LARGE command (0x01)
-- mctp-smbus-test -t -l 32 8 0x28 0x24 9 8 0x85 0x80 0x01 (Note, it should use 8-bits slave address)
+Step 5: Send ASPEED echo message type (0x7c) with ECHO_LARGE command (0x01)
+- mctp-smbus-test -t -l 32 8 0x28 0x24 9 8 0x7c 0x80 0x01 (Note, it should use 8-bits slave address)
 
 The response data is:
 
 ```
-85 00 01 00 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
+7c 00 01 00 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
 ```
 
-Step 6: Send ASPEED control message (0x85) with unsupported command (0x03)
-- mctp-smbus-test -t 8 0x28 0x24 9 8 0x85 0x80 0x03 (Note, it should use 8-bits slave address)
+Step 6: Send ASPEED echo message type (0x7c) with unsupported command (0x03)
+- mctp-smbus-test -t 8 0x28 0x24 9 8 0x7c 0x80 0x03 (Note, it should use 8-bits slave address)
 
 The response data is:
 
 ```
-85 00 03 05
+7c 00 03 05
 ```

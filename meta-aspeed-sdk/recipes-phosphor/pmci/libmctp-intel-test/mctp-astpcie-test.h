@@ -15,7 +15,7 @@ extern "C" {
 #include <libmctp-cmds.h>
 #include <libmctp-msgtypes.h>
 
-#define MCTP_MESSAGE_TYPE_ASPEED_CTRL 0x85
+#define MCTP_MESSAGE_TYPE_ASPEED_ECHO_TEST 0x7c
 #define MCTP_ASPEED_CTRL_CMD_ECHO 0x00
 #define MCTP_ASPEED_CTRL_CMD_ECHO_LARGE 0x01
 #define PCIE_TEST_BUFF_SIZE 2048

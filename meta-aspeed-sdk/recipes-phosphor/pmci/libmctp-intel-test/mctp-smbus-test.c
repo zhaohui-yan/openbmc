@@ -51,14 +51,14 @@ void usage(FILE *fp, int argc, char **argv)
 		" <src_eid>         source EID\n"
 		" <type>            MCTP message type\n"
 		"   0x00                - MCTP Control Message\n"
-		"   0x85                - ASPEED Control Message\n"
+		"   0x7c                - ASPEED Echo Message\n"
 		" example: rx : mctp-smbus-test -r 8 0x24 0x28 8 9\n"
 		" example: tx :\n"
 		"   MCTP Control Message\n"
 		"       GET MESSAGE TYPE SUPPORT : mctp-smbus-test -t 8 0x28 0x24 9 8 0x00 0x80 0x05\n"
 		"   MCTP ASPEED Control Message\n"
-		"       ECHO : mctp-smbus-test -t 8 0x28 0x24 9 8 0x85 0x80 0x00 0x01 0x02 0x03 0x04 0x05\n"
-		"       ECHO LARGE: mctp-smbus-test -t -l 32 8 0x28 0x24 9 8 0x85 0x80 0x01\n"
+		"       ECHO : mctp-smbus-test -t 8 0x28 0x24 9 8 0x7c 0x80 0x00 0x01 0x02 0x03 0x04 0x05\n"
+		"       ECHO LARGE: mctp-smbus-test -t -l 32 8 0x28 0x24 9 8 0x7c 0x80 0x01\n"
 		"",
 		argv[0]);
 }
@@ -155,7 +155,7 @@ void rx_request_handler(mctp_eid_t src, void *data, void *msg, size_t len,
 	mctp_prinfo("Received Command: %d", cmd);
 	mctp_prinfo("Received Message length: %d", len);
 
-	if (mctp_type != MCTP_MESSAGE_TYPE_ASPEED_CTRL) {
+	if (mctp_type != MCTP_MESSAGE_TYPE_ASPEED_ECHO_TEST) {
 		mctp_prwarn("%s: Not support message type 0x%X\n", __func__, mctp_type);
 		return;
 	}
@@ -601,9 +601,8 @@ int main(int argc, char *argv[])
 		rq_dgram_inst = (uint8_t)strtoul(argv[optind++], NULL, 0);
 		cmd = (uint8_t)strtoul(argv[optind++], NULL, 0);
 		tbuf[tlen++] = mctp_type;
-		tbuf[tlen++] = rq_dgram_inst | MCTP_CTRL_HDR_FLAG_REQUEST;
+		tbuf[tlen++] = rq_dgram_inst;
 		tbuf[tlen++] = cmd;
-
 
 		if (data_len > 0) {
 			test_pattern_prepare(&tbuf[msg_hdr_len], data_len);
@@ -623,11 +622,6 @@ int main(int argc, char *argv[])
 				printf("0x%x ", tbuf[i]);
 
 			printf("\n");
-		}
-
-		if (mctp_type != MCTP_MESSAGE_TYPE_MCTP_CTRL && mctp_type != MCTP_MESSAGE_TYPE_ASPEED_CTRL) {
-			mctp_prerr("Error not support message type 0x%X\n", mctp_type);
-			return -1;
 		}
 
 		for (i = 0; i < loop_count; i++) {
