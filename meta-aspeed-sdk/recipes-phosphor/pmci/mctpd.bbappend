@@ -4,6 +4,8 @@ SRC_URI:append = " \
     file://mctp_pcie_busowner.json \
     file://mctp_pcie_endpoint.json \
     file://0001-disable-all-warnings-being-treated-as-errors.patch \
+    file://0002-smbus-add-to-check-root-device-map.patch \
+    file://0003-add-tx-retry-mechanism-in-transmitqueuedmessages.patch \
 "
 
 do_install:append() {
