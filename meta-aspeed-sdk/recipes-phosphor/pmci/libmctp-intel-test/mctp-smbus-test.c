@@ -300,15 +300,17 @@ int test_mctp_smbus_recv_data_timeout_raw(struct test_mctp_ctx *ctx, uint8_t dst
 	struct test_mctp_ctx *p = (struct test_mctp_ctx *)ctx;
 	struct mctp *mctp = ctx->mctp;
 	struct pollfd pfd;
-	int retry = 500; //Default 5 secs (10ms * 500)
+	int retry = 0;
 	int r;
 
 	pfd.fd = smbus->in_fd;
 	pfd.events = POLLPRI;
 	mctp_set_rx_all(mctp, rx_response_handler, ctx);
 
-	while (retry--) {
+	// Default 5 secs (10ms * 500)
+	while (retry < 500) {
 		mctp_prdebug("%s: MCTP retry %d", __func__, retry);
+		retry++;
 		r = poll(&pfd, 1, 10);
 
 		if (r < 0) {
@@ -331,7 +333,6 @@ int test_mctp_smbus_recv_data_timeout_raw(struct test_mctp_ctx *ctx, uint8_t dst
 
 	mctp_prerr("%s: MCTP timeout", __func__);
 	return -1;
-
 }
 
 struct test_mctp_ctx *test_mctp_smbus_init(uint8_t bus, uint8_t src_addr, uint8_t dst_addr, uint8_t src_eid)
@@ -342,6 +343,8 @@ struct test_mctp_ctx *test_mctp_smbus_init(uint8_t bus, uint8_t src_addr, uint8_
 	char slave_queue[64] = { 0 };
 	char dev[64] = { 0 };
 	struct mctp *mctp;
+	int ret;
+	int len;
 	int fd;
 
 	mctp_ctx = (struct test_mctp_ctx *)malloc(sizeof(struct test_mctp_ctx));
@@ -391,6 +394,20 @@ struct test_mctp_ctx *test_mctp_smbus_init(uint8_t bus, uint8_t src_addr, uint8_
 	mctp_ctx->mctp = mctp;
 	mctp_ctx->prot = (void *)smbus;
 	mctp_ctx->len = 0;
+
+	// flush slave queue first
+	do {
+		ret = lseek(smbus->in_fd, 0, SEEK_SET);
+		if (ret < 0) {
+			mctp_prerr("%s, failed to seek", __func__);
+			goto bail;
+		}
+
+		len = read(smbus->in_fd, smbus->rxbuf, sizeof(smbus->rxbuf));
+		if (len > 0)
+			mctp_trace_common(">Flush slave queue<", smbus->rxbuf, len);
+	} while (len > 0);
+
 	return mctp_ctx;
 
 bail:

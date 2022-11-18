@@ -300,15 +300,17 @@ int test_mctp_astpcie_recv_data_timeout_raw(struct test_mctp_ctx *ctx, uint8_t d
 	struct test_mctp_ctx *p = (struct test_mctp_ctx *)ctx;
 	struct mctp *mctp = ctx->mctp;
 	struct pollfd pfd = { 0 };
-	int retry = 500; //Default 5 secs (10ms * 500)
+	int retry = 0;
 	int r;
 
 	pfd.fd = astpcie->fd;
 	pfd.events = POLLIN;
 	mctp_set_rx_all(mctp, rx_response_handler, ctx);
 
-	while (retry--) {
+	// Default 5 secs (10ms * 500)
+	while (retry < 500) {
 		mctp_prdebug("%s: MCTP retry %d", __func__, retry);
+		retry++;
 		r = poll(&pfd, 1, 10);
 
 		if (r < 0)
