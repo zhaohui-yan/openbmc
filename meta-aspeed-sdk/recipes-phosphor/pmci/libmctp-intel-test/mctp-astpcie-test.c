@@ -259,7 +259,7 @@ void rx_request_control_handler(mctp_eid_t src, void *data, void *msg, size_t le
  */
 void wait_for_request(struct test_mctp_ctx *ctx)
 {
-	struct mctp_binding_astpcie *astpcie = (struct mctp_binding_astpcie *)ctx->prot;
+	struct mctp_binding_astpcie *astpcie = (struct mctp_binding_astpcie *)ctx->port;
 	struct mctp *mctp = ctx->mctp;
 	struct pollfd pfd = { 0 };
 	int count = 0;
@@ -296,7 +296,7 @@ void wait_for_request(struct test_mctp_ctx *ctx)
 // return byte count, do not interpret data (e.g. MCTP msg type)
 int test_mctp_astpcie_recv_data_timeout_raw(struct test_mctp_ctx *ctx, uint8_t dst, int TOsec)
 {
-	struct mctp_binding_astpcie *astpcie = (struct mctp_binding_astpcie *)ctx->prot;
+	struct mctp_binding_astpcie *astpcie = (struct mctp_binding_astpcie *)ctx->port;
 	struct test_mctp_ctx *p = (struct test_mctp_ctx *)ctx;
 	struct mctp *mctp = ctx->mctp;
 	struct pollfd pfd = { 0 };
@@ -394,6 +394,9 @@ struct test_mctp_ctx *test_mctp_astpcie_init(char *mctp_dev, uint8_t bus, uint8_
 	astpcie = mctp_astpcie_init();
 	mctp_astpcie_mctp_dev_name(astpcie, mctp_dev);
 	astpcie_binding = mctp_astpcie_core(astpcie);
+	mctp_ctx->mctp = mctp;
+	mctp_ctx->port = (void *)astpcie;
+	mctp_ctx->astpcie_binding = astpcie_binding;
 	if (mctp == NULL || astpcie == NULL || astpcie_binding == NULL || mctp_register_bus_dynamic_eid(mctp, astpcie_binding) < 0) {
 		mctp_prerr("%s: MCTP init failed", __func__);
 		goto bail;
@@ -420,9 +423,6 @@ struct test_mctp_ctx *test_mctp_astpcie_init(char *mctp_dev, uint8_t bus, uint8_
 	astpcie_extra_params->routing = routing;
 	astpcie_extra_params->remote_id = bus << 8 | (dst_dev & 0x1f) << 3 | (dst_func & 0x07);
 	mctp_prdebug("%s: astpcieextra_params remote_id=0x%02X", __func__, astpcie_extra_params->remote_id);
-	mctp_ctx->mctp = mctp;
-	mctp_ctx->prot = (void *)astpcie;
-	mctp_ctx->astpcie_binding = astpcie_binding;
 	return mctp_ctx;
 
 bail:
@@ -460,10 +460,16 @@ int test_mctp_astpcie_send_data(struct test_mctp_ctx *ctx, uint8_t dst, uint8_t 
 
 void test_mctp_astpcie_free(struct test_mctp_ctx *ctx)
 {
-	mctp_astpcie_free(ctx->prot);
-	mctp_destroy(ctx->mctp);
-	free(ctx);
-	free(astpcie_extra_params);
+	if (ctx != NULL) {
+		if (ctx->port != NULL)
+			mctp_astpcie_free(ctx->port);
+		if (ctx->mctp != NULL)
+			mctp_destroy(ctx->mctp);
+		free(ctx);
+	}
+
+	if (astpcie_extra_params != NULL)
+		free(astpcie_extra_params);
 }
 
 int test_send_mctp_cmd(char *mctp_dev, uint8_t bus, uint8_t routing, uint8_t dst_dev, uint8_t dst_func, uint8_t dst_eid, uint8_t src_eid,

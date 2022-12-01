@@ -256,7 +256,7 @@ void rx_request_control_handler(mctp_eid_t src, void *data, void *msg, size_t le
  */
 void wait_for_request(struct test_mctp_ctx *ctx)
 {
-	struct mctp_binding_smbus *smbus = (struct mctp_binding_smbus *)ctx->prot;
+	struct mctp_binding_smbus *smbus = (struct mctp_binding_smbus *)ctx->port;
 	struct mctp *mctp = ctx->mctp;
 	struct pollfd pfd = { 0 };
 	int count = 0;
@@ -296,7 +296,7 @@ void wait_for_request(struct test_mctp_ctx *ctx)
 // return byte count, do not interpret data (e.g. MCTP msg type)
 int test_mctp_smbus_recv_data_timeout_raw(struct test_mctp_ctx *ctx, uint8_t dst, int TOsec)
 {
-	struct mctp_binding_smbus *smbus = (struct mctp_binding_smbus *)ctx->prot;
+	struct mctp_binding_smbus *smbus = (struct mctp_binding_smbus *)ctx->port;
 	struct test_mctp_ctx *p = (struct test_mctp_ctx *)ctx;
 	struct mctp *mctp = ctx->mctp;
 	struct pollfd pfd;
@@ -356,6 +356,9 @@ struct test_mctp_ctx *test_mctp_smbus_init(uint8_t bus, uint8_t src_addr, uint8_
 
 	mctp = mctp_init();
 	smbus = mctp_smbus_init();
+	mctp_ctx->mctp = mctp;
+	mctp_ctx->port = (void *)smbus;
+	mctp_ctx->len = 0;
 	if (mctp == NULL || smbus == NULL || mctp_smbus_register_bus(smbus, mctp, src_eid) < 0) {
 		mctp_prerr("%s: MCTP init failed", __func__);
 		goto bail;
@@ -391,9 +394,6 @@ struct test_mctp_ctx *test_mctp_smbus_init(uint8_t bus, uint8_t src_addr, uint8_
 	}
 
 	mctp_smbus_set_in_fd(smbus, fd);
-	mctp_ctx->mctp = mctp;
-	mctp_ctx->prot = (void *)smbus;
-	mctp_ctx->len = 0;
 
 	// flush slave queue first
 	do {
@@ -442,10 +442,15 @@ int test_mctp_smbus_send_data(struct test_mctp_ctx *ctx, uint8_t dst, uint8_t fl
 
 void test_mctp_smbus_free(struct test_mctp_ctx *ctx)
 {
-	mctp_smbus_free(ctx->prot);
-	mctp_destroy(ctx->mctp);
-	free(ctx);
-	free(smbus_extra_params);
+	if (ctx != NULL) {
+		if (ctx->port != NULL)
+			mctp_smbus_free(ctx->port);
+		if (ctx->mctp != NULL)
+			mctp_destroy(ctx->mctp);
+		free(ctx);
+	}
+	if (smbus_extra_params != NULL)
+		free(smbus_extra_params);
 }
 
 int test_send_mctp_cmd(uint8_t bus, uint8_t src_addr, uint8_t dst_addr, uint8_t src_eid, uint8_t dst_eid,

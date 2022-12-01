@@ -48,7 +48,7 @@ struct test_mctp_ctx {
 	struct mctp *mctp;
 	uint16_t len;
 	void *rx_buf;
-	void *prot;
+	void *port;
 };
 
 struct mctp_binding_astpcie {
