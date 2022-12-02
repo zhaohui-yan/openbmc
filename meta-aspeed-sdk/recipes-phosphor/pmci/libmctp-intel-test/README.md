@@ -97,14 +97,16 @@ Usage: mctp-astpcie-test [options] <bus_num> <routing_type> <dst_dev> <des_func>
 
 Sends MCTP data over PCIE
 Options:
- -h | --help       print this message
- -t | --req        requester
- -r | --resp       responder
- -d | --deb        debug
- -l | --len        data length
- -c | --count      test times
- -g | --gbdf       get BDF information
- -n | --noresp     no response
+ -h | --help           print this message
+ -t | --req            requester
+ -r | --resp           responder
+ -d | --deb            debug
+ -l | --len            data length
+ -c | --count          test times
+ -g | --gbdf           get BDF information
+ -n | --noresp         no response
+ -o | --node           mctp device node(defalut: /dev/aspeed-mctp)
+ -v | --verify_echo    verify echo command
 Command fields
  <bus_num>         destination PCIE bus number
  <routing_type>    PCIE routing type 0: route to RC, 2: route by ID, 3: Broadcast from RC
@@ -222,13 +224,14 @@ Usage: mctp-smbus-test [options] <bus_num> <dst_addr> <src_addr> <dst_eid> <src_
 
 Sends MCTP data over SMbus
 Options:
- -h | --help       print this message
- -t | --req        requester
- -r | --resp       responder
- -d | --deb        debug
- -l | --len        data length
- -c | --count      test times
- -n | --noresp     no response
+ -h | --help           print this message
+ -t | --req            requester
+ -r | --resp           responder
+ -d | --deb            debug
+ -l | --len            data length
+ -c | --count          test times
+ -n | --noresp         no response
+ -v | --verify_echo    verify echo command
 Command fields
  <bus_num>         I2C bus number
  <dst_addr>        destination slave address

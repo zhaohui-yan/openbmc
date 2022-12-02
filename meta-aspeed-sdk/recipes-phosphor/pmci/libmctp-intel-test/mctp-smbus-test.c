@@ -12,21 +12,23 @@
 #include <getopt.h>
 #include <unistd.h>
 #include "mctp-smbus-test.h"
+#include "mctp-test-utils.h"
 
 #define SYSFS_SLAVE_QUEUE "/sys/bus/i2c/devices/%d-00%02x/slave-mqueue"
 
 struct mctp_smbus_pkt_private *smbus_extra_params = NULL;
 uint8_t enable_response = 1;
-static const char short_options[] = "htrdnl:c:";
+static const char short_options[] = "htrdnl:c:v";
 static const struct option
 	long_options[] = {
-	{ "help",   no_argument,        NULL,   'h' },
-	{ "req",    no_argument,        NULL,   't' },
-	{ "resp",   no_argument,        NULL,   'r' },
-	{ "deb",    no_argument,        NULL,   'd' },
-	{ "noresp", no_argument,        NULL,   'n' },
-	{ "len",    required_argument,  NULL,   'l' },
-	{ "count",  required_argument,  NULL,   'c' },
+	{ "help",         no_argument,        NULL,   'h' },
+	{ "req",          no_argument,        NULL,   't' },
+	{ "resp",         no_argument,        NULL,   'r' },
+	{ "deb",          no_argument,        NULL,   'd' },
+	{ "noresp",       no_argument,        NULL,   'n' },
+	{ "len",          required_argument,  NULL,   'l' },
+	{ "count",        required_argument,  NULL,   'c' },
+	{ "verify_echo",  no_argument,        NULL,   'v' },
 	{ 0, 0, 0, 0 }
 };
 
@@ -36,13 +38,14 @@ void usage(FILE *fp, int argc, char **argv)
 		"Usage: %s [options] <bus_num> <dst_addr> <src_addr> <dst_eid> <src_eid> <message_type> <cmd payload>\n\n"
 		"Sends MCTP data over SMbus\n"
 		"Options:\n"
-		" -h | --help       print this message\n"
-		" -t | --req        requester\n"
-		" -r | --resp       responder\n"
-		" -d | --deb        debug\n"
-		" -l | --len        data length\n"
-		" -c | --count      test times\n"
-		" -n | --noresp     no response\n"
+		" -h | --help           print this message\n"
+		" -t | --req            requester\n"
+		" -r | --resp           responder\n"
+		" -d | --deb            debug\n"
+		" -l | --len            data length\n"
+		" -c | --count          test times\n"
+		" -n | --noresp         no response\n"
+		" -v | --verify_echo    verify echo command\n"
 		"Command fields\n"
 		" <bus_num>         I2C bus number\n"
 		" <dst_addr>        destination slave address\n"
@@ -61,39 +64,6 @@ void usage(FILE *fp, int argc, char **argv)
 		"       ECHO LARGE: mctp-smbus-test -t -l 32 8 0x28 0x24 9 8 0x7c 0x80 0x01\n"
 		"",
 		argv[0]);
-}
-
-void print_raw_resp(uint8_t *rbuf, int rlen)
-{
-	int i = 0;
-
-	for (i = 0; i < rlen; ++i)
-		printf("%02x ", rbuf[i]);
-
-	printf("\n");
-}
-
-int compare_pattern(uint8_t *pattern0, uint8_t *pattern1, int size)
-{
-	int i;
-
-	for (i = 0; i < size; i++) {
-		if (pattern0[i] != pattern1[i])
-			return 0;
-	}
-
-	return 1;
-}
-
-void test_pattern_prepare(uint8_t *pattern, int size)
-{
-	int i;
-	int j;
-
-	for (i = 0; i < size; i++) {
-		j = i % 0x100;
-		pattern[i] = j;
-	}
 }
 
 /*
@@ -513,10 +483,11 @@ int main(int argc, char *argv[])
 {
 	uint8_t msg_hdr_len = sizeof(struct mctp_ctrl_msg_hdr);
 	uint8_t cmd = MCTP_CTRL_CMD_GET_MESSAGE_TYPE_SUPPORT;
-	uint8_t tbuf[SMBUS_TEST_TX_BUFF_SIZE] = { 0 };
-	uint8_t rbuf[SMBUS_TEST_RX_BUFF_SIZE] = { 0 };
+	uint8_t tbuf[TEST_TX_BUFF_SIZE] = { 0 };
+	uint8_t rbuf[TEST_RX_BUFF_SIZE] = { 0 };
 	uint8_t src_eid = REQUESTER_EID;
 	uint8_t dst_eid = RESPONDER_EID;
+	uint8_t verify_echo_flag = 0;
 	uint8_t rq_dgram_inst = 0x80;
 	uint8_t responder_flag = 0;
 	uint8_t requester_flag = 0;
@@ -572,6 +543,10 @@ int main(int argc, char *argv[])
 			enable_response = 0;
 			minargc += 1;
 			break;
+		case 'v':
+			verify_echo_flag = 1;
+			minargc += 1;
+			break;
 		default:
 			usage(stdout, argc, argv);
 			exit(EXIT_FAILURE);
@@ -604,8 +579,8 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	if (data_len > (SMBUS_TEST_TX_BUFF_SIZE - msg_hdr_len)) {
-		mctp_prerr("length exceeds max payload length %d\n", (SMBUS_TEST_TX_BUFF_SIZE - msg_hdr_len));
+	if (data_len > (TEST_TX_BUFF_SIZE - msg_hdr_len)) {
+		mctp_prerr("length exceeds max payload length %d\n", (TEST_TX_BUFF_SIZE - msg_hdr_len));
 		usage(stdout, argc, argv);
 		exit(EXIT_FAILURE);
 	}
@@ -647,6 +622,7 @@ int main(int argc, char *argv[])
 		}
 
 		for (i = 0; i < loop_count; i++) {
+			printf("test time(%d)...\n", i);
 			ret = test_send_mctp_cmd(bus, src_addr, dst_addr, src_eid, dst_eid,
 						 tbuf, tlen, rbuf, &rlen);
 			if (ret < 0) {
@@ -655,7 +631,14 @@ int main(int argc, char *argv[])
 				break;
 			}
 
-			print_raw_resp(rbuf, rlen);
+			if (verify_echo_flag) {
+				ret = verify_mctp_echo_cmd(tbuf, tlen, rbuf, rlen);
+				if (ret < 0) {
+					test_status = -1;
+					break;
+				}
+			} else
+				print_raw_data(rbuf, rlen);
 		}
 
 		return test_status;
