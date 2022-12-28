@@ -12,21 +12,23 @@
 #include <getopt.h>
 #include <unistd.h>
 #include "mctp-smbus-test.h"
+#include "mctp-test-utils.h"
 
 #define SYSFS_SLAVE_QUEUE "/sys/bus/i2c/devices/%d-00%02x/slave-mqueue"
 
 struct mctp_smbus_pkt_private *smbus_extra_params = NULL;
 uint8_t enable_response = 1;
-static const char short_options[] = "htrdnl:c:";
+static const char short_options[] = "htrdnl:c:v";
 static const struct option
 	long_options[] = {
-	{ "help",   no_argument,        NULL,   'h' },
-	{ "req",    no_argument,        NULL,   't' },
-	{ "resp",   no_argument,        NULL,   'r' },
-	{ "deb",    no_argument,        NULL,   'd' },
-	{ "noresp", no_argument,        NULL,   'n' },
-	{ "len",    required_argument,  NULL,   'l' },
-	{ "count",  required_argument,  NULL,   'c' },
+	{ "help",         no_argument,        NULL,   'h' },
+	{ "req",          no_argument,        NULL,   't' },
+	{ "resp",         no_argument,        NULL,   'r' },
+	{ "deb",          no_argument,        NULL,   'd' },
+	{ "noresp",       no_argument,        NULL,   'n' },
+	{ "len",          required_argument,  NULL,   'l' },
+	{ "count",        required_argument,  NULL,   'c' },
+	{ "verify_echo",  no_argument,        NULL,   'v' },
 	{ 0, 0, 0, 0 }
 };
 
@@ -36,13 +38,14 @@ void usage(FILE *fp, int argc, char **argv)
 		"Usage: %s [options] <bus_num> <dst_addr> <src_addr> <dst_eid> <src_eid> <message_type> <cmd payload>\n\n"
 		"Sends MCTP data over SMbus\n"
 		"Options:\n"
-		" -h | --help       print this message\n"
-		" -t | --req        requester\n"
-		" -r | --resp       responder\n"
-		" -d | --deb        debug\n"
-		" -l | --len        data length\n"
-		" -c | --count      test times\n"
-		" -n | --noresp     no response\n"
+		" -h | --help           print this message\n"
+		" -t | --req            requester\n"
+		" -r | --resp           responder\n"
+		" -d | --deb            debug\n"
+		" -l | --len            data length\n"
+		" -c | --count          test times\n"
+		" -n | --noresp         no response\n"
+		" -v | --verify_echo    verify echo command\n"
 		"Command fields\n"
 		" <bus_num>         I2C bus number\n"
 		" <dst_addr>        destination slave address\n"
@@ -51,49 +54,16 @@ void usage(FILE *fp, int argc, char **argv)
 		" <src_eid>         source EID\n"
 		" <type>            MCTP message type\n"
 		"   0x00                - MCTP Control Message\n"
-		"   0x85                - ASPEED Control Message\n"
+		"   0x7c                - ASPEED Echo Message\n"
 		" example: rx : mctp-smbus-test -r 8 0x24 0x28 8 9\n"
 		" example: tx :\n"
 		"   MCTP Control Message\n"
 		"       GET MESSAGE TYPE SUPPORT : mctp-smbus-test -t 8 0x28 0x24 9 8 0x00 0x80 0x05\n"
-		"   MCTP ASPEED Control Message\n"
-		"       ECHO : mctp-smbus-test -t 8 0x28 0x24 9 8 0x85 0x80 0x00 0x01 0x02 0x03 0x04 0x05\n"
-		"       ECHO LARGE: mctp-smbus-test -t -l 32 8 0x28 0x24 9 8 0x85 0x80 0x01\n"
+		"   MCTP ASPEED Echo Message\n"
+		"       ECHO : mctp-smbus-test -t 8 0x28 0x24 9 8 0x7c 0x80 0x00 0x01 0x02 0x03 0x04 0x05\n"
+		"       ECHO LARGE: mctp-smbus-test -t -l 32 8 0x28 0x24 9 8 0x7c 0x80 0x01\n"
 		"",
 		argv[0]);
-}
-
-void print_raw_resp(uint8_t *rbuf, int rlen)
-{
-	int i = 0;
-
-	for (i = 0; i < rlen; ++i)
-		printf("%02x ", rbuf[i]);
-
-	printf("\n");
-}
-
-int compare_pattern(uint8_t *pattern0, uint8_t *pattern1, int size)
-{
-	int i;
-
-	for (i = 0; i < size; i++) {
-		if (pattern0[i] != pattern1[i])
-			return 0;
-	}
-
-	return 1;
-}
-
-void test_pattern_prepare(uint8_t *pattern, int size)
-{
-	int i;
-	int j;
-
-	for (i = 0; i < size; i++) {
-		j = i % 0x100;
-		pattern[i] = j;
-	}
 }
 
 /*
@@ -155,7 +125,7 @@ void rx_request_handler(mctp_eid_t src, void *data, void *msg, size_t len,
 	mctp_prinfo("Received Command: %d", cmd);
 	mctp_prinfo("Received Message length: %d", len);
 
-	if (mctp_type != MCTP_MESSAGE_TYPE_ASPEED_CTRL) {
+	if (mctp_type != MCTP_MESSAGE_TYPE_ASPEED_ECHO_TEST) {
 		mctp_prwarn("%s: Not support message type 0x%X\n", __func__, mctp_type);
 		return;
 	}
@@ -256,7 +226,7 @@ void rx_request_control_handler(mctp_eid_t src, void *data, void *msg, size_t le
  */
 void wait_for_request(struct test_mctp_ctx *ctx)
 {
-	struct mctp_binding_smbus *smbus = (struct mctp_binding_smbus *)ctx->prot;
+	struct mctp_binding_smbus *smbus = (struct mctp_binding_smbus *)ctx->port;
 	struct mctp *mctp = ctx->mctp;
 	struct pollfd pfd = { 0 };
 	int count = 0;
@@ -268,7 +238,7 @@ void wait_for_request(struct test_mctp_ctx *ctx)
 	mctp_set_rx_all(mctp, rx_request_handler, ctx);
 	mctp_set_rx_ctrl(mctp, rx_request_control_handler, ctx);
 
-	while (count <= 10000) {
+	while (1) {
 		r = poll(&pfd, 1, 5000);
 
 		if (r < 0) {
@@ -296,19 +266,21 @@ void wait_for_request(struct test_mctp_ctx *ctx)
 // return byte count, do not interpret data (e.g. MCTP msg type)
 int test_mctp_smbus_recv_data_timeout_raw(struct test_mctp_ctx *ctx, uint8_t dst, int TOsec)
 {
-	struct mctp_binding_smbus *smbus = (struct mctp_binding_smbus *)ctx->prot;
+	struct mctp_binding_smbus *smbus = (struct mctp_binding_smbus *)ctx->port;
 	struct test_mctp_ctx *p = (struct test_mctp_ctx *)ctx;
 	struct mctp *mctp = ctx->mctp;
 	struct pollfd pfd;
-	int retry = 500; //Default 5 secs (10ms * 500)
+	int retry = 0;
 	int r;
 
 	pfd.fd = smbus->in_fd;
 	pfd.events = POLLPRI;
 	mctp_set_rx_all(mctp, rx_response_handler, ctx);
 
-	while (retry--) {
+	// Default 5 secs (10ms * 500)
+	while (retry < 500) {
 		mctp_prdebug("%s: MCTP retry %d", __func__, retry);
+		retry++;
 		r = poll(&pfd, 1, 10);
 
 		if (r < 0) {
@@ -331,7 +303,6 @@ int test_mctp_smbus_recv_data_timeout_raw(struct test_mctp_ctx *ctx, uint8_t dst
 
 	mctp_prerr("%s: MCTP timeout", __func__);
 	return -1;
-
 }
 
 struct test_mctp_ctx *test_mctp_smbus_init(uint8_t bus, uint8_t src_addr, uint8_t dst_addr, uint8_t src_eid)
@@ -342,6 +313,8 @@ struct test_mctp_ctx *test_mctp_smbus_init(uint8_t bus, uint8_t src_addr, uint8_
 	char slave_queue[64] = { 0 };
 	char dev[64] = { 0 };
 	struct mctp *mctp;
+	int ret;
+	int len;
 	int fd;
 
 	mctp_ctx = (struct test_mctp_ctx *)malloc(sizeof(struct test_mctp_ctx));
@@ -353,6 +326,9 @@ struct test_mctp_ctx *test_mctp_smbus_init(uint8_t bus, uint8_t src_addr, uint8_
 
 	mctp = mctp_init();
 	smbus = mctp_smbus_init();
+	mctp_ctx->mctp = mctp;
+	mctp_ctx->port = (void *)smbus;
+	mctp_ctx->len = 0;
 	if (mctp == NULL || smbus == NULL || mctp_smbus_register_bus(smbus, mctp, src_eid) < 0) {
 		mctp_prerr("%s: MCTP init failed", __func__);
 		goto bail;
@@ -388,9 +364,20 @@ struct test_mctp_ctx *test_mctp_smbus_init(uint8_t bus, uint8_t src_addr, uint8_
 	}
 
 	mctp_smbus_set_in_fd(smbus, fd);
-	mctp_ctx->mctp = mctp;
-	mctp_ctx->prot = (void *)smbus;
-	mctp_ctx->len = 0;
+
+	// flush slave queue first
+	do {
+		ret = lseek(smbus->in_fd, 0, SEEK_SET);
+		if (ret < 0) {
+			mctp_prerr("%s, failed to seek", __func__);
+			goto bail;
+		}
+
+		len = read(smbus->in_fd, smbus->rxbuf, sizeof(smbus->rxbuf));
+		if (len > 0)
+			mctp_trace_common(">Flush slave queue<", smbus->rxbuf, len);
+	} while (len > 0);
+
 	return mctp_ctx;
 
 bail:
@@ -404,22 +391,36 @@ int test_mctp_smbus_send_data(struct test_mctp_ctx *ctx, uint8_t dst, uint8_t fl
 	bool tag_owner = flag_tag & MCTP_HDR_FLAG_TO ? true : false;
 	uint8_t tag = MCTP_HDR_GET_TAG(flag_tag);
 	struct mctp *mctp = ctx->mctp;
+	int retry = 5;
+	int ret = -1;
+	int i;
 
-	if (mctp_message_tx(mctp, dst, req, size,
-			    tag_owner, tag, smbus_extra_params) < 0) {
-		mctp_prerr("%s: MCTP TX error", __func__);
-		return -1;
+	for (i = 0; i <= retry; i++) {
+		ret = mctp_message_tx(mctp, dst, req, size,
+			    tag_owner, tag, smbus_extra_params);
+		if (ret == 0)
+			break;
+		mctp_prerr("%s: MCTP retry %d", __func__, i);
+		usleep(10*1000);
 	}
 
-	return 0;
+	if (i > retry)
+		mctp_prerr("%s: MCTP TX error", __func__);
+
+	return ret;
 }
 
 void test_mctp_smbus_free(struct test_mctp_ctx *ctx)
 {
-	mctp_smbus_free(ctx->prot);
-	mctp_destroy(ctx->mctp);
-	free(ctx);
-	free(smbus_extra_params);
+	if (ctx != NULL) {
+		if (ctx->port != NULL)
+			mctp_smbus_free(ctx->port);
+		if (ctx->mctp != NULL)
+			mctp_destroy(ctx->mctp);
+		free(ctx);
+	}
+	if (smbus_extra_params != NULL)
+		free(smbus_extra_params);
 }
 
 int test_send_mctp_cmd(uint8_t bus, uint8_t src_addr, uint8_t dst_addr, uint8_t src_eid, uint8_t dst_eid,
@@ -482,10 +483,11 @@ int main(int argc, char *argv[])
 {
 	uint8_t msg_hdr_len = sizeof(struct mctp_ctrl_msg_hdr);
 	uint8_t cmd = MCTP_CTRL_CMD_GET_MESSAGE_TYPE_SUPPORT;
-	uint8_t tbuf[SMBUS_TEST_TX_BUFF_SIZE] = { 0 };
-	uint8_t rbuf[SMBUS_TEST_RX_BUFF_SIZE] = { 0 };
+	uint8_t tbuf[TEST_TX_BUFF_SIZE] = { 0 };
+	uint8_t rbuf[TEST_RX_BUFF_SIZE] = { 0 };
 	uint8_t src_eid = REQUESTER_EID;
 	uint8_t dst_eid = RESPONDER_EID;
+	uint8_t verify_echo_flag = 0;
 	uint8_t rq_dgram_inst = 0x80;
 	uint8_t responder_flag = 0;
 	uint8_t requester_flag = 0;
@@ -541,6 +543,10 @@ int main(int argc, char *argv[])
 			enable_response = 0;
 			minargc += 1;
 			break;
+		case 'v':
+			verify_echo_flag = 1;
+			minargc += 1;
+			break;
 		default:
 			usage(stdout, argc, argv);
 			exit(EXIT_FAILURE);
@@ -573,8 +579,8 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	if (data_len > (SMBUS_TEST_TX_BUFF_SIZE - msg_hdr_len)) {
-		mctp_prerr("length exceeds max payload length %d\n", (SMBUS_TEST_TX_BUFF_SIZE - msg_hdr_len));
+	if (data_len > (TEST_TX_BUFF_SIZE - msg_hdr_len)) {
+		mctp_prerr("length exceeds max payload length %d\n", (TEST_TX_BUFF_SIZE - msg_hdr_len));
 		usage(stdout, argc, argv);
 		exit(EXIT_FAILURE);
 	}
@@ -592,9 +598,8 @@ int main(int argc, char *argv[])
 		rq_dgram_inst = (uint8_t)strtoul(argv[optind++], NULL, 0);
 		cmd = (uint8_t)strtoul(argv[optind++], NULL, 0);
 		tbuf[tlen++] = mctp_type;
-		tbuf[tlen++] = rq_dgram_inst | MCTP_CTRL_HDR_FLAG_REQUEST;
+		tbuf[tlen++] = rq_dgram_inst;
 		tbuf[tlen++] = cmd;
-
 
 		if (data_len > 0) {
 			test_pattern_prepare(&tbuf[msg_hdr_len], data_len);
@@ -616,20 +621,24 @@ int main(int argc, char *argv[])
 			printf("\n");
 		}
 
-		if (mctp_type != MCTP_MESSAGE_TYPE_MCTP_CTRL && mctp_type != MCTP_MESSAGE_TYPE_ASPEED_CTRL) {
-			mctp_prerr("Error not support message type 0x%X\n", mctp_type);
-			return -1;
-		}
-
 		for (i = 0; i < loop_count; i++) {
+			printf("test time(%d)...\n", i);
 			ret = test_send_mctp_cmd(bus, src_addr, dst_addr, src_eid, dst_eid,
 						 tbuf, tlen, rbuf, &rlen);
 			if (ret < 0) {
 				mctp_prerr("Error sending MCTP cmd, ret = %d\n count = %d\n", ret, i);
 				test_status = -1;
-			} else   {
-				print_raw_resp(rbuf, rlen);
+				break;
 			}
+
+			if (verify_echo_flag) {
+				ret = verify_mctp_echo_cmd(tbuf, tlen, rbuf, rlen);
+				if (ret < 0) {
+					test_status = -1;
+					break;
+				}
+			} else
+				print_raw_data(rbuf, rlen);
 		}
 
 		return test_status;

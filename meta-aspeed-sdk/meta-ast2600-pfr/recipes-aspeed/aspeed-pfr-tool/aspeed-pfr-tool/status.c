@@ -135,8 +135,8 @@ static const char *g_last_panic_reason[256] = {
 	"BMC WDT expired",
 	"Intel ME WDT expired",
 	"ACM WDT expired",
-	"",
-	"",
+	"IBB WDT expired",
+	"OBB WDT expired",
 	"ACM/IBB/OBB sigled authentication failure",
 	"Attestation failure",
 	// 0Bh - 0Fh Reserved
