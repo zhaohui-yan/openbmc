@@ -1,0 +1,1334 @@
+From 4d487563da13b1616b879d02f7e28399b55a735a Mon Sep 17 00:00:00 2001
+From: Troy Lee <troy_lee@aspeedtech.com>
+Date: Wed, 28 Dec 2022 18:59:53 +0800
+Subject: [PATCH] Support Yocto build and LibMCTP-Intel with SPDM-EMU
+
+Signed-off-by: Troy Lee <troy_lee@aspeedtech.com>
+---
+ CMakeLists.txt                                |  22 +-
+ spdm_emu/spdm_emu_common/key.c                |   7 +
+ spdm_emu/spdm_emu_common/spdm_emu.c           |  40 ++
+ spdm_emu/spdm_emu_common/spdm_emu.h           |   5 +
+ spdm_emu/spdm_emu_common/working_queue.c      |  89 ++++
+ spdm_emu/spdm_emu_common/working_queue.h      |  35 ++
+ spdm_emu/spdm_requester_emu/CMakeLists.txt    |   6 +
+ .../spdm_requester_emu/spdm_requester_emu.c   | 165 +++++++
+ .../spdm_requester_emu/spdm_requester_emu.h   |   8 +
+ .../spdm_requester_emu/spdm_requester_mctp.c  |   2 +
+ .../spdm_requester_measurement.c              |   1 +
+ .../spdm_requester_emu/spdm_requester_spdm.c  |  55 +--
+ spdm_emu/spdm_responder_emu/CMakeLists.txt    |   6 +
+ .../spdm_responder_emu/spdm_responder_emu.c   | 451 +++++++++---------
+ .../spdm_responder_emu/spdm_responder_emu.h   |   9 +
+ .../spdm_responder_emu/spdm_responder_mctp.c  |   2 +
+ .../spdm_responder_emu/spdm_responder_spdm.c  |  43 ++
+ 17 files changed, 681 insertions(+), 265 deletions(-)
+ create mode 100644 spdm_emu/spdm_emu_common/working_queue.c
+ create mode 100644 spdm_emu/spdm_emu_common/working_queue.h
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index ac5cc6a..71615a9 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -20,6 +20,7 @@ if(NOT GCOV)
+ endif()
+ 
+ SET(LIBSPDM_DIR ${PROJECT_SOURCE_DIR}/libspdm)
++SET(LIBMCTP_DIR ${PROJECT_SOURCE_DIR}/libmctp)
+ SET(SPDM_RESPONDER_VALIDATOR_DIR ${PROJECT_SOURCE_DIR}/SPDM-Responder-Validator)
+ SET(COMMON_TEST_FRAMEWORK_DIR ${PROJECT_SOURCE_DIR}/SPDM-Responder-Validator/common_test_framework)
+ 
+@@ -62,6 +63,8 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+         MESSAGE("TOOLCHAIN = KLEE")
+     elseif(TOOLCHAIN STREQUAL "LIBFUZZER")
+         MESSAGE("TOOLCHAIN = LIBFUZZER")
++    elseif(TOOLCHAIN STREQUAL "YOCTO")
++        MESSAGE("TOOLCHAIN = YOCTO")
+     elseif(TOOLCHAIN STREQUAL "ARM_GCC")
+         MESSAGE("TOOLCHAIN = ARM_GCC")
+     elseif(TOOLCHAIN STREQUAL "AARCH64_GCC")
+@@ -167,6 +170,23 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+         endif()
+         SET(CMAKE_C_LINK_EXECUTABLE "<CMAKE_LINKER> <LINK_FLAGS> <OBJECTS> -o <TARGET> -Wl,--start-group <LINK_LIBRARIES> -Wl,--end-group")
+ 
++    elseif(TOOLCHAIN STREQUAL "YOCTO")
++        # SET(CMAKE_C_COMPILER arm-linux-gnueabi-gcc)
++        ADD_COMPILE_OPTIONS(-O2)
++        # ADD_COMPILE_OPTIONS(-O2 -g -fshort-wchar -fno-strict-aliasing -Wall -Werror -Wno-array-bounds -ffunction-sections -fdata-sections -fno-common -Wno-address -fpie -fno-asynchronous-unwind-tables -flto -DUSING_LTO  -Wno-maybe-uninitialized -Wno-uninitialized  -Wno-builtin-declaration-mismatch -Wno-nonnull-compare)
++        SET(MBEDTLS_FLAGS "")
++        SET(OPENSSL_FLAGS -include base.h -Wno-error=maybe-uninitialized -Wno-error=format -Wno-format -Wno-error=unused-but-set-variable)
++        SET(CMOCKA_FLAGS -std=gnu99 -Wpedantic -Wall -Wshadow -Wmissing-prototypes -Wcast-align -Werror=address -Wstrict-prototypes -Werror=strict-prototypes -Wwrite-strings -Werror=write-strings -Werror-implicit-function-declaration -Wpointer-arith -Werror=pointer-arith -Wdeclaration-after-statement -Werror=declaration-after-statement -Wreturn-type -Werror=return-type -Wuninitialized -Werror=uninitialized -Werror=strict-overflow -Wstrict-overflow=2 -Wno-format-zero-length -Wmissing-field-initializers -Wformat-security -Werror=format-security -fno-common -Wformat -fno-common -fstack-protector-strong)
++
++        # SET(CMAKE_AR arm-linux-gnueabi-gcc-ar)
++
++        # SET(CMAKE_LINKER arm-linux-gnueabi-gcc)
++        # SET(CMAKE_LINKER arm-openbmc-linux-gnueabi-gcc)
++        SET(CMAKE_EXE_LINKER_FLAGS "-flto -no-pie" )
++        # SET(CMAKE_EXE_LINKER_FLAGS "" )
++        MESSAGE("TROY ${CMAKE_C_LINK_EXECUTABLE}")
++        SET(CMAKE_C_LINK_EXECUTABLE   "<CMAKE_C_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> -static -Wl,--start-group <LINK_LIBRARIES> -Wl,--end-group")
++        # SET(CMAKE_C_LINK_EXECUTABLE "<CMAKE_LINKER> <LINK_FLAGS> <OBJECTS> -o <TARGET> -static -Wl,--start-group <LINK_LIBRARIES> -Wl,--end-group")
+     elseif(TOOLCHAIN STREQUAL "ARM_GCC")
+         SET(CMAKE_C_COMPILER arm-linux-gnueabi-gcc)
+         ADD_COMPILE_OPTIONS(-g -fshort-wchar -fno-strict-aliasing -Wall -Werror -Wno-array-bounds -ffunction-sections -fdata-sections -fno-common -Wno-address -fpie -fno-asynchronous-unwind-tables -flto -DUSING_LTO  -Wno-maybe-uninitialized -Wno-uninitialized  -Wno-builtin-declaration-mismatch -Wno-nonnull-compare)
+@@ -184,7 +204,7 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+         if(GCOV STREQUAL "ON")
+         SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}  --coverage -lgcov -fprofile-arcs -ftest-coverage")
+         endif()
+-        SET(CMAKE_C_LINK_EXECUTABLE "<CMAKE_LINKER> <LINK_FLAGS> <OBJECTS> -o <TARGET> -Wl,--start-group <LINK_LIBRARIES> -Wl,--end-group")
++        SET(CMAKE_C_LINK_EXECUTABLE "<CMAKE_LINKER> <LINK_FLAGS> <OBJECTS> -o <TARGET> -static -Wl,--start-group <LINK_LIBRARIES> -Wl,--end-group")
+ 
+     elseif(TOOLCHAIN STREQUAL "AARCH64_GCC")
+         SET(CMAKE_C_COMPILER aarch64-linux-gnu-gcc)
+diff --git a/spdm_emu/spdm_emu_common/key.c b/spdm_emu/spdm_emu_common/key.c
+index 5d52d85..1945dfe 100644
+--- a/spdm_emu/spdm_emu_common/key.c
++++ b/spdm_emu/spdm_emu_common/key.c
+@@ -182,3 +182,10 @@ uint8_t m_session_policy =
+ 
+ uint8_t m_end_session_attributes =
+     SPDM_END_SESSION_REQUEST_ATTRIBUTES_PRESERVE_NEGOTIATED_STATE_CLEAR;
++
++uint8_t m_mctp_bus = 4;
++uint8_t m_mctp_sa = 0x10;
++uint8_t m_mctp_eid = 0x0a;
++uint8_t m_mctp_rot_sa = 0x38;
++uint8_t m_failure_case = 0x00;
++// 0x01 VCA, 0x02 Challenge, 0x03 Measurement miss match
+diff --git a/spdm_emu/spdm_emu_common/spdm_emu.c b/spdm_emu/spdm_emu_common/spdm_emu.c
+index eace0c1..2df6c84 100644
+--- a/spdm_emu/spdm_emu_common/spdm_emu.c
++++ b/spdm_emu/spdm_emu_common/spdm_emu.c
+@@ -28,6 +28,10 @@ void print_usage(const char *name)
+     printf("\n%s [--trans MCTP|PCI_DOE|NONE]\n", name);
+     printf("   [--ver 1.0|1.1|1.2]\n");
+     printf("   [--sec_ver 0|1.0|1.1]\n");
++    printf("   [--mctp_bus 4]\n");
++    printf("   [--mctp_sa 0x10]\n");
++    printf("   [--mctp_rot_sa 0x38]\n");
++    printf("   [--mctp_eid 0x0a]\n");
+     printf(
+         "   [--cap CACHE|CERT|CHAL|MEAS_NO_SIG|MEAS_SIG|MEAS_FRESH|ENCRYPT|MAC|MUT_AUTH|KEY_EX|PSK|PSK_WITH_CONTEXT|ENCAP|HBEAT|KEY_UPD|HANDSHAKE_IN_CLEAR|PUB_KEY_ID|CHUNK|ALIAS_CERT|SET_CERT|CSR|CERT_INSTALL_RESET]\n");
+     printf("   [--hash SHA_256|SHA_384|SHA_512|SHA3_256|SHA3_384|SHA3_512|SM3_256]\n");
+@@ -62,6 +66,10 @@ void print_usage(const char *name)
+     printf("   [--ver] is version. By default, 1.2 is used.\n");
+     printf(
+         "   [--sec_ver] is secured message version. By default, 1.0 is used. 0 means no secured message version negotiation.\n");
++
++    printf("   [--mctp_bus] is the smbus channel. By default, set to /dev/i2c-4\n");
++    printf("   [--mctp_sa] is the slave address of smbus channel. By default, set to 0x10 (7-bit address)\n");
++    printf("   [--mctp_eid] is the endpoint id of mctp. By default, set to 0x0a.\n");
+     printf(
+         "   [--cap] is capability flags. Multiple flags can be set together. Please use ',' for them.\n");
+     printf(
+@@ -500,6 +508,38 @@ void process_args(char *program_name, int argc, char *argv[])
+             }
+         }
+ 
++	if (strcmp(argv[0], "--mctp_bus") == 0) {
++            data32 = strtol(argv[1], NULL, 0);
++            m_mctp_bus = data32 & 0xff;
++            argc -= 2;
++            argv += 2;
++            continue;
++	}
++
++	if (strcmp(argv[0], "--mctp_sa") == 0) {
++            data32 = strtol(argv[1], NULL, 0);
++            m_mctp_sa = data32 & 0xff;
++            argc -= 2;
++            argv += 2;
++            continue;
++	}
++
++	if (strcmp(argv[0], "--mctp_rot_sa") == 0) {
++            data32 = strtol(argv[1], NULL, 0);
++            m_mctp_rot_sa = data32 & 0xff;
++            argc -= 2;
++            argv += 2;
++            continue;
++	}
++
++	if (strcmp(argv[0], "--mctp_eid") == 0) {
++            data32 = strtol(argv[1], NULL, 0);
++            m_mctp_eid = data32 & 0xff;
++            argc -= 2;
++            argv += 2;
++            continue;
++	}
++
+         if (strcmp(argv[0], "--cap") == 0) {
+             if (argc >= 2) {
+                 value_string_entry_t *CapabilitiesStringTable;
+diff --git a/spdm_emu/spdm_emu_common/spdm_emu.h b/spdm_emu/spdm_emu_common/spdm_emu.h
+index 08fbef9..183dac5 100644
+--- a/spdm_emu/spdm_emu_common/spdm_emu.h
++++ b/spdm_emu/spdm_emu_common/spdm_emu.h
+@@ -57,6 +57,11 @@ extern uint8_t m_support_other_params_support;
+ extern uint8_t m_session_policy;
+ extern uint8_t m_end_session_attributes;
+ 
++extern uint8_t m_mctp_bus;
++extern uint8_t m_mctp_sa;
++extern uint8_t m_mctp_eid;
++extern uint8_t m_mctp_rot_sa;
++
+ extern char *m_load_state_file_name;
+ extern char *m_save_state_file_name;
+ 
+diff --git a/spdm_emu/spdm_emu_common/working_queue.c b/spdm_emu/spdm_emu_common/working_queue.c
+new file mode 100644
+index 0000000..f062403
+--- /dev/null
++++ b/spdm_emu/spdm_emu_common/working_queue.c
+@@ -0,0 +1,89 @@
++#include <stdlib.h>
++#include <stddef.h>
++#include <stdint.h>
++#include <string.h>
++#include <semaphore.h>
++#include <stdio.h>
++
++#include "working_queue.h"
++
++void *wq_create()
++{
++	/* Create a semaphore and a linked-list */
++	struct wq_t *wq = (struct wq_t *)malloc(sizeof(struct wq_t));
++	if (wq) {
++		sem_init(&wq->sem, /* in-thread */ 0, 0);
++		pthread_mutex_init(&wq->mutex, 0);
++		wq->head = NULL;
++		wq->tail = NULL;
++	}
++	return wq;
++}
++
++static struct item_data *new_data(uint8_t *msg, size_t len, uint8_t tag, uint8_t src_eid)
++{
++	struct item_data *item = (struct item_data *)malloc(sizeof(struct item_data));
++
++	memcpy(item->msg, msg, len);
++	item->len = len;
++	item->tag = tag;
++	item->src_eid = src_eid;
++
++	return item;
++}
++
++void wq_enqueue(void *queue, void *msg, size_t msg_len, uint8_t src_eid, uint8_t tag)
++{
++	struct wq_t *wq = (struct wq_t *)queue;
++	/* Append to tail */
++	pthread_mutex_lock(&wq->mutex);
++	{
++
++		/* TODO: Critical section */
++		struct linked_list *item = (struct linked_list *)malloc(sizeof(struct linked_list *));
++		if (!item) {
++			exit(1);
++		}
++		item->data = new_data(msg, msg_len, tag, src_eid);
++		item->next = NULL;
++
++		if (wq->tail == NULL)
++			wq->head = item;
++		else
++			wq->tail->next = item;
++		wq->tail = item;
++
++		//printf("ENQ item=%p msg=%p\n", item, item->data->msg);
++	}
++	pthread_mutex_unlock(&wq->mutex);
++	/* Post semaphore */
++	sem_post(&wq->sem);
++}
++
++void wq_dequeue(void *queue, void *msg, size_t *msg_len, uint8_t *src_eid, uint8_t *tag, int blocking)
++{
++	struct wq_t *wq = (struct wq_t *)queue;
++	/* TODO: Timeout? */
++	/* Pend semaphore */
++	int ret = sem_wait(&wq->sem);
++
++	/* Fetch from head */
++	if (!ret) {
++		pthread_mutex_lock(&wq->mutex);
++		/* TODO: Critical section */
++		struct linked_list *item = wq->head;
++		wq->head = wq->head->next;
++
++		if (wq->head == NULL)
++			wq->tail = NULL;
++		//printf("DEQ item=%p msg=%p\n", item, item->data->msg);
++		memcpy(msg, item->data->msg, item->data->len);
++		*msg_len = item->data->len;
++		*src_eid = item->data->src_eid;
++		*tag = item->data->tag;
++
++		free(item->data);
++		free(item);
++		pthread_mutex_unlock(&wq->mutex);
++	}
++}
+diff --git a/spdm_emu/spdm_emu_common/working_queue.h b/spdm_emu/spdm_emu_common/working_queue.h
+new file mode 100644
+index 0000000..20f422d
+--- /dev/null
++++ b/spdm_emu/spdm_emu_common/working_queue.h
+@@ -0,0 +1,35 @@
++#pragma once
++
++#include <stdint.h>
++#include <semaphore.h>
++#include <pthread.h>
++
++void *wq_create();
++void wq_enqueue(void *queue, void *msg, size_t msg_len, uint8_t src, uint8_t tag);
++void wq_dequeue(void *queue, void *msg, size_t *msg_len, uint8_t *src, uint8_t *tag, int blocking);
++
++struct item_data {
++	size_t len;
++	uint8_t tag;
++	uint8_t src_eid;
++	uint8_t msg[4096];
++};
++
++struct linked_list {
++	struct item_data *data;
++#if 0
++	uint8_t *msg;
++	size_t len;
++	uint8_t tag;
++	uint8_t src_eid;
++#endif
++	struct linked_list *next;
++};
++
++struct wq_t {
++	sem_t sem;
++	pthread_mutex_t mutex;
++
++	struct linked_list *head, *tail;
++};
++
+diff --git a/spdm_emu/spdm_requester_emu/CMakeLists.txt b/spdm_emu/spdm_requester_emu/CMakeLists.txt
+index b8340e3..de698ae 100644
+--- a/spdm_emu/spdm_requester_emu/CMakeLists.txt
++++ b/spdm_emu/spdm_requester_emu/CMakeLists.txt
+@@ -9,6 +9,8 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/spdm_emu/spdm_requester_emu
+                     ${LIBSPDM_DIR}/os_stub/include
+ )
+ 
++INCLUDE_DIRECTORIES(${LIBMCTP_DIR}/include)
++
+ SET(src_spdm_requester_emu
+     spdm_requester_spdm.c
+     spdm_requester_authentication.c
+@@ -23,6 +25,7 @@ SET(src_spdm_requester_emu
+     ${PROJECT_SOURCE_DIR}/spdm_emu/spdm_emu_common/nv_storage.c
+     ${PROJECT_SOURCE_DIR}/spdm_emu/spdm_emu_common/pcap.c
+     ${PROJECT_SOURCE_DIR}/spdm_emu/spdm_emu_common/support.c
++    ${PROJECT_SOURCE_DIR}/spdm_emu/spdm_emu_common/working_queue.c
+ )
+ 
+ SET(spdm_requester_emu_LIBRARY
+@@ -44,6 +47,8 @@ SET(spdm_requester_emu_LIBRARY
+     pci_doe_requester_lib
+     pci_ide_km_requester_lib
+     platform_lib
++    mctp_intel
++    pthread
+ )
+ 
+ if((TOOLCHAIN STREQUAL "KLEE") OR (TOOLCHAIN STREQUAL "CBMC"))
+@@ -70,4 +75,5 @@ if((TOOLCHAIN STREQUAL "KLEE") OR (TOOLCHAIN STREQUAL "CBMC"))
+ else()
+     ADD_EXECUTABLE(spdm_requester_emu ${src_spdm_requester_emu})
+     TARGET_LINK_LIBRARIES(spdm_requester_emu ${spdm_requester_emu_LIBRARY})
++    INSTALL(TARGETS spdm_requester_emu DESTINATION bin)
+ endif()
+diff --git a/spdm_emu/spdm_requester_emu/spdm_requester_emu.c b/spdm_emu/spdm_requester_emu/spdm_requester_emu.c
+index b76e644..48149b6 100644
+--- a/spdm_emu/spdm_requester_emu/spdm_requester_emu.c
++++ b/spdm_emu/spdm_requester_emu/spdm_requester_emu.c
+@@ -6,6 +6,33 @@
+ 
+ #include "spdm_requester_emu.h"
+ 
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <fcntl.h>
++#include <poll.h>
++#include <pthread.h>
++
++#include <libmctp.h>
++#include <libmctp-log.h>
++#include <libmctp-smbus.h>
++#include <libmctp-cmds.h>
++#include <libmctp-msgtypes.h>
++
++#include "working_queue.h"
++
++#define MCTP_RX "/sys/bus/i2c/devices/%d-%04x/slave-mqueue"
++#define MCTP_TX "/dev/i2c-%d"
++
++#define MCTP_BUS 4
++#define MCTP_RX_SA 0x10
++#define MCTP_SRC_EID 0x0a
++
++extern struct wq_t *comm_queue;
++extern void *m_mctp_context;
++SOCKET m_mctp_tx;
++SOCKET m_server_socket;
++
++
+ #define IP_ADDRESS "127.0.0.1"
+ 
+ #ifdef _MSC_VER
+@@ -41,8 +68,12 @@ libspdm_return_t do_authentication_via_spdm(void);
+ libspdm_return_t do_session_via_spdm(bool use_psk);
+ libspdm_return_t do_certificate_provising_via_spdm(uint32_t* session_id);
+ 
++bool init_mctp_server();
+ bool init_client(SOCKET *sock, uint16_t port)
+ {
++#if 1
++    return init_mctp_server();
++#else
+     SOCKET client_socket;
+     struct sockaddr_in server_addr;
+     int32_t ret_val;
+@@ -83,6 +114,7 @@ bool init_client(SOCKET *sock, uint16_t port)
+ 
+     *sock = client_socket;
+     return true;
++#endif
+ }
+ 
+ bool platform_client_routine(uint16_t port_number)
+@@ -220,6 +252,139 @@ done:
+     return true;
+ }
+ 
++void rx_request_handler(mctp_eid_t src, void *data, void *msg, size_t len,
++                    bool tag_owner, uint8_t tag, void *msg_binding_private)
++{
++    uint8_t *req = (uint8_t *)msg;
++    uint8_t mctp_type;
++
++    if (len > 0) {
++        mctp_type = req[0];
++
++        if (mctp_type == 0x05) {
++            /* PIPE Data to LibSPDM Reciever */
++            wq_enqueue(comm_queue, req, len, src, tag);
++            /* Getting Response data from LibSPDM */
++
++        } else {
++
++        }
++    }
++}
++
++void rx_request_control_handler(mctp_eid_t src, void *data, void *msg, size_t len,
++                        bool tag_owner, uint8_t tag, void *msg_binding_private)
++{
++    printf("%s src_eid=%d data=%p msg=%p len=%d\n", __func__, src, data, msg, len);
++}
++void *platform_mctp_server(void *ctx)
++{
++    struct spdm_mctp_ctx *mctp_ctx = ctx;
++    struct mctp_binding_smbus *smbus = (struct mctp_binding_smbus *)mctp_ctx->prot;
++    struct mctp *mctp = mctp_ctx->mctp;
++    struct pollfd pfd = { 0 };
++    int count = 0;
++    int r;
++
++    pfd.fd = smbus->in_fd;
++    pfd.events = POLLPRI;
++
++    mctp_set_rx_all(mctp, rx_request_handler, mctp_ctx);
++    mctp_set_rx_ctrl(mctp, rx_request_control_handler, mctp_ctx);
++
++    while (1) {
++        r = poll(&pfd, 1, 5000);
++        if (r < 0) {
++            printf("Poll returned error status (errno=%d)\n", errno);
++            break;
++        }
++        if (r == 0 || !(pfd.revents & POLLPRI))
++            continue;
++        if (mctp_smbus_read(smbus) < 0) {
++            printf("%s: MCTP RX error\n", __func__);
++            break;
++        } /*else {
++            printf("%s: SMBUS READ Done\n", __func__);
++        }*/
++        if (mctp_ctx->len > 0) {
++            count++;
++            mctp_ctx->len = 0;
++            printf("%s: MCTP RX count = %d\n", __func__, count);
++        }
++    };
++
++    return NULL;
++}
++
++bool init_mctp_server()
++{
++    char binding[128];
++    int fd;
++    struct mctp *mctp;
++    struct mctp_binding_smbus *smbus;
++
++    comm_queue = wq_create();
++
++    mctp_set_log_stdio(MCTP_LOG_INFO);
++    mctp_set_tracing_enabled(true);
++
++    /* Open Slave MQ */
++    snprintf(binding, sizeof(binding), MCTP_RX, MCTP_BUS, MCTP_RX_SA);
++
++    fd = open(binding, O_RDONLY | O_NONBLOCK);
++    if (fd < 0) {
++        printf("Failed to open %s\n", binding);
++        return false;
++    }
++    m_server_socket = fd;
++
++    /* Open MCTP TX */
++    snprintf(binding, sizeof(binding), MCTP_TX, MCTP_BUS);
++    fd = open(binding, O_RDONLY /*| O_NONBLOCK*/);
++    if (fd < 0) {
++        printf("Failed to open %s\n", binding);
++        return false;
++    }
++    m_mctp_tx = fd;
++
++    mctp = mctp_init();
++    smbus = mctp_smbus_init();
++
++    if (mctp == NULL || smbus == NULL) {
++        printf("Fail to init mctp/smbus structure\n");
++        return false;
++    }
++
++    if (mctp_smbus_register_bus(smbus, mctp, MCTP_SRC_EID) < 0) {
++        printf("Failed to register smbus src eid\n");
++        return false;
++    }
++
++    mctp_smbus_set_src_slave_addr(smbus, MCTP_RX_SA << 1);
++    mctp_smbus_set_out_fd(smbus, m_mctp_tx);
++    mctp_smbus_set_in_fd(smbus, m_server_socket);
++
++    struct mctp_smbus_pkt_private *smbus_private =
++        (struct mctp_smbus_pkt_private *)malloc(sizeof(struct mctp_smbus_pkt_private));
++    smbus_private->mux_hold_timeout = 0;
++    smbus_private->mux_flags = 0;
++    smbus_private->fd = m_mctp_tx;
++    smbus_private->slave_addr = 0x38 << 1;
++
++
++    struct spdm_mctp_ctx *mctp_ctx = (struct spdm_mctp_ctx *)malloc(sizeof(struct spdm_mctp_ctx));
++    mctp_ctx->mctp = mctp;
++    mctp_ctx->prot = (void *)smbus;
++    mctp_ctx->len = 0;
++    mctp_ctx->priv_binding = smbus_private;
++    m_mctp_context = mctp_ctx;
++
++    pthread_t mctp_server;
++    pthread_create(&mctp_server, NULL, platform_mctp_server, mctp_ctx);
++    
++    return true;
++}
++
+ int main(int argc, char *argv[])
+ {
+     printf("%s version 0.1\n", "spdm_requester_emu");
+diff --git a/spdm_emu/spdm_requester_emu/spdm_requester_emu.h b/spdm_emu/spdm_requester_emu/spdm_requester_emu.h
+index ebf4570..5fac123 100644
+--- a/spdm_emu/spdm_requester_emu/spdm_requester_emu.h
++++ b/spdm_emu/spdm_requester_emu/spdm_requester_emu.h
+@@ -21,4 +21,12 @@
+ #include "stdio.h"
+ #include "spdm_emu.h"
+ 
++/* Test MCTP ctx */
++struct spdm_mctp_ctx {
++    struct mctp *mctp;
++    uint16_t len;
++    void *rx_buf;
++    void *prot;
++    void *priv_binding;
++};
+ #endif
+diff --git a/spdm_emu/spdm_requester_emu/spdm_requester_mctp.c b/spdm_emu/spdm_requester_emu/spdm_requester_mctp.c
+index 29a19ce..aaf19b2 100644
+--- a/spdm_emu/spdm_requester_emu/spdm_requester_mctp.c
++++ b/spdm_emu/spdm_requester_emu/spdm_requester_mctp.c
+@@ -5,8 +5,10 @@
+  **/
+ 
+ #include "spdm_requester_emu.h"
++#include <working_queue.h>
+ 
+ void *m_mctp_context;
++struct wq_t *comm_queue;
+ 
+ libspdm_return_t mctp_process_session_message(void *spdm_context, uint32_t session_id)
+ {
+diff --git a/spdm_emu/spdm_requester_emu/spdm_requester_measurement.c b/spdm_emu/spdm_requester_emu/spdm_requester_measurement.c
+index 2d2bb40..88eac12 100644
+--- a/spdm_emu/spdm_requester_emu/spdm_requester_measurement.c
++++ b/spdm_emu/spdm_requester_emu/spdm_requester_measurement.c
+@@ -77,6 +77,7 @@ libspdm_return_t spdm_send_receive_get_measurement(void *spdm_context,
+                 index, m_use_slot_id & 0xF, NULL, &number_of_block,
+                 &measurement_record_length, measurement_record);
+             if (LIBSPDM_STATUS_IS_ERROR(status)) {
++                LIBSPDM_DEBUG((LIBSPDM_DEBUG_INFO, "libspdm_get_measurement error 0x%x\n", status));
+                 continue;
+             }
+             received_number_of_block += 1;
+diff --git a/spdm_emu/spdm_requester_emu/spdm_requester_spdm.c b/spdm_emu/spdm_requester_emu/spdm_requester_spdm.c
+index 24f9d9d..315c76b 100644
+--- a/spdm_emu/spdm_requester_emu/spdm_requester_spdm.c
++++ b/spdm_emu/spdm_requester_emu/spdm_requester_spdm.c
+@@ -5,6 +5,17 @@
+  **/
+ 
+ #include "spdm_requester_emu.h"
++#include <libmctp.h>
++#include <libmctp-log.h>
++#include <libmctp-smbus.h>
++#include <libmctp-cmds.h>
++#include <libmctp-msgtypes.h>
++#include "working_queue.h"
++
++extern void *m_mctp_context;
++extern struct wq_t *comm_queue;
++
++uint8_t spdm_src_eid = 0x0b, spdm_tag;
+ 
+ void *m_spdm_context;
+ void *m_scratch_buffer;
+@@ -16,6 +27,9 @@ bool communicate_platform_data(SOCKET socket, uint32_t command,
+                                size_t *bytes_to_receive,
+                                uint8_t *receive_buffer)
+ {
++#if 1
++    return true;
++#else
+     bool result;
+ 
+     result =
+@@ -44,26 +58,23 @@ bool communicate_platform_data(SOCKET socket, uint32_t command,
+         return result;
+     }
+     return result;
++#endif
+ }
+ 
+ libspdm_return_t spdm_device_send_message(void *spdm_context,
+                                        size_t request_size, const void *request,
+                                        uint64_t timeout)
+ {
+-    bool result;
+-
+-    result = send_platform_data(m_socket, SOCKET_SPDM_COMMAND_NORMAL,
+-                                request, (uint32_t)request_size);
+-    if (!result) {
+-        printf("send_platform_data Error - %x\n",
+-#ifdef _MSC_VER
+-               WSAGetLastError()
+-#else
+-               errno
+-#endif
+-               );
+-        return LIBSPDM_STATUS_SEND_FAIL;
+-    }
++    struct spdm_mctp_ctx *mctp_ctx = m_mctp_context;
++    
++    printf("Sending with MSG_TAG=%02x DST_EID=%02x\n", spdm_tag, spdm_src_eid);
++
++    mctp_message_tx(mctp_ctx->mctp,
++            spdm_src_eid,
++            (void *)request, request_size,
++            true,
++            ++spdm_tag,
++            mctp_ctx->priv_binding);
+     return LIBSPDM_STATUS_SUCCESS;
+ }
+ 
+@@ -72,21 +83,7 @@ libspdm_return_t spdm_device_receive_message(void *spdm_context,
+                                           void **response,
+                                           uint64_t timeout)
+ {
+-    bool result;
+-    uint32_t command;
+-
+-    result = receive_platform_data(m_socket, &command, *response,
+-                                   response_size);
+-    if (!result) {
+-        printf("receive_platform_data Error - %x\n",
+-#ifdef _MSC_VER
+-               WSAGetLastError()
+-#else
+-               errno
+-#endif
+-               );
+-        return LIBSPDM_STATUS_RECEIVE_FAIL;
+-    }
++    wq_dequeue(comm_queue, *response, response_size, &spdm_src_eid, &spdm_tag, 1);
+     return LIBSPDM_STATUS_SUCCESS;
+ }
+ 
+diff --git a/spdm_emu/spdm_responder_emu/CMakeLists.txt b/spdm_emu/spdm_responder_emu/CMakeLists.txt
+index ca57c05..261c2b7 100644
+--- a/spdm_emu/spdm_responder_emu/CMakeLists.txt
++++ b/spdm_emu/spdm_responder_emu/CMakeLists.txt
+@@ -9,6 +9,8 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/spdm_emu/spdm_responder_emu
+                     ${LIBSPDM_DIR}/os_stub/include
+ )
+ 
++INCLUDE_DIRECTORIES(${LIBMCTP_DIR}/include)
++
+ SET(src_spdm_responder_emu
+     spdm_responder_spdm.c
+     spdm_responder_session.c
+@@ -21,6 +23,7 @@ SET(src_spdm_responder_emu
+     ${PROJECT_SOURCE_DIR}/spdm_emu/spdm_emu_common/nv_storage.c
+     ${PROJECT_SOURCE_DIR}/spdm_emu/spdm_emu_common/pcap.c
+     ${PROJECT_SOURCE_DIR}/spdm_emu/spdm_emu_common/support.c
++    ${PROJECT_SOURCE_DIR}/spdm_emu/spdm_emu_common/working_queue.c
+ )
+ 
+ SET(spdm_responder_emu_LIBRARY
+@@ -43,6 +46,8 @@ SET(spdm_responder_emu_LIBRARY
+     pci_ide_km_responder_lib
+     pci_ide_km_device_lib_sample
+     platform_lib
++    mctp_intel
++    pthread
+ )
+ 
+ if((TOOLCHAIN STREQUAL "KLEE") OR (TOOLCHAIN STREQUAL "CBMC"))
+@@ -70,4 +75,5 @@ if((TOOLCHAIN STREQUAL "KLEE") OR (TOOLCHAIN STREQUAL "CBMC"))
+ else()
+     ADD_EXECUTABLE(spdm_responder_emu ${src_spdm_responder_emu})
+     TARGET_LINK_LIBRARIES(spdm_responder_emu ${spdm_responder_emu_LIBRARY})
++    INSTALL(TARGETS spdm_responder_emu DESTINATION bin)
+ endif()
+diff --git a/spdm_emu/spdm_responder_emu/spdm_responder_emu.c b/spdm_emu/spdm_responder_emu/spdm_responder_emu.c
+index 649b0a1..b55e0c7 100644
+--- a/spdm_emu/spdm_responder_emu/spdm_responder_emu.c
++++ b/spdm_emu/spdm_responder_emu/spdm_responder_emu.c
+@@ -9,275 +9,254 @@
+ uint32_t m_command;
+ 
+ SOCKET m_server_socket;
++SOCKET m_mctp_tx;
+ 
+ extern void *m_spdm_context;
+ extern void *m_scratch_buffer;
+ extern void *m_pci_doe_context;
++extern void *m_mctp_context;
+ 
+ void *spdm_server_init(void);
+ libspdm_return_t pci_doe_init_responder ();
+ 
+-bool create_socket(uint16_t port_number, SOCKET *listen_socket)
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <fcntl.h>
++#include <poll.h>
++#include <pthread.h>
++
++#include <libmctp.h>
++#include <libmctp-log.h>
++#include <libmctp-smbus.h>
++#include <libmctp-cmds.h>
++#include <libmctp-msgtypes.h>
++
++#include "working_queue.h"
++
++#define MCTP_RX "/sys/bus/i2c/devices/%d-%04x/slave-mqueue"
++#define MCTP_TX "/dev/i2c-%d"
++
++extern struct wq_t *comm_queue;
++
++void rx_request_handler(mctp_eid_t src, void *data, void *msg, size_t len,
++                    bool tag_owner, uint8_t tag, void *msg_binding_private)
+ {
+-    struct sockaddr_in my_address;
+-    int32_t res;
+-
+-    /* Initialize Winsock*/
+-#ifdef _MSC_VER
+-    WSADATA ws;
+-    res = WSAStartup(MAKEWORD(2, 2), &ws);
+-    if (res != 0) {
+-        printf("WSAStartup failed with error: %d\n", res);
+-        return false;
++    uint8_t *req = (uint8_t *)msg;
++    uint8_t mctp_type;
++
++    if (len > 0) {
++        mctp_type = req[0];
++
++        if (mctp_type == 0x05) {
++            /* PIPE Data to LibSPDM Reciever */
++            wq_enqueue(comm_queue, req, len, src, tag);
++            /* Getting Response data from LibSPDM */
++
++        } else {
++
++        }
+     }
++}
++#if 0
++void rx_request_control_handler(mctp_eid_t src, void *data, void *msg, size_t len,
++                        bool tag_owner, uint8_t tag, void *msg_binding_private)
++{
++    printf("%s src_eid=%d data=%p msg=%p len=%d\n", __func__, src, data, msg, len);
++}
++#else 
++struct mctp_ctrl_resp {
++	struct mctp_ctrl_msg_hdr hdr;
++	uint8_t completion_code;
++	uint8_t data[MCTP_BTU];
++};
++
++struct mctp_ctrl_req {
++	struct mctp_ctrl_msg_hdr hdr;
++	uint8_t data[MCTP_BTU];
++};
++
++/* Test MCTP ctx */
++struct test_mctp_ctx {
++	struct mctp *mctp;
++	uint16_t len;
++	void *rx_buf;
++	void *prot;
++};
++void rx_request_control_handler(mctp_eid_t src, void *data, void *msg, size_t len,
++		bool tag_owner, uint8_t tag, void *msg_binding_private)
++{
++	struct mctp_smbus_pkt_private *pkt_prv =
++		(struct mctp_smbus_pkt_private *)msg_binding_private;
++	struct test_mctp_ctx *ctx = (struct test_mctp_ctx *)data;
++	struct mctp_ctrl_req *req = (struct mctp_ctrl_req *)msg;
++	uint16_t resp_len = sizeof(struct mctp_ctrl_msg_hdr);
++	struct mctp_ctrl_resp resp = { 0 };
++	uint8_t cmd;
++	int rc;
++	if (ctx == NULL) {
++		mctp_prerr("%s: ctx not found", __func__);
++		return;
++	}
++	if (req == NULL) {
++		mctp_prerr("%s: request message not found", __func__);
++		return;
++	}
++	if (pkt_prv == NULL) {
++		mctp_prerr("%s: private smbus message not found", __func__);
++		return;
++	}
++	cmd = req->hdr.command_code;
++	mctp_prinfo("Received Control Command: %d", cmd);
++	mctp_prinfo("Received Message length: %d", len);
++	memcpy(&resp.hdr, &req->hdr, sizeof(struct mctp_ctrl_msg_hdr));
++	resp.hdr.rq_dgram_inst &= ~(MCTP_CTRL_HDR_FLAG_REQUEST);
++	ctx->len = len; // notify wait_for_request
++	switch (cmd) {
++	case MCTP_CTRL_CMD_GET_ENDPOINT_ID:
++		mctp_ctrl_cmd_get_endpoint_id(ctx->mctp, src, false, (struct mctp_ctrl_resp_get_eid *)&resp);
++
++		resp_len += 4;
++		break;
++	case MCTP_CTRL_CMD_GET_MESSAGE_TYPE_SUPPORT:
++		resp.completion_code = MCTP_CTRL_CC_SUCCESS;
++		resp.data[0] = 0x05;
++		resp_len += 2;
++		break;
++	default:
++		resp.completion_code = MCTP_CTRL_CC_ERROR_UNSUPPORTED_CMD;
++		resp_len += 1;
++		mctp_prwarn("Not handled: %02x", cmd);
++		break;
++	}
++	rc = mctp_message_tx(ctx->mctp, src, &resp, resp_len, false, tag,
++			(void *)pkt_prv);
++	if (rc < 0)
++		mctp_prerr("%s: send response failed", __func__);
++}
+ #endif
+ 
+-    *listen_socket = socket(PF_INET, SOCK_STREAM, 0);
+-    if (INVALID_SOCKET == *listen_socket) {
+-        printf("Cannot create server listen socket.  Error is 0x%x\n",
+-#ifdef _MSC_VER
+-               WSAGetLastError()
+-#else
+-               errno
+-#endif
+-               );
++void *platform_mctp_server(void *ctx)
++{
++    struct spdm_mctp_ctx *mctp_ctx = ctx;
++    struct mctp_binding_smbus *smbus = (struct mctp_binding_smbus *)mctp_ctx->prot;
++    struct mctp *mctp = mctp_ctx->mctp;
++    struct pollfd pfd = { 0 };
++    int count = 0;
++    int r;
++
++    pfd.fd = smbus->in_fd;
++    pfd.events = POLLPRI;
++
++    mctp_set_rx_all(mctp, rx_request_handler, mctp_ctx);
++    mctp_set_rx_ctrl(mctp, rx_request_control_handler, mctp_ctx);
++
++    while (1) {
++        r = poll(&pfd, 1, 5000);
++        if (r < 0) {
++            printf("Poll returned error status (errno=%d)\n", errno);
++            break;
++        }
++        if (r == 0 || !(pfd.revents & POLLPRI))
++            continue;
++        if (mctp_smbus_read(smbus) < 0) {
++            printf("%s: MCTP RX error\n", __func__);
++            break;
++        } /*else {
++            printf("%s: SMBUS READ Done\n", __func__);
++        }*/
++        if (mctp_ctx->len > 0) {
++            count++;
++            mctp_ctx->len = 0;
++            printf("%s: MCTP RX count = %d\n", __func__, count);
++        }
++    };
++
++    return NULL;
++}
++
++bool init_mctp_server()
++{
++    char binding[128];
++    int fd;
++    struct mctp *mctp;
++    struct mctp_binding_smbus *smbus;
++
++    comm_queue = wq_create();
++
++    mctp_set_log_stdio(MCTP_LOG_ERR);
++    mctp_set_tracing_enabled(true);
++
++    /* Open Slave MQ */
++    snprintf(binding, sizeof(binding), MCTP_RX, m_mctp_bus, m_mctp_sa);
++
++    fd = open(binding, O_RDONLY | O_NONBLOCK);
++    if (fd < 0) {
++        printf("Failed to open %s\n", binding);
+         return false;
+     }
++    m_server_socket = fd;
+ 
+-    /* When the program stops unexpectedly the used port will stay in the TIME_WAIT
+-     * state which prevents other programs from binding to this port until a timeout
+-     * triggers. This timeout may be 30s to 120s. In this state the responder cannot
+-     * be restarted since it cannot bind to its port.
+-     * To prevent this SO_REUSEADDR is applied to the socket which allows the
+-     * responder to bind to this port even if it is still in the TIME_WAIT state.*/
+-    if (setsockopt(*listen_socket, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0) {
+-        printf("Cannot configure server listen socket.  Error is 0x%x\n",
+-#ifdef _MSC_VER
+-               WSAGetLastError()
+-#else
+-               errno
+-#endif
+-               );
++    /* Open MCTP TX */
++    snprintf(binding, sizeof(binding), MCTP_TX, m_mctp_bus);
++    fd = open(binding, O_RDONLY /*| O_NONBLOCK*/);
++    if (fd < 0) {
++        printf("Failed to open %s\n", binding);
+         return false;
+     }
++    m_mctp_tx = fd;
+ 
+-    libspdm_zero_mem(&my_address, sizeof(my_address));
+-    my_address.sin_port = htons((short)port_number);
+-    my_address.sin_family = AF_INET;
+-
+-    res = bind(*listen_socket, (struct sockaddr *)&my_address,
+-               sizeof(my_address));
+-    if (res == SOCKET_ERROR) {
+-        printf("Bind error.  Error is 0x%x\n",
+-#ifdef _MSC_VER
+-               WSAGetLastError()
+-#else
+-               errno
+-#endif
+-               );
+-        closesocket(*listen_socket);
++    mctp = mctp_init();
++    smbus = mctp_smbus_init();
++
++    if (mctp == NULL || smbus == NULL) {
++        printf("Fail to init mctp/smbus structure\n");
+         return false;
+     }
+ 
+-    res = listen(*listen_socket, 3);
+-    if (res == SOCKET_ERROR) {
+-        printf("Listen error.  Error is 0x%x\n",
+-#ifdef _MSC_VER
+-               WSAGetLastError()
+-#else
+-               errno
+-#endif
+-               );
+-        closesocket(*listen_socket);
++    if (mctp_smbus_register_bus(smbus, mctp, m_mctp_eid) < 0) {
++        printf("Failed to register smbus src eid\n");
+         return false;
+     }
++
++    mctp_smbus_set_src_slave_addr(smbus, m_mctp_sa << 1);
++    mctp_smbus_set_out_fd(smbus, m_mctp_tx);
++    mctp_smbus_set_in_fd(smbus, m_server_socket);
++
++    struct mctp_smbus_pkt_private *smbus_private =
++        (struct mctp_smbus_pkt_private *)malloc(sizeof(struct mctp_smbus_pkt_private));
++    smbus_private->mux_hold_timeout = 0;
++    smbus_private->mux_flags = 0;
++    smbus_private->fd = m_mctp_tx;
++    smbus_private->slave_addr = m_mctp_rot_sa << 1;
++
++
++    struct spdm_mctp_ctx *mctp_ctx = (struct spdm_mctp_ctx *)malloc(sizeof(struct spdm_mctp_ctx));
++    mctp_ctx->mctp = mctp;
++    mctp_ctx->prot = (void *)smbus;
++    mctp_ctx->len = 0;
++    mctp_ctx->priv_binding = smbus_private;
++    m_mctp_context = mctp_ctx;
++
++    pthread_t mctp_server;
++    pthread_create(&mctp_server, NULL, platform_mctp_server, mctp_ctx);
++    
+     return true;
+ }
+ 
+-bool platform_server(const SOCKET socket)
++bool platform_server()
+ {
+-    bool result;
+     libspdm_return_t status;
+-    uint8_t response[LIBPCIDOE_MAX_NON_SPDM_MESSAGE_SIZE];
+-    size_t response_size;
+ 
+     while (true) {
+         status = libspdm_responder_dispatch_message(m_spdm_context);
+         if (status == LIBSPDM_STATUS_SUCCESS) {
+             /* success dispatch SPDM message*/
+-        }
+-        if ((status == LIBSPDM_STATUS_SEND_FAIL) ||
+-            (status == LIBSPDM_STATUS_RECEIVE_FAIL)) {
+-            printf("Server Critical Error - STOP\n");
+-            return false;
+-        }
+-        if (status != LIBSPDM_STATUS_UNSUPPORTED_CAP) {
+-            continue;
+-        }
+-        switch (m_command) {
+-        case SOCKET_SPDM_COMMAND_TEST:
+-            result = send_platform_data(socket,
+-                                        SOCKET_SPDM_COMMAND_TEST,
+-                                        (uint8_t *)"Server Hello!",
+-                                        sizeof("Server Hello!"));
+-            if (!result) {
+-                printf("send_platform_data Error - %x\n",
+-#ifdef _MSC_VER
+-                       WSAGetLastError()
+-#else
+-                       errno
+-#endif
+-                       );
+-                return true;
+-            }
+-            break;
+-
+-        case SOCKET_SPDM_COMMAND_OOB_ENCAP_KEY_UPDATE:
+-            libspdm_init_key_update_encap_state(m_spdm_context);
+-            result = send_platform_data(
+-                socket,
+-                SOCKET_SPDM_COMMAND_OOB_ENCAP_KEY_UPDATE, NULL,
+-                0);
+-            if (!result) {
+-                printf("send_platform_data Error - %x\n",
+-#ifdef _MSC_VER
+-                       WSAGetLastError()
+-#else
+-                       errno
+-#endif
+-                       );
+-                return true;
+-            }
+-            break;
+-
+-        case SOCKET_SPDM_COMMAND_SHUTDOWN:
+-            result = send_platform_data(
+-                socket, SOCKET_SPDM_COMMAND_SHUTDOWN, NULL, 0);
+-            if (!result) {
+-                printf("send_platform_data Error - %x\n",
+-#ifdef _MSC_VER
+-                       WSAGetLastError()
+-#else
+-                       errno
+-#endif
+-                       );
+-                return true;
+-            }
+-            return false;
+-            break;
+-
+-        case SOCKET_SPDM_COMMAND_CONTINUE:
+-            result = send_platform_data(
+-                socket, SOCKET_SPDM_COMMAND_CONTINUE, NULL, 0);
+-            if (!result) {
+-                printf("send_platform_data Error - %x\n",
+-#ifdef _MSC_VER
+-                       WSAGetLastError()
+-#else
+-                       errno
+-#endif
+-                       );
+-                return true;
+-            }
+-            return true;
+-            break;
+-
+-        case SOCKET_SPDM_COMMAND_NORMAL:
+-            if (m_use_transport_layer ==
+-                SOCKET_TRANSPORT_TYPE_PCI_DOE) {
+-                response_size = sizeof(response);
+-                status = pci_doe_get_response_doe_request (m_pci_doe_context,
+-                                                           m_send_receive_buffer,
+-                                                           m_send_receive_buffer_size, response,
+-                                                           &response_size);
+-                if (LIBSPDM_STATUS_IS_ERROR(status)) {
+-                    /* unknown message*/
+-                    return true;
+-                }
+-                result = send_platform_data(
+-                    socket, SOCKET_SPDM_COMMAND_NORMAL,
+-                    response, response_size);
+-                if (!result) {
+-                    printf("send_platform_data Error - %x\n",
+-#ifdef _MSC_VER
+-                           WSAGetLastError()
+-#else
+-                           errno
+-#endif
+-                           );
+-                    return true;
+-                }
+-            } else {
+-                /* unknown message*/
+-                return true;
+-            }
+-            break;
+-
+-        default:
+-            printf("Unrecognized platform interface command %x\n",
+-                   m_command);
+-            result = send_platform_data(
+-                socket, SOCKET_SPDM_COMMAND_UNKOWN, NULL, 0);
+-            if (!result) {
+-                printf("send_platform_data Error - %x\n",
+-#ifdef _MSC_VER
+-                       WSAGetLastError()
+-#else
+-                       errno
+-#endif
+-                       );
+-                return true;
+-            }
+-            return true;
+-        }
+-    }
+-}
+-
+-bool platform_server_routine(uint16_t port_number)
+-{
+-    SOCKET listen_socket;
+-    struct sockaddr_in peer_address;
+-    bool result;
+-    uint32_t length;
+-    bool continue_serving;
+-
+-    result = create_socket(port_number, &listen_socket);
+-    if (!result) {
+-        printf("Create platform service socket fail\n");
+-        return result;
++            printf("SPDM Message Done\n");
++        } else {
++            printf("SPDM Message error status=%x\n", status);
++	}
+     }
+ 
+-    do {
+-        printf("Platform server listening on port %d\n", port_number);
+-
+-        length = sizeof(peer_address);
+-        m_server_socket =
+-            accept(listen_socket, (struct sockaddr *)&peer_address,
+-                   (socklen_t *)&length);
+-        if (m_server_socket == INVALID_SOCKET) {
+-            printf("Accept error.  Error is 0x%x\n",
+-#ifdef _MSC_VER
+-                   WSAGetLastError()
+-#else
+-                   errno
+-#endif
+-                   );
+-#ifdef _MSC_VER
+-            WSACleanup();
+-#endif
+-            closesocket(listen_socket);
+-            return false;
+-        }
+-        printf("Client accepted\n");
+-
+-        continue_serving = platform_server(m_server_socket);
+-        closesocket(m_server_socket);
+-
+-    } while (continue_serving);
+-#ifdef _MSC_VER
+-    WSACleanup();
+-#endif
+-    closesocket(listen_socket);
+     return true;
+ }
+ 
+@@ -303,7 +282,9 @@ int main(int argc, char *argv[])
+         }
+     }
+ 
+-    platform_server_routine(DEFAULT_SPDM_PLATFORM_PORT);
++    init_mctp_server();
++
++    platform_server();
+ 
+     if (m_spdm_context != NULL) {
+         free(m_spdm_context);
+diff --git a/spdm_emu/spdm_responder_emu/spdm_responder_emu.h b/spdm_emu/spdm_responder_emu/spdm_responder_emu.h
+index 794a1a4..e0db2ae 100644
+--- a/spdm_emu/spdm_responder_emu/spdm_responder_emu.h
++++ b/spdm_emu/spdm_responder_emu/spdm_responder_emu.h
+@@ -21,4 +21,13 @@
+ #include "stdio.h"
+ #include "spdm_emu.h"
+ 
++/* Test MCTP ctx */
++struct spdm_mctp_ctx {
++    struct mctp *mctp;
++    uint16_t len;
++    void *rx_buf;
++    void *prot;
++    void *priv_binding;
++};
++
+ #endif
+diff --git a/spdm_emu/spdm_responder_emu/spdm_responder_mctp.c b/spdm_emu/spdm_responder_emu/spdm_responder_mctp.c
+index 086d899..a5752a0 100644
+--- a/spdm_emu/spdm_responder_emu/spdm_responder_mctp.c
++++ b/spdm_emu/spdm_responder_emu/spdm_responder_mctp.c
+@@ -4,6 +4,8 @@
+  *  License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/spdm-emu/blob/main/LICENSE.md
+  **/
+ 
++#include <working_queue.h>
+ #include "spdm_responder_emu.h"
+ 
+ void *m_mctp_context;
++struct wq_t *comm_queue;
+diff --git a/spdm_emu/spdm_responder_emu/spdm_responder_spdm.c b/spdm_emu/spdm_responder_emu/spdm_responder_spdm.c
+index 9fa00c7..481911d 100644
+--- a/spdm_emu/spdm_responder_emu/spdm_responder_spdm.c
++++ b/spdm_emu/spdm_responder_emu/spdm_responder_spdm.c
+@@ -6,12 +6,14 @@
+ 
+ #include "spdm_responder_emu.h"
+ 
++extern void *m_mctp_context;
+ void *m_spdm_context;
+ void *m_scratch_buffer;
+ 
+ extern uint32_t m_command;
+ 
+ extern SOCKET m_server_socket;
++extern SOCKET m_mctp_tx;
+ 
+ /**
+  * Notify the session state to a session APP.
+@@ -38,6 +40,46 @@ libspdm_return_t spdm_get_response_vendor_defined_request(
+     size_t request_size, const void *request, size_t *response_size,
+     void *response);
+ 
++#if 1
++#include <libmctp.h>
++#include <libmctp-log.h>
++#include <libmctp-smbus.h>
++#include <libmctp-cmds.h>
++#include <libmctp-msgtypes.h>
++#include "working_queue.h"
++
++extern struct wq_t *comm_queue;
++
++uint8_t spdm_src_eid, spdm_tag;
++libspdm_return_t spdm_device_send_message(void *spdm_context,
++                                       size_t request_size, const void *request,
++                                       uint64_t timeout)
++{
++    struct spdm_mctp_ctx *mctp_ctx = m_mctp_context;
++    
++    printf("Sending with MSG_TAG=%02x\n", spdm_tag);
++
++    mctp_message_tx(mctp_ctx->mctp,
++            spdm_src_eid,
++            (void *)request, request_size,
++            false,
++            spdm_tag,
++            mctp_ctx->priv_binding);
++    return LIBSPDM_STATUS_SUCCESS;
++}
++
++libspdm_return_t spdm_device_receive_message(void *spdm_context,
++                                          size_t *response_size,
++                                          void **response,
++                                          uint64_t timeout)
++{
++
++    wq_dequeue(comm_queue, m_send_receive_buffer, response_size, &spdm_src_eid, &spdm_tag, 1);
++    *response = m_send_receive_buffer;
++    return LIBSPDM_STATUS_SUCCESS;
++}
++
++#else
+ libspdm_return_t spdm_device_send_message(void *spdm_context,
+                                        size_t request_size, const void *request,
+                                        uint64_t timeout)
+@@ -96,6 +138,7 @@ libspdm_return_t spdm_device_receive_message(void *spdm_context,
+ 
+     return LIBSPDM_STATUS_SUCCESS;
+ }
++#endif
+ 
+ void *spdm_server_init(void)
+ {
+-- 
+2.25.1
+
