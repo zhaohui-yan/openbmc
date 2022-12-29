@@ -9,38 +9,7 @@
 extern "C" {
 #endif
 
-#include <libmctp.h>
-#include <libmctp-log.h>
 #include <libmctp-astpcie.h>
-#include <libmctp-cmds.h>
-#include <libmctp-msgtypes.h>
-
-#define MCTP_MESSAGE_TYPE_ASPEED_CTRL 0x85
-#define MCTP_ASPEED_CTRL_CMD_ECHO 0x00
-#define MCTP_ASPEED_CTRL_CMD_ECHO_LARGE 0x01
-#define PCIE_TEST_BUFF_SIZE 2048
-#define PCIE_TEST_TX_BUFF_SIZE (PCIE_TEST_BUFF_SIZE + sizeof(struct mctp_ctrl_msg_hdr))
-#define PCIE_TEST_RX_BUFF_SIZE	(PCIE_TEST_BUFF_SIZE + sizeof(struct mctp_ctrl_msg_hdr) + 1)
-
-#define REQUESTER_EID 8
-#define RESPONDER_EID 9
-
-struct mctp_ctrl_req {
-	struct mctp_ctrl_msg_hdr hdr;
-	uint8_t data[MCTP_BTU];
-};
-
-struct mctp_ctrl_resp {
-	struct mctp_ctrl_msg_hdr hdr;
-	uint8_t completion_code;
-	uint8_t data[MCTP_BTU];
-};
-
-struct mctp_echo_resp {
-	struct mctp_ctrl_msg_hdr hdr;
-	uint8_t completion_code;
-	uint8_t data[PCIE_TEST_BUFF_SIZE];
-};
 
 /* Test MCTP ctx */
 struct test_mctp_ctx {
@@ -48,7 +17,7 @@ struct test_mctp_ctx {
 	struct mctp *mctp;
 	uint16_t len;
 	void *rx_buf;
-	void *prot;
+	void *port;
 };
 
 struct mctp_binding_astpcie {
@@ -59,9 +28,6 @@ struct mctp_binding_astpcie {
 };
 
 void usage(FILE *fp, int argc, char **argv);
-void print_raw_resp(uint8_t *rbuf, int rlen);
-int compare_pattern(uint8_t *pattern0, uint8_t *pattern1, int size);
-void test_pattern_prepare(uint8_t *pattern, int size);
 void rx_response_handler(uint8_t eid, void *data, void *msg, size_t len,
 			 bool tag_owner, uint8_t tag, void *prv);
 void rx_request_handler(mctp_eid_t src, void *data, void *msg, size_t len,

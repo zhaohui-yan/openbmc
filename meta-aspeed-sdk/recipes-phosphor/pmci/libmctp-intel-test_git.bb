@@ -7,6 +7,8 @@ SRC_URI = " file://mctp-astpcie-test.c;subdir=${S} \
             file://mctp-astpcie-test.h;subdir=${S} \
             file://mctp-smbus-test.c;subdir=${S} \
             file://mctp-smbus-test.h;subdir=${S} \
+            file://mctp-test-utils.c;subdir=${S} \
+            file://mctp-test-utils.h;subdir=${S} \
             file://CMakeLists.txt;subdir=${S} \
           "
 

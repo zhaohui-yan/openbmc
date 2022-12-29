@@ -54,3 +54,10 @@ option(
     description: 'PCH Recovery Region Offset'
 )
 
+option(
+    'mctp',
+    type: 'feature',
+    value: 'enabled',
+    description: 'Enable the PFR MCTP'
+)
+

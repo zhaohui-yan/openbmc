@@ -11,21 +11,23 @@
 #include <getopt.h>
 #include <unistd.h>
 #include "mctp-astpcie-test.h"
+#include "mctp-test-utils.h"
 
 struct mctp_astpcie_pkt_private *astpcie_extra_params = NULL;
 uint8_t enable_response = 1;
-static const char short_options[] = "htrdgno:l:c:";
+static const char short_options[] = "htrdgno:l:c:v";
 static const struct option
 	long_options[] = {
-	{ "help",   no_argument,        NULL,   'h' },
-	{ "req",    no_argument,        NULL,   't' },
-	{ "resp",   no_argument,        NULL,   'r' },
-	{ "deb",    no_argument,        NULL,   'd' },
-	{ "gbdf",   no_argument,        NULL,   'g' },
-	{ "noresp", no_argument,        NULL,   'n' },
-	{ "len",    required_argument,  NULL,   'l' },
-	{ "count",  required_argument,  NULL,   'c' },
-	{ "node",   optional_argument,  NULL,   'o' },
+	{ "help",         no_argument,        NULL,   'h' },
+	{ "req",          no_argument,        NULL,   't' },
+	{ "resp",         no_argument,        NULL,   'r' },
+	{ "deb",          no_argument,        NULL,   'd' },
+	{ "gbdf",         no_argument,        NULL,   'g' },
+	{ "noresp",       no_argument,        NULL,   'n' },
+	{ "len",          required_argument,  NULL,   'l' },
+	{ "count",        required_argument,  NULL,   'c' },
+	{ "node",         required_argument,  NULL,   'o' },
+	{ "verify_echo",  no_argument,        NULL,   'v' },
 	{ 0, 0, 0, 0 }
 };
 
@@ -35,15 +37,16 @@ void usage(FILE *fp, int argc, char **argv)
 		"Usage: %s [options] <bus_num> <routing_type> <dst_dev> <des_func> <dst_eid> <src_eid> <message_type> <cmd payload>\n\n"
 		"Sends MCTP data over PCIE\n"
 		"Options:\n"
-		" -h | --help       print this message\n"
-		" -t | --req        requester\n"
-		" -r | --resp       responder\n"
-		" -d | --deb        debug\n"
-		" -l | --len        data length\n"
-		" -c | --count      test times\n"
-		" -g | --gbdf       get BDF information\n"
-		" -n | --noresp     no response\n"
-		" -o | --node       mctp device node(defalut: /dev/aspeed-mctp)\n"
+		" -h | --help           print this message\n"
+		" -t | --req            requester\n"
+		" -r | --resp           responder\n"
+		" -d | --deb            debug\n"
+		" -l | --len            data length\n"
+		" -c | --count          test times\n"
+		" -g | --gbdf           get BDF information\n"
+		" -n | --noresp         no response\n"
+		" -o | --node           mctp device node(defalut: /dev/aspeed-mctp)\n"
+		" -v | --verify_echo    verify echo command\n"
 		"Command fields\n"
 		" <bus_num>         destination PCIE bus number\n"
 		" <routing_type>    PCIE routing type 0: route to RC, 2: route by ID, 3: Broadcast from RC\n"
@@ -53,50 +56,17 @@ void usage(FILE *fp, int argc, char **argv)
 		" <src_eid>         source EID\n"
 		" <type>            MCTP message type\n"
 		"   0x00                - MCTP Control Message\n"
-		"   0x85                - ASPEED Control Message\n"
+		"   0x7c                - ASPEED Echo Message\n"
 		" example: get BDF: mctp-astpcie-test -g\n"
 		" example: rx : mctp-astpcie-test -r 2 2 0 0 8 9\n"
 		" example: tx :\n"
 		"   MCTP Control Message\n"
 		"       GET MESSAGE TYPE SUPPORT : mctp-astpcie-test -t 10 2 0 0 9 8 0x00 0x80 0x05\n"
-		"   MCTP ASPEED Control Message\n"
-		"       ECHO : mctp-astpcie-test -t 10 2 0 0 9 8 0x85 0x80 0x00 0x01 0x02 0x03 0x04 0x05\n"
-		"       ECHO LARGE: mctp-astpcie-test -t -l 32 10 2 0 0 9 8 0x85 0x80 0x01\n"
+		"   MCTP ASPEED Echo Message\n"
+		"       ECHO : mctp-astpcie-test -t 10 2 0 0 9 8 0x7c 0x80 0x00 0x01 0x02 0x03 0x04 0x05\n"
+		"       ECHO LARGE: mctp-astpcie-test -t -l 32 10 2 0 0 9 8 0x7c 0x80 0x01\n"
 		"",
 		argv[0]);
-}
-
-void print_raw_resp(uint8_t *rbuf, int rlen)
-{
-	int i = 0;
-
-	for (i = 0; i < rlen; ++i)
-		printf("%02x ", rbuf[i]);
-
-	printf("\n");
-}
-
-int compare_pattern(uint8_t *pattern0, uint8_t *pattern1, int size)
-{
-	int i;
-
-	for (i = 0; i < size; i++) {
-		if (pattern0[i] != pattern1[i])
-			return 0;
-	}
-
-	return 1;
-}
-
-void test_pattern_prepare(uint8_t *pattern, int size)
-{
-	int i;
-	int j;
-
-	for (i = 0; i < size; i++) {
-		j = i % 0x100;
-		pattern[i] = j;
-	}
 }
 
 /*
@@ -158,7 +128,7 @@ void rx_request_handler(mctp_eid_t src, void *data, void *msg, size_t len,
 	mctp_prinfo("Received Command: %d", cmd);
 	mctp_prinfo("Received Message length: %d", len);
 
-	if (mctp_type != MCTP_MESSAGE_TYPE_ASPEED_CTRL) {
+	if (mctp_type != MCTP_MESSAGE_TYPE_ASPEED_ECHO_TEST) {
 		mctp_prwarn("%s: Not support message type 0x%X\n", __func__, mctp_type);
 		return;
 	}
@@ -259,7 +229,7 @@ void rx_request_control_handler(mctp_eid_t src, void *data, void *msg, size_t le
  */
 void wait_for_request(struct test_mctp_ctx *ctx)
 {
-	struct mctp_binding_astpcie *astpcie = (struct mctp_binding_astpcie *)ctx->prot;
+	struct mctp_binding_astpcie *astpcie = (struct mctp_binding_astpcie *)ctx->port;
 	struct mctp *mctp = ctx->mctp;
 	struct pollfd pfd = { 0 };
 	int count = 0;
@@ -270,7 +240,7 @@ void wait_for_request(struct test_mctp_ctx *ctx)
 	mctp_set_rx_all(mctp, rx_request_handler, ctx);
 	mctp_set_rx_ctrl(mctp, rx_request_control_handler, ctx);
 
-	while (count <= 10000) {
+	while (1) {
 		r = poll(&pfd, 1, 5000);
 
 		if (r < 0)
@@ -296,19 +266,21 @@ void wait_for_request(struct test_mctp_ctx *ctx)
 // return byte count, do not interpret data (e.g. MCTP msg type)
 int test_mctp_astpcie_recv_data_timeout_raw(struct test_mctp_ctx *ctx, uint8_t dst, int TOsec)
 {
-	struct mctp_binding_astpcie *astpcie = (struct mctp_binding_astpcie *)ctx->prot;
+	struct mctp_binding_astpcie *astpcie = (struct mctp_binding_astpcie *)ctx->port;
 	struct test_mctp_ctx *p = (struct test_mctp_ctx *)ctx;
 	struct mctp *mctp = ctx->mctp;
 	struct pollfd pfd = { 0 };
-	int retry = 500; //Default 5 secs (10ms * 500)
+	int retry = 0;
 	int r;
 
 	pfd.fd = astpcie->fd;
 	pfd.events = POLLIN;
 	mctp_set_rx_all(mctp, rx_response_handler, ctx);
 
-	while (retry--) {
+	// Default 5 secs (10ms * 500)
+	while (retry < 500) {
 		mctp_prdebug("%s: MCTP retry %d", __func__, retry);
+		retry++;
 		r = poll(&pfd, 1, 10);
 
 		if (r < 0)
@@ -392,6 +364,9 @@ struct test_mctp_ctx *test_mctp_astpcie_init(char *mctp_dev, uint8_t bus, uint8_
 	astpcie = mctp_astpcie_init();
 	mctp_astpcie_mctp_dev_name(astpcie, mctp_dev);
 	astpcie_binding = mctp_astpcie_core(astpcie);
+	mctp_ctx->mctp = mctp;
+	mctp_ctx->port = (void *)astpcie;
+	mctp_ctx->astpcie_binding = astpcie_binding;
 	if (mctp == NULL || astpcie == NULL || astpcie_binding == NULL || mctp_register_bus_dynamic_eid(mctp, astpcie_binding) < 0) {
 		mctp_prerr("%s: MCTP init failed", __func__);
 		goto bail;
@@ -418,9 +393,6 @@ struct test_mctp_ctx *test_mctp_astpcie_init(char *mctp_dev, uint8_t bus, uint8_
 	astpcie_extra_params->routing = routing;
 	astpcie_extra_params->remote_id = bus << 8 | (dst_dev & 0x1f) << 3 | (dst_func & 0x07);
 	mctp_prdebug("%s: astpcieextra_params remote_id=0x%02X", __func__, astpcie_extra_params->remote_id);
-	mctp_ctx->mctp = mctp;
-	mctp_ctx->prot = (void *)astpcie;
-	mctp_ctx->astpcie_binding = astpcie_binding;
 	return mctp_ctx;
 
 bail:
@@ -435,23 +407,39 @@ int test_mctp_astpcie_send_data(struct test_mctp_ctx *ctx, uint8_t dst, uint8_t 
 	bool tag_owner = flag_tag & MCTP_HDR_FLAG_TO ? true : false;
 	uint8_t tag = MCTP_HDR_GET_TAG(flag_tag);
 	struct mctp *mctp = ctx->mctp;
+	int retry = 5;
+	int ret = -1;
+	int i;
 
 	mctp_binding_set_tx_enabled(astpcie_binding, true);
-	if (mctp_message_tx(mctp, dst, req, size,
-			    tag_owner, tag, astpcie_extra_params) < 0) {
-		mctp_prerr("%s: MCTP TX error", __func__);
-		return -1;
+
+	for (i = 0; i <= retry; i++) {
+		ret = mctp_message_tx(mctp, dst, req, size,
+			    tag_owner, tag, astpcie_extra_params);
+		if (ret == 0)
+			break;
+		mctp_prerr("%s: MCTP retry %d", __func__, i);
+		usleep(10*1000);
 	}
 
-	return 0;
+	if (i > retry)
+		mctp_prerr("%s: MCTP TX error", __func__);
+
+	return ret;
 }
 
 void test_mctp_astpcie_free(struct test_mctp_ctx *ctx)
 {
-	mctp_astpcie_free(ctx->prot);
-	mctp_destroy(ctx->mctp);
-	free(ctx);
-	free(astpcie_extra_params);
+	if (ctx != NULL) {
+		if (ctx->port != NULL)
+			mctp_astpcie_free(ctx->port);
+		if (ctx->mctp != NULL)
+			mctp_destroy(ctx->mctp);
+		free(ctx);
+	}
+
+	if (astpcie_extra_params != NULL)
+		free(astpcie_extra_params);
 }
 
 int test_send_mctp_cmd(char *mctp_dev, uint8_t bus, uint8_t routing, uint8_t dst_dev, uint8_t dst_func, uint8_t dst_eid, uint8_t src_eid,
@@ -515,10 +503,11 @@ int main(int argc, char *argv[])
 {
 	uint8_t msg_hdr_len = sizeof(struct mctp_ctrl_msg_hdr);
 	uint8_t cmd = MCTP_CTRL_CMD_GET_MESSAGE_TYPE_SUPPORT;
-	uint8_t tbuf[PCIE_TEST_TX_BUFF_SIZE] = { 0 };
-	uint8_t rbuf[PCIE_TEST_RX_BUFF_SIZE] = { 0 };
+	uint8_t tbuf[TEST_TX_BUFF_SIZE] = { 0 };
+	uint8_t rbuf[TEST_RX_BUFF_SIZE] = { 0 };
 	uint8_t src_eid = REQUESTER_EID;
 	uint8_t dst_eid = RESPONDER_EID;
+	uint8_t verify_echo_flag = 0;
 	uint8_t rq_dgram_inst = 0x80;
 	uint8_t responder_flag = 0;
 	uint8_t requester_flag = 0;
@@ -586,11 +575,16 @@ int main(int argc, char *argv[])
 			break;
 		case 'o':
 			strcpy(dev_name, optarg);
+			minargc += 2;
 			if (!strcmp(dev_name, "")) {
 				printf("No dev file name!\n");
 				usage(stdout, argc, argv);
 				exit(EXIT_FAILURE);
 			}
+			break;
+		case 'v':
+			verify_echo_flag = 1;
+			minargc += 1;
 			break;
 		default:
 			usage(stdout, argc, argv);
@@ -634,8 +628,8 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	if (data_len > (PCIE_TEST_TX_BUFF_SIZE - msg_hdr_len)) {
-		mctp_prerr("length exceeds max payload length %d\n", (PCIE_TEST_TX_BUFF_SIZE - msg_hdr_len));
+	if (data_len > (TEST_TX_BUFF_SIZE - msg_hdr_len)) {
+		mctp_prerr("length exceeds max payload length %d\n", (TEST_TX_BUFF_SIZE - msg_hdr_len));
 		usage(stdout, argc, argv);
 		exit(EXIT_FAILURE);
 	}
@@ -660,7 +654,7 @@ int main(int argc, char *argv[])
 		rq_dgram_inst = (uint8_t)strtoul(argv[optind++], NULL, 0);
 		cmd = (uint8_t)strtoul(argv[optind++], NULL, 0);
 		tbuf[tlen++] = mctp_type;
-		tbuf[tlen++] = rq_dgram_inst | MCTP_CTRL_HDR_FLAG_REQUEST;
+		tbuf[tlen++] = rq_dgram_inst;
 		tbuf[tlen++] = cmd;
 
 		if (data_len > 0) {
@@ -683,20 +677,24 @@ int main(int argc, char *argv[])
 			printf("\n");
 		}
 
-		if (mctp_type != MCTP_MESSAGE_TYPE_MCTP_CTRL && mctp_type != MCTP_MESSAGE_TYPE_ASPEED_CTRL) {
-			mctp_prerr("Error not support message type 0x%X\n", mctp_type);
-			return -1;
-		}
-
 		for (i = 0; i < loop_count; i++) {
+			printf("test time(%d)...\n", i);
 			ret = test_send_mctp_cmd(dev_name, dst_bus, routing, dst_dev, dst_func, dst_eid, src_eid,
 						 tbuf, tlen, rbuf, &rlen);
 			if (ret < 0) {
 				mctp_prerr("Error sending MCTP cmd, ret = %d\n count = %d\n", ret, i);
 				test_status = -1;
-			} else   {
-				print_raw_resp(rbuf, rlen);
+				break;
 			}
+
+			if (verify_echo_flag) {
+				ret = verify_mctp_echo_cmd(tbuf, tlen, rbuf, rlen);
+				if (ret < 0) {
+					test_status = -1;
+					break;
+				}
+			} else
+				print_raw_data(rbuf, rlen);
 		}
 
 		return test_status;

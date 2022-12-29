@@ -15,8 +15,22 @@ incdir = include_directories(
     'include'
 )
 
-# Generate the aspeed-pfr-tool executable
+# Get the options and enable the respective features
+## create a MAP of  "options : feature_flag"
+feature_map = {
+    'mctp' : '-DENABLE_PFR_MCTP',
+}
 
+# Get the options status and build a project summary to show which flags are
+# being enabled during the configuration time.
+foreach option_key, option_value : feature_map
+    if (get_option(option_key).enabled())
+        summary(option_key, option_value, section : 'Enabled Features')
+        add_project_arguments(option_value, language:'c')
+    endif
+endforeach
+
+# Generate the aspeed-pfr-tool executable
 executable(
     'aspeed-pfr-tool',
     [
@@ -32,7 +46,6 @@ executable(
     install: true
 )
 
-# PFR Info
 # Gather the Configuration data
 conf_data = configuration_data()
 
@@ -60,3 +73,4 @@ configure_file(input : 'aspeed-pfr-tool.conf.in',
                configuration: conf_data,
                install_dir: '/usr/share/pfrconfig',
                install : true)
+

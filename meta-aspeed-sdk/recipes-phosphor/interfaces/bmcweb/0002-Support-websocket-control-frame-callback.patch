@@ -138,7 +138,7 @@ index 3aa8554..c773e2b 100644
      }
  
      void sendBinary(const std::string_view msg) override
-@@ -286,6 +325,8 @@ class ConnectionImpl : public Connection
+@@ -285,6 +324,8 @@ class ConnectionImpl : public Connection
      std::function<void(Connection&, const std::string&, bool)> messageHandler;
      std::function<void(Connection&, const std::string&)> closeHandler;
      std::function<void(Connection&)> errorHandler;

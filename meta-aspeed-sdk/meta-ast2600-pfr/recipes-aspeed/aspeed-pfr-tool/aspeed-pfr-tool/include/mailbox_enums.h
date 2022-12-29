@@ -48,10 +48,15 @@ typedef enum {
 	MB_UFM_WRITE_FIFO = 0x0D,
 	/* Egress byte for Read FIFO */
 	MB_UFM_READ_FIFO = 0x0E,
+#ifdef ENABLE_PFR_MCTP
+	/* MCTP packet data storage */
+	MB_MCTP_PACKET_WRITE_RXFIFO = 0x0F,
+#else
 	/* Status of BMC, write from BMC allowed only until BMC signals boot complete, write from BMC
 	 * re-allowed on BMC reset
 	 */
 	MB_BMC_CHECKPOINT = 0x0F,
+#endif
 	/* Status of ACM, write from CPU allowed only until ACM signals end of execution, write from CPU
 	 * re-allowed on CPU reset
 	 */
@@ -80,6 +85,13 @@ typedef enum {
 	MB_BMC_PFM_RECOVERY_MINOR_VER = 0x1F,
 	/* Hash value of CPLD RoT HW + FW; read-only for CPU/BMC */
 	MB_CPLD_HASH = 0x20,
+#ifdef	ENABLE_PFR_MCTP
+	/* Status of BMC, write from BMC allowed only until BMC signals boot complete, write from BMC
+	 * re-allowed on BMC reset
+	 */
+	MB_BMC_CHECKPOINT = 0x60,
+#endif
+
 } MB_REGFILE_OFFSET_ENUM;
 
 typedef enum {
