@@ -61,3 +61,10 @@ option(
     description: 'Enable the PFR MCTP'
 )
 
+option(
+    'attestation',
+    type: 'feature',
+    value: 'enabled',
+    description: 'Enable the PFR SPDM ATTESTATION'
+)
+
