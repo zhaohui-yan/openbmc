@@ -2,43 +2,36 @@
   <VersionAddr>0x00000001</VersionAddr>
   <RuntimeUpdate>false</RuntimeUpdate>
   <ReadWrite>
-    <Region>
-      <StartAddr>0x00100000</StartAddr> <!-- u-boot env -->
-      <EndAddr>0x0011FFFF</EndAddr>
-      <OperationOnFailure>Restore</OperationOnFailure>
-    </Region>
-
-    <Region>
-      <StartAddr>0x00120000</StartAddr> <!-- rwfs -->
-      <EndAddr>0x010FFFFF</EndAddr>
-      <OperationOnFailure>Erase</OperationOnFailure>
-    </Region>
-
-    <Region>
-      <StartAddr>0x08000000</StartAddr> <!-- staging -->
-      <EndAddr>0x0E4FFFFF</EndAddr>
-      <OperationOnFailure>Nothing</OperationOnFailure>
-    </Region>
+      <Region>
+          <StartAddr>0x00100000</StartAddr> <!-- u-boot env -->
+          <EndAddr>0x0011FFFF</EndAddr>
+          <OperationOnFailure>Restore</OperationOnFailure>
+      </Region>
+      <Region>
+          <StartAddr>0x00120000</StartAddr> <!-- rwfs -->
+          <EndAddr>0x010FFFFF</EndAddr>
+          <OperationOnFailure>Erase</OperationOnFailure>
+      </Region>
+      <Region>
+          <StartAddr>0x08000000</StartAddr> <!-- staging -->
+          <EndAddr>0x0E4FFFFF</EndAddr>
+          <OperationOnFailure>Nothing</OperationOnFailure>
+      </Region>
   </ReadWrite>
 
   <SignedImage>
-    <PrivateKey>pricsk0_2048.pem</PrivateKey>
-    <HashType>SHA256</HashType>
-    <Region>
-      <StartAddr>0x00000000</StartAddr> <!-- u-boot -->
-      <EndAddr>0x000DFFFF</EndAddr>
-    </Region>
-    <ValidateOnBoot>true</ValidateOnBoot>
-  </SignedImage>
-
-  <SignedImage>
-    <PrivateKey>pricsk1_2048.pem</PrivateKey>
-    <HashType>SHA256</HashType>
-    <Region>
-      <StartAddr>0x01100000</StartAddr> <!-- fit-image -->
-      <EndAddr>0x03DFFFFF</EndAddr>
-    </Region>
-    <ValidateOnBoot>true</ValidateOnBoot>
+      <KeyId>0</KeyId>
+      <PrivateKey>pricsk0_2048.pem</PrivateKey>
+      <HashType>SHA256</HashType>
+      <Region>
+          <StartAddr>0x00000000</StartAddr> <!-- u-boot -->
+          <EndAddr>0x000DFFFF</EndAddr>
+      </Region>
+      <Region>
+          <StartAddr>0x01100000</StartAddr> <!-- fit-image -->
+          <EndAddr>0x03DFFFFF</EndAddr>
+      </Region>
+      <ValidateOnBoot>true</ValidateOnBoot>
   </SignedImage>
 
   <I2cFilterRule> <!-- I2c command filtering rule -->
