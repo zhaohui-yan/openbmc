@@ -1,6 +1,6 @@
-From b867675f6ef1b455b4ba78e156c298ce6c3e57b3 Mon Sep 17 00:00:00 2001
-From: Jammy Huang <jammy_huang@aspeedtech.com>
-Date: Fri, 18 Feb 2022 14:08:40 +0800
+From bf4a29f2fa40f08e30d26dfb3b011c92eadb80cb Mon Sep 17 00:00:00 2001
+From: Steven Lee <steven_lee@aspeedtech.com>
+Date: Mon, 6 Feb 2023 18:08:36 +0800
 Subject: [PATCH] Avoid frame drop
 
 For standard jpeg, frame-drop is OK. Just send the latest frame
@@ -33,18 +33,18 @@ Signed-off-by: Jammy Huang <jammy_huang@aspeedtech.com>
  3 files changed, 105 insertions(+), 59 deletions(-)
 
 diff --git a/ikvm_server.cpp b/ikvm_server.cpp
-index e5f12c5..6bf61e3 100644
+index 67dfb5b..9ad260d 100644
 --- a/ikvm_server.cpp
 +++ b/ikvm_server.cpp
-@@ -10,6 +10,7 @@
- #include <boost/crc.hpp>
+@@ -9,6 +9,7 @@
+ #include <xyz/openbmc_project/Common/error.hpp>
  
- #define 	rfbEncodingAspeed   18
+ #define        rfbEncodingAspeed   18
 +#define ROUND_DOWN(x,r) ((x) & ~((r) - 1))
  
  namespace ikvm
  {
-@@ -100,7 +101,7 @@ void Server::sendFrame()
+@@ -99,7 +100,7 @@ void Server::sendFrame()
      uint32_t frameCount = 0;
      rfbClientIteratorPtr it;
      rfbClientPtr cl;
@@ -53,7 +53,7 @@ index e5f12c5..6bf61e3 100644
  
      if (!data || pendingResize)
      {
-@@ -113,6 +114,7 @@ void Server::sendFrame()
+@@ -112,6 +113,7 @@ void Server::sendFrame()
      {
          ClientData* cd = (ClientData*)cl->clientData;
          rfbFramebufferUpdateMsg* fu = (rfbFramebufferUpdateMsg*)cl->updateBuf;
@@ -61,7 +61,7 @@ index e5f12c5..6bf61e3 100644
  
          if (!cd)
          {
-@@ -130,26 +132,8 @@ void Server::sendFrame()
+@@ -129,26 +131,8 @@ void Server::sendFrame()
              continue;
          }
  
@@ -71,9 +71,9 @@ index e5f12c5..6bf61e3 100644
 -            {
 -                /* JFIF header contains some varying data so skip it for
 -                 * checksum calculation */
--                frame_crc = boost::crc<32, 0x04C11DB7, 0xFFFFFFFF, 0xFFFFFFFF,
--                                       true, true>(data + 0x30,
--                                                   video.getFrameSize() - 0x30);
+-                frame_crc =
+-                    boost::crc<32, 0x04C11DB7, 0xFFFFFFFF, 0xFFFFFFFF, true,
+-                               true>(data + 0x30, video.getFrameSize() - 0x30);
 -            }
 -
 -            if (cd->last_crc == frame_crc)
@@ -89,7 +89,7 @@ index e5f12c5..6bf61e3 100644
  
          if (cl->enableLastRectEncoding)
          {
-@@ -164,11 +148,12 @@ void Server::sendFrame()
+@@ -163,11 +147,12 @@ void Server::sendFrame()
          cl->ublen = sz_rfbFramebufferUpdateMsg;
          rfbSendUpdateBuf(cl);
  
@@ -105,9 +105,9 @@ index e5f12c5..6bf61e3 100644
              cl->updateBuf[cl->ublen++] = (char)(0);
              cl->updateBuf[cl->ublen++] = (char)(frameCount >> 24 & 0xff);
              cl->updateBuf[cl->ublen++] = (char)(frameCount >> 16 & 0xff);
-@@ -177,11 +162,14 @@ void Server::sendFrame()
+@@ -176,11 +161,14 @@ void Server::sendFrame()
              cl->updateBuf[cl->ublen++] = (char)(video.getSubsampling());
-             cl->updateBuf[cl->ublen++] = (char)(0x00);	// the value of quality if changed
+             cl->updateBuf[cl->ublen++] = (char)(0x00); // the value of quality if changed
          }
 -        else if (video.getFormat() == 0)
 +        else
@@ -122,7 +122,7 @@ index e5f12c5..6bf61e3 100644
  
          if (cl->enableLastRectEncoding)
          {
-@@ -192,6 +180,9 @@ void Server::sendFrame()
+@@ -191,6 +179,9 @@ void Server::sendFrame()
      }
  
      rfbReleaseClientIterator(it);
@@ -132,7 +132,7 @@ index e5f12c5..6bf61e3 100644
  }
  
  void Server::clientFramebufferUpdateRequest(
-@@ -228,7 +219,7 @@ enum rfbNewClientAction Server::newClient(rfbClientPtr cl)
+@@ -227,7 +218,7 @@ enum rfbNewClientAction Server::newClient(rfbClientPtr cl)
      Server* server = (Server*)cl->screen->screenData;
  
      cl->clientData =
@@ -141,7 +141,7 @@ index e5f12c5..6bf61e3 100644
      cl->clientGoneHook = clientGone;
      cl->clientFramebufferUpdateRequestHook = clientFramebufferUpdateRequest;
      if (!server->numClients++)
-@@ -265,8 +256,9 @@ void Server::doResize()
+@@ -264,8 +255,9 @@ void Server::doResize()
              continue;
          }
  
@@ -153,7 +153,7 @@ index e5f12c5..6bf61e3 100644
  
      rfbReleaseClientIterator(it);
 diff --git a/ikvm_video.cpp b/ikvm_video.cpp
-index dcf4abb..3c4e35b 100644
+index c75ffc0..ffe1149 100644
 --- a/ikvm_video.cpp
 +++ b/ikvm_video.cpp
 @@ -34,7 +34,7 @@ using namespace sdbusplus::xyz::openbmc_project::Common::Device::Error;
@@ -162,10 +162,10 @@ index dcf4abb..3c4e35b 100644
      resizeAfterOpen(false), timingsError(false), fd(-1), frameRate(fr),
 -    lastFrameIndex(-1), height(600), width(800), subSampling(sub),
 +    height(600), width(800), subSampling(sub),
- 	format(fmt), input(input), path(p)
- {
- }
-@@ -46,12 +46,21 @@ Video::~Video()
+     format(fmt), input(input), path(p)
+ {}
+ 
+@@ -45,12 +45,21 @@ Video::~Video()
  
  char* Video::getData()
  {
@@ -190,7 +190,7 @@ index dcf4abb..3c4e35b 100644
  }
  
  void Video::getFrame()
-@@ -67,6 +76,12 @@ void Video::getFrame()
+@@ -66,6 +75,12 @@ void Video::getFrame()
          return;
      }
  
@@ -203,7 +203,7 @@ index dcf4abb..3c4e35b 100644
      FD_ZERO(&fds);
      FD_SET(fd, &fds);
  
-@@ -95,48 +110,59 @@ void Video::getFrame()
+@@ -94,48 +109,59 @@ void Video::getFrame()
  
                  if (!(buf.flags & V4L2_BUF_FLAG_ERROR))
                  {
@@ -286,7 +286,7 @@ index dcf4abb..3c4e35b 100644
  bool Video::needsResize()
  {
      int rc;
-@@ -186,7 +212,7 @@ bool Video::needsResize()
+@@ -185,7 +211,7 @@ bool Video::needsResize()
                  xyz::openbmc_project::Common::File::Open::PATH(path.c_str()));
          }
  
@@ -295,7 +295,7 @@ index dcf4abb..3c4e35b 100644
          return true;
      }
  
-@@ -501,7 +527,7 @@ void Video::stop()
+@@ -500,7 +526,7 @@ void Video::stop()
          return;
      }
  
@@ -305,7 +305,7 @@ index dcf4abb..3c4e35b 100644
      rc = ioctl(fd, VIDIOC_STREAMOFF, &type);
      if (rc)
 diff --git a/ikvm_video.hpp b/ikvm_video.hpp
-index 9669ebe..0cc0b76 100644
+index 69ec79c..0246d25 100644
 --- a/ikvm_video.hpp
 +++ b/ikvm_video.hpp
 @@ -5,6 +5,7 @@
@@ -371,7 +371,7 @@ index 9669ebe..0cc0b76 100644
      /*
       * @struct Buffer
       * @brief Store the address and size of frame data from streaming
-@@ -160,6 +189,7 @@ class Video
+@@ -159,6 +188,7 @@ class Video
          bool queued;
          size_t payload;
          size_t size;
@@ -379,7 +379,7 @@ index 9669ebe..0cc0b76 100644
      };
  
      /*
-@@ -173,8 +203,6 @@ class Video
+@@ -172,8 +202,6 @@ class Video
      int fd;
      /* @brief Desired frame rate of video stream in frames per second */
      int frameRate;

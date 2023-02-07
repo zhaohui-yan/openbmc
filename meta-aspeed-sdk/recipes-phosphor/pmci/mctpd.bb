@@ -30,5 +30,6 @@ DEPENDS += " \
     phosphor-dbus-interfaces \
     udev \
     "
+
 FILES:${PN} += "${systemd_system_unitdir}/xyz.openbmc_project.mctpd@.service"
 FILES:${PN} += "/usr/share/mctp/mctp_config.json"
