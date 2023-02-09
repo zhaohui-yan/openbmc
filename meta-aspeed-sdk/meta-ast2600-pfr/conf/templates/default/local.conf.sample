@@ -27,8 +27,6 @@ EXTRA_USERS_PARAMS = " \
 # in kernel build time.
 TZ = '/etc/localtime'
 
-require conf/machine/include/obmc-bsp-common.inc
-
 # AST2600 Alternate Boot Record feature
 #require conf/machine/include/ast-abr.inc
 
