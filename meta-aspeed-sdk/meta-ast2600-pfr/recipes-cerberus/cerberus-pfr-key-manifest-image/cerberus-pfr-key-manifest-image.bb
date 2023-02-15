@@ -1,5 +1,5 @@
-SUMMARY = "Cerberus PFR key cancellation image"
-DESCRIPTION = "Cerberus PFR key cancellation creation"
+SUMMARY = "Cerberus PFR key manifest image"
+DESCRIPTION = "Cerberus PFR key manifest indivisual image creation"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
@@ -25,8 +25,7 @@ do_install() {
     install -m 0644 ${S}/key_management_tools/*.* ${PFR_KEY_MANAGEMENT_TOOLS_DIR}
 
     cd ${PFR_KEY_MANAGEMENT_TOOLS_DIR}
-    python3 key_management_tool.py cancel_key_manifest0_keys.config
-    python3 key_management_tool.py cancel_key_manifest1_keys.config
+    python3 key_management_tool.py key_manifest1_image.config
     cd ${S}
 
     install -d ${D}${datadir}/cerberus
