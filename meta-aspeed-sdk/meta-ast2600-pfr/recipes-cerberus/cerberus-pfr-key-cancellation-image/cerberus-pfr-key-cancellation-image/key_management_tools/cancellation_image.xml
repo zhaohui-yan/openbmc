@@ -1,9 +1,0 @@
-<CancellationImage version="08.03" platform="Server-BMC" type="4">
-  <CancellationSection>
-    <WriteAddress>0x00000000</WriteAddress>
-    <Region>
-      <StartAddr>0x00000000</StartAddr>
-      <EndAddr>0x000000FF</EndAddr>
-    </Region>
-  </CancellationSection>
-</CancellationImage>
