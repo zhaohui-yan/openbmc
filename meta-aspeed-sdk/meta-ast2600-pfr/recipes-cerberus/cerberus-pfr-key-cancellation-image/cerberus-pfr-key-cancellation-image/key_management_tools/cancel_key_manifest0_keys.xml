@@ -1,7 +1,7 @@
 <CancellationImage version="08.04" platform="Server-BMC" type="4">
   <!-- Cancel keys in key manifest 0 -->
   <CancellationSection>
-      <CancellationPolicy>BMC</CancellationPolicy> <!-- BMC or PCH -->
+      <CancellationPolicy>BMC</CancellationPolicy> <!-- BMC, PCH, or ROT -->
       <HashType>SHA256</HashType>
       <Key>
           <KeyId>2</KeyId>
