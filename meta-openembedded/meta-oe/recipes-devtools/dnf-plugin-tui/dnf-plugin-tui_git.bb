@@ -4,7 +4,7 @@ LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263"
 
 SRC_URI = "git://github.com/ubinux/dnf-plugin-tui.git;branch=master;protocol=https"
-SRCREV = "7c45fd65dcd811def66161f6d572c3930f2ba4d8"
+SRCREV = "8d21f52577aa03958732a5a346a678c699e98cb6"
 PV = "1.3"
 
 SRC_URI:append:class-target = " file://oe-remote.repo.sample"
@@ -28,13 +28,20 @@ do_install:append:class-target() {
     install -m 0644 ${WORKDIR}/oe-remote.repo.sample ${D}${sysconfdir}/yum.repos.d
 }
 
+do_install:append:class-nativesdk() {
+    install -d -p ${D}/${SDKPATH}/postinst-intercepts
+    cp -r ${COREBASE}/scripts/postinst-intercepts/* ${D}/${SDKPATH}/postinst-intercepts/
+    sed -i -e 's/STAGING_DIR_NATIVE/NATIVE_ROOT/g' ${D}/${SDKPATH}/postinst-intercepts/*
+}
+
 FILES:${PN} += "${datadir}/dnf"
+FILES:${PN} += "${SDKPATH}/postinst-intercepts"
 
 RDEPENDS:${PN} += " \
     bash \
     dnf \
     libnewt-python \
 "
-
+DEPENDS:append:class-nativesdk = " file-replacement-nativesdk"
 BBCLASSEXTEND = "nativesdk"
 SKIP_RECIPE[dnf-plugin-tui] ?= "${@bb.utils.contains('PACKAGE_CLASSES', 'package_rpm', '', 'does not build correctly without package_rpm in PACKAGE_CLASSES', d)}"

@@ -88,7 +88,7 @@ class GitSM(Git):
                 subrevision[m] = module_hash.split()[2]
 
                 # Convert relative to absolute uri based on parent uri
-                if uris[m].startswith('..'):
+                if  uris[m].startswith('..') or uris[m].startswith('./'):
                     newud = copy.copy(ud)
                     newud.path = os.path.realpath(os.path.join(newud.path, uris[m]))
                     uris[m] = Git._get_repo_url(self, newud)
@@ -115,10 +115,14 @@ class GitSM(Git):
                     # This has to be a file reference
                     proto = "file"
                     url = "gitsm://" + uris[module]
+            if url.endswith("{}{}".format(ud.host, ud.path)):
+                raise bb.fetch2.FetchError("Submodule refers to the parent repository. This will cause deadlock situation in current version of Bitbake." \
+                                           "Consider using git fetcher instead.")
 
             url += ';protocol=%s' % proto
             url += ";name=%s" % module
             url += ";subpath=%s" % module
+            url += ";nobranch=1"
 
             ld = d.createCopy()
             # Not necessary to set SRC_URI, since we're passing the URI to

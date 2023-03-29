@@ -34,9 +34,12 @@ ACTION_ON="on"
 ACTION_OFF="off"
 ACTION_DFU="dfu"
 ACTION_RECOVERY="recovery"
+ACTION_CYCLE="cycle"
+ACTION_RESET="reset"
 ACTION_AC_ON="ac-on"
 ACTION_AC_OFF="ac-off"
 ACTION_STATUS="status"
+ACTION_BOOT_MODE="boot-from-bootmode"
 
 VALID_SLED_ACTIONS="
     $ACTION_ON
@@ -46,7 +49,14 @@ VALID_SLED_ACTIONS="
     $ACTION_STATUS
     $ACTION_DFU
     $ACTION_RECOVERY
+    $ACTION_CYCLE
+    $ACTION_RESET
+    $ACTION_BOOT_MODE
 "
+
+BOOT_MODE_REGULAR="\"xyz.openbmc_project.Control.Boot.Mode.Modes.Regular\""
+BOOT_MODE_SAFE="\"xyz.openbmc_project.Control.Boot.Mode.Modes.Safe\""
+BOOT_MODE_SETUP="\"xyz.openbmc_project.Control.Boot.Mode.Modes.Setup\""
 
 function is_valid_sled_action()
 {
@@ -230,10 +240,19 @@ function get_host_status_dbus()
     return 0
 }
 
+function get_addr_from_dts_aliases()
+{
+    local node_address
+    node_address=$(awk -F '@' '{printf $2}' /sys/firmware/devicetree/base/aliases/"$1")
+    echo "$node_address"
+}
+
 function get_host_status_mdio()
 {
     local SLED_NUM=$1
-    local MDIO_BUS=0
+    local MDIO_BUS
+
+    MDIO_BUS="$(get_addr_from_dts_aliases mdio0).mdio-1"
 
     declare -a PORT_MAP=(0 3 2 1 7 6 5)
 
@@ -253,7 +272,7 @@ function get_host_status_mdio()
 
     while true
     do
-        if POST_ST_VAL=$(mdio-util c22 r $MDIO_BUS "${PORT_MAP[SLED_NUM]}" 0); then
+        if POST_ST_VAL=$(mdio "$MDIO_BUS" phy "${PORT_MAP[SLED_NUM]}" 0); then
             if [ $((POST_ST_VAL&16#0800)) -eq $((16#0000)) ]; then
                 case $SLED_LAST_ACTION in
                     "$ACTION_DFU")
@@ -319,6 +338,47 @@ function get_host_status()
     return $?
 }
 
+function get_host_bootmode()
+{
+    local BUS_NAME="xyz.openbmc_project.Settings"
+    local OBJ_PATH="/xyz/openbmc_project/control/host${1}/boot"
+    local INTF_NAME="xyz.openbmc_project.Control.Boot.Mode"
+    busctl get-property "${BUS_NAME}" "${OBJ_PATH}" "${INTF_NAME}" BootMode | awk '{print $2}'
+}
+
+function do_action_reset()
+{
+    # 1. Power off
+    # 2. Power on
+
+    local SLED_NUM=$1
+    local CUR_ST=$2
+
+    if [ "$CUR_ST" != "$HOST_ST_OFF" ]; then
+        do_action_off "$SLED_NUM"
+    else
+        echo "sled${SLED_NUM}: already powered off"
+    fi
+
+    sleep 3
+    do_action_on "$SLED_NUM"
+}
+
+function do_action_cycle()
+{
+    # 1. AC off
+    # 2. AC on
+    # 3. Power on
+
+    local SLED_NUM=$1
+
+    do_action_ac_off "$SLED_NUM"
+    sleep 3
+    do_action_ac_on "$SLED_NUM"
+    sleep 3
+    do_action_on "$SLED_NUM"
+}
+
 function do_action_ac_on()
 {
     local SLED_NUM=$1
@@ -340,6 +400,7 @@ function do_action_on()
     local SLED_NUM=$1
     echo "sled${SLED_NUM}: power on host"
     trigger_power_button  "$SLED_NUM"  "$DELAY_POWER_ON"
+    sleep 10 # Mac mini need about 10 second to stable link status
     echo "$ACTION_ON" > "/tmp/sled${SLED_NUM}-last-action"
 }
 
@@ -374,7 +435,7 @@ function do_action_dfu()
         echo "SLED$SLED_NUM: press power button failed"
         echo "SLED$SLED_NUM: releasing power button"
         release_power_button "$SLED_NUM"
-        exit 1
+        return 1
     fi
     sleep 1
 
@@ -387,7 +448,7 @@ function do_action_dfu()
     echo "SLED$SLED_NUM: releasing host power button"
     if ! release_power_button "$SLED_NUM"; then
         echo "SLED$SLED_NUM: release power button failed"
-        exit 1
+        return 1
     fi
     echo "$ACTION_DFU" > "/tmp/sled${SLED_NUM}-last-action"
 }
@@ -403,6 +464,12 @@ function host_state_on_action_handler()
             ;;
         "$ACTION_AC_OFF")
             do_action_ac_off "$SLED_NUM"
+            ;;
+        "$ACTION_RESET")
+            do_action_reset "$SLED_NUM" "$HOST_ST_ON"
+            ;;
+        "$ACTION_CYCLE")
+            do_action_cycle "$SLED_NUM"
             ;;
         *)
             echo "Invalid action ($ACTION) for current host state (On)"
@@ -426,6 +493,12 @@ function host_state_sleep_action_handler()
         "$ACTION_AC_OFF")
             do_action_ac_off "$SLED_NUM"
             ;;
+        "$ACTION_RESET")
+            do_action_reset "$SLED_NUM" "$HOST_ST_ON"
+            ;;
+        "$ACTION_CYCLE")
+            do_action_cycle "$SLED_NUM"
+            ;;
         *)
             echo "Invalid action ($ACTION) for current host state (Sleep)"
             return 1
@@ -445,8 +518,17 @@ function host_state_off_action_handler()
         "$ACTION_RECOVERY")
             do_action_recovery "$SLED_NUM"
             ;;
+        "$ACTION_DFU")
+            do_action_dfu "$SLED_NUM"
+            ;;
         "$ACTION_AC_OFF")
             do_action_ac_off "$SLED_NUM"
+            ;;
+        "$ACTION_RESET")
+            do_action_reset "$SLED_NUM" "$HOST_ST_ON"
+            ;;
+        "$ACTION_CYCLE")
+            do_action_cycle "$SLED_NUM"
             ;;
         *)
             echo "Invalid action ($ACTION) for current host state (Off)"
@@ -471,6 +553,9 @@ function host_state_ac_off_action_handler()
             echo "sled${SLED_NUM}: already ac off"
             return 1
             ;;
+        "$ACTION_CYCLE")
+            do_action_reset "$SLED_NUM"
+            ;;
         *)
             echo "Invalid action ($ACTION) for current host state (AC Off)"
             return 1
@@ -486,6 +571,12 @@ function host_state_ac_on_action_handler()
     case $ACTION in
         "$ACTION_AC_OFF")
             do_action_ac_off "$SLED_NUM"
+            ;;
+        "$ACTION_DFU")
+            do_action_dfu "$SLED_NUM"
+            ;;
+        "$ACTION_CYCLE")
+            do_action_cycle "$SLED_NUM"
             ;;
         *)
             echo "sled${SLED_NUM}: already ac on"
@@ -506,6 +597,12 @@ function host_state_recovery_action_handler()
         "$ACTION_AC_OFF")
             do_action_ac_off "$SLED_NUM"
             ;;
+        "$ACTION_RESET")
+            do_action_reset "$SLED_NUM" "$HOST_ST_ON"
+            ;;
+        "$ACTION_CYCLE")
+            do_action_cycle "$SLED_NUM"
+            ;;
         *)
             echo "Invalid action ($ACTION) for current host state (Recovery)"
             return 1
@@ -521,6 +618,9 @@ function host_state_dfu_action_handler()
     case $ACTION in
         "$ACTION_AC_OFF")
             do_action_ac_off "$SLED_NUM"
+            ;;
+        "$ACTION_CYCLE")
+            do_action_cycle "$SLED_NUM"
             ;;
         *)
             echo "Invalid action ($ACTION) for current host state (DFU)"
@@ -608,6 +708,28 @@ elif [ "$ACTION" = "$ACTION_STATUS" ];then
     echo "$HOST_CURR_STATUS"
 else
     HOST_CURR_STATUS=$(get_host_status "$SLED_NUM")
+
+    if [ "$ACTION" = "$ACTION_BOOT_MODE" ]; then
+        BOOT_MODE=$(get_host_bootmode "$SLED_NUM")
+        case "$BOOT_MODE" in
+        "$BOOT_MODE_REGULAR")
+            echo "Boot mode: on (regular)"
+            ACTION="$ACTION_ON"
+            ;;
+        "$BOOT_MODE_SAFE")
+            echo "Boot mode: recovery (safe)"
+            ACTION="$ACTION_RECOVERY"
+            ;;
+        "$BOOT_MODE_SETUP")
+            echo "Boot mode: dfu (setup)"
+            ACTION="$ACTION_DFU"
+            ;;
+        *)
+            echo "Boot mode: unknow"
+            ;;
+        esac
+    fi
+
     case $HOST_CURR_STATUS in
         "$HOST_AC_OFF")
             host_state_ac_off_action_handler "$SLED_NUM" "$ACTION"

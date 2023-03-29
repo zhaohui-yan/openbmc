@@ -24,6 +24,7 @@ import pickle
 from multiprocessing import Process
 import shlex
 import pprint
+import time
 
 bblogger = logging.getLogger("BitBake")
 logger = logging.getLogger("BitBake.RunQueue")
@@ -154,11 +155,60 @@ class RunQueueScheduler(object):
         self.stamps = {}
         for tid in self.rqdata.runtaskentries:
             (mc, fn, taskname, taskfn) = split_tid_mcfn(tid)
-            self.stamps[tid] = bb.build.stampfile(taskname, self.rqdata.dataCaches[mc], taskfn, noextra=True)
+            self.stamps[tid] = bb.parse.siggen.stampfile_mcfn(taskname, taskfn, extrainfo=False)
             if tid in self.rq.runq_buildable:
                 self.buildable.append(tid)
 
         self.rev_prio_map = None
+        self.is_pressure_usable()
+
+    def is_pressure_usable(self):
+        """
+        If monitoring pressure, return True if pressure files can be open and read. For example
+        openSUSE /proc/pressure/* files have readable file permissions but when read the error EOPNOTSUPP (Operation not supported)
+        is returned.
+        """
+        if self.rq.max_cpu_pressure or self.rq.max_io_pressure or self.rq.max_memory_pressure:
+            try:
+                with open("/proc/pressure/cpu") as cpu_pressure_fds, \
+                    open("/proc/pressure/io") as io_pressure_fds, \
+                    open("/proc/pressure/memory") as memory_pressure_fds:
+
+                    self.prev_cpu_pressure = cpu_pressure_fds.readline().split()[4].split("=")[1]
+                    self.prev_io_pressure = io_pressure_fds.readline().split()[4].split("=")[1]
+                    self.prev_memory_pressure = memory_pressure_fds.readline().split()[4].split("=")[1]
+                    self.prev_pressure_time = time.time()
+                self.check_pressure = True
+            except:
+                bb.note("The /proc/pressure files can't be read. Continuing build without monitoring pressure")
+                self.check_pressure = False
+        else:
+            self.check_pressure = False
+
+    def exceeds_max_pressure(self):
+        """
+        Monitor the difference in total pressure at least once per second, if
+        BB_PRESSURE_MAX_{CPU|IO|MEMORY} are set, return True if above threshold.
+        """
+        if self.check_pressure:
+            with open("/proc/pressure/cpu") as cpu_pressure_fds, \
+                open("/proc/pressure/io") as io_pressure_fds, \
+                open("/proc/pressure/memory") as memory_pressure_fds:
+                # extract "total" from /proc/pressure/{cpu|io}
+                curr_cpu_pressure = cpu_pressure_fds.readline().split()[4].split("=")[1]
+                curr_io_pressure = io_pressure_fds.readline().split()[4].split("=")[1]
+                curr_memory_pressure = memory_pressure_fds.readline().split()[4].split("=")[1]
+                exceeds_cpu_pressure =  self.rq.max_cpu_pressure and (float(curr_cpu_pressure) - float(self.prev_cpu_pressure)) > self.rq.max_cpu_pressure
+                exceeds_io_pressure =  self.rq.max_io_pressure and (float(curr_io_pressure) - float(self.prev_io_pressure)) > self.rq.max_io_pressure
+                exceeds_memory_pressure = self.rq.max_memory_pressure and (float(curr_memory_pressure) - float(self.prev_memory_pressure)) > self.rq.max_memory_pressure
+                now = time.time()
+                if now - self.prev_pressure_time > 1.0:
+                    self.prev_cpu_pressure = curr_cpu_pressure
+                    self.prev_io_pressure = curr_io_pressure
+                    self.prev_memory_pressure = curr_memory_pressure
+                    self.prev_pressure_time = now
+            return (exceeds_cpu_pressure or exceeds_io_pressure or exceeds_memory_pressure)
+        return False
 
     def next_buildable_task(self):
         """
@@ -170,6 +220,12 @@ class RunQueueScheduler(object):
         buildable.difference_update(self.rq.holdoff_tasks)
         buildable.intersection_update(self.rq.tasks_covered | self.rq.tasks_notcovered)
         if not buildable:
+            return None
+
+        # Bitbake requires that at least one task be active. Only check for pressure if
+        # this is the case, otherwise the pressure limitation could result in no tasks
+        # being active and no new tasks started thereby, at times, breaking the scheduler.
+        if self.rq.stats.active and self.exceeds_max_pressure():
             return None
 
         # Filter out tasks that have a max number of threads that have been exceeded
@@ -595,6 +651,8 @@ class RunQueueData:
             # Nothing to do
             return 0
 
+        bb.parse.siggen.setup_datacache(self.dataCaches)
+
         self.init_progress_reporter.start()
         self.init_progress_reporter.next_stage()
 
@@ -642,6 +700,8 @@ class RunQueueData:
                 frommc = mcdependency[1]
                 mcdep = mcdependency[2]
                 deptask = mcdependency[4]
+                if mcdep not in taskData:
+                    bb.fatal("Multiconfig '%s' is referenced in multiconfig dependency '%s' but not enabled in BBMULTICONFIG?" % (mcdep, dep))
                 if mc == frommc:
                     fn = taskData[mcdep].build_targets[pn][0]
                     newdep = '%s:%s' % (fn,deptask)
@@ -877,7 +937,7 @@ class RunQueueData:
                     bb.debug(1, "Task %s is marked nostamp, cannot invalidate this task" % taskname)
             else:
                 logger.verbose("Invalidate task %s, %s", taskname, fn)
-                bb.parse.siggen.invalidate_task(taskname, self.dataCaches[mc], taskfn)
+                bb.parse.siggen.invalidate_task(taskname, taskfn)
 
         self.target_tids = []
         for (mc, target, task, fn) in self.targets:
@@ -1187,9 +1247,8 @@ class RunQueueData:
         return len(self.runtaskentries)
 
     def prepare_task_hash(self, tid):
-        dc = bb.parse.siggen.get_data_caches(self.dataCaches, mc_from_tid(tid))
-        bb.parse.siggen.prep_taskhash(tid, self.runtaskentries[tid].depends, dc)
-        self.runtaskentries[tid].hash = bb.parse.siggen.get_taskhash(tid, self.runtaskentries[tid].depends, dc)
+        bb.parse.siggen.prep_taskhash(tid, self.runtaskentries[tid].depends, self.dataCaches)
+        self.runtaskentries[tid].hash = bb.parse.siggen.get_taskhash(tid, self.runtaskentries[tid].depends, self.dataCaches)
         self.runtaskentries[tid].unihash = bb.parse.siggen.get_unihash(tid)
 
     def dump_data(self):
@@ -1255,10 +1314,6 @@ class RunQueue:
         workerpipe = runQueuePipe(worker.stdout, None, self.cfgData, self, rqexec, fakerootlogs=fakerootlogs)
 
         workerdata = {
-            "taskdeps" : self.rqdata.dataCaches[mc].task_deps,
-            "fakerootenv" : self.rqdata.dataCaches[mc].fakerootenv,
-            "fakerootdirs" : self.rqdata.dataCaches[mc].fakerootdirs,
-            "fakerootnoenv" : self.rqdata.dataCaches[mc].fakerootnoenv,
             "sigdata" : bb.parse.siggen.get_taskdata(),
             "logdefaultlevel" : bb.msg.loggerDefaultLogLevel,
             "build_verbose_shell" : self.cooker.configuration.build_verbose_shell,
@@ -1343,7 +1398,7 @@ class RunQueue:
         if taskname is None:
             taskname = tn
 
-        stampfile = bb.build.stampfile(taskname, self.rqdata.dataCaches[mc], taskfn)
+        stampfile = bb.parse.siggen.stampfile_mcfn(taskname, taskfn)
 
         # If the stamp is missing, it's not current
         if not os.access(stampfile, os.F_OK):
@@ -1355,7 +1410,7 @@ class RunQueue:
             logger.debug2("%s.%s is nostamp\n", fn, taskname)
             return False
 
-        if taskname != "do_setscene" and taskname.endswith("_setscene"):
+        if taskname.endswith("_setscene"):
             return True
 
         if cache is None:
@@ -1366,8 +1421,8 @@ class RunQueue:
         for dep in self.rqdata.runtaskentries[tid].depends:
             if iscurrent:
                 (mc2, fn2, taskname2, taskfn2) = split_tid_mcfn(dep)
-                stampfile2 = bb.build.stampfile(taskname2, self.rqdata.dataCaches[mc2], taskfn2)
-                stampfile3 = bb.build.stampfile(taskname2 + "_setscene", self.rqdata.dataCaches[mc2], taskfn2)
+                stampfile2 = bb.parse.siggen.stampfile_mcfn(taskname2, taskfn2)
+                stampfile3 = bb.parse.siggen.stampfile_mcfn(taskname2 + "_setscene", taskfn2)
                 t2 = get_timestamp(stampfile2)
                 t3 = get_timestamp(stampfile3)
                 if t3 and not t2:
@@ -1456,7 +1511,7 @@ class RunQueue:
 
             if not self.dm_event_handler_registered:
                  res = bb.event.register(self.dm_event_handler_name,
-                                         lambda x: self.dm.check(self) if self.state in [runQueueRunning, runQueueCleanUp] else False,
+                                         lambda x, y: self.dm.check(self) if self.state in [runQueueRunning, runQueueCleanUp] else False,
                                          ('bb.event.HeartbeatEvent',), data=self.cfgData)
                  self.dm_event_handler_registered = True
 
@@ -1553,29 +1608,28 @@ class RunQueue:
         else:
             self.rqexe.finish()
 
-    def rq_dump_sigfn(self, fn, options):
-        bb_cache = bb.cache.NoCache(self.cooker.databuilder)
-        mc = bb.runqueue.mc_from_tid(fn)
-        the_data = bb_cache.loadDataFull(fn, self.cooker.collections[mc].get_file_appends(fn))
-        siggen = bb.parse.siggen
-        dataCaches = self.rqdata.dataCaches
-        siggen.dump_sigfn(fn, dataCaches, options)
+    def _rq_dump_sigtid(self, tids):
+        for tid in tids:
+            (mc, fn, taskname, taskfn) = split_tid_mcfn(tid)
+            dataCaches = self.rqdata.dataCaches
+            bb.parse.siggen.dump_sigtask(taskfn, taskname, dataCaches[mc].stamp[taskfn], True)
 
     def dump_signatures(self, options):
-        fns = set()
-        bb.note("Reparsing files to collect dependency data")
+        if bb.cooker.CookerFeatures.RECIPE_SIGGEN_INFO not in self.cooker.featureset:
+            bb.fatal("The dump signatures functionality needs the RECIPE_SIGGEN_INFO feature enabled")
 
-        for tid in self.rqdata.runtaskentries:
-            fn = fn_from_tid(tid)
-            fns.add(fn)
+        bb.note("Writing task signature files")
 
         max_process = int(self.cfgData.getVar("BB_NUMBER_PARSE_THREADS") or os.cpu_count() or 1)
+        def chunkify(l, n):
+            return [l[i::n] for i in range(n)]
+        tids = chunkify(list(self.rqdata.runtaskentries), max_process)
         # We cannot use the real multiprocessing.Pool easily due to some local data
         # that can't be pickled. This is a cheap multi-process solution.
         launched = []
-        while fns:
+        while tids:
             if len(launched) < max_process:
-                p = Process(target=self.rq_dump_sigfn, args=(fns.pop(), options))
+                p = Process(target=self._rq_dump_sigtid, args=(tids.pop(), ))
                 p.start()
                 launched.append(p)
             for q in launched:
@@ -1699,6 +1753,9 @@ class RunQueueExecute:
 
         self.number_tasks = int(self.cfgData.getVar("BB_NUMBER_THREADS") or 1)
         self.scheduler = self.cfgData.getVar("BB_SCHEDULER") or "speed"
+        self.max_cpu_pressure = self.cfgData.getVar("BB_PRESSURE_MAX_CPU")
+        self.max_io_pressure = self.cfgData.getVar("BB_PRESSURE_MAX_IO")
+        self.max_memory_pressure = self.cfgData.getVar("BB_PRESSURE_MAX_MEMORY")
 
         self.sq_buildable = set()
         self.sq_running = set()
@@ -1733,6 +1790,29 @@ class RunQueueExecute:
         if self.number_tasks <= 0:
              bb.fatal("Invalid BB_NUMBER_THREADS %s" % self.number_tasks)
 
+        lower_limit = 1.0
+        upper_limit = 1000000.0
+        if self.max_cpu_pressure:
+            self.max_cpu_pressure = float(self.max_cpu_pressure)
+            if self.max_cpu_pressure < lower_limit:
+                bb.fatal("Invalid BB_PRESSURE_MAX_CPU %s, minimum value is %s." % (self.max_cpu_pressure, lower_limit))
+            if self.max_cpu_pressure > upper_limit:
+                bb.warn("Your build will be largely unregulated since BB_PRESSURE_MAX_CPU is set to %s. It is very unlikely that such high pressure will be experienced." % (self.max_cpu_pressure))
+
+        if self.max_io_pressure:
+            self.max_io_pressure = float(self.max_io_pressure)
+            if self.max_io_pressure < lower_limit:
+                bb.fatal("Invalid BB_PRESSURE_MAX_IO %s, minimum value is %s." % (self.max_io_pressure, lower_limit))
+            if self.max_io_pressure > upper_limit:
+                bb.warn("Your build will be largely unregulated since BB_PRESSURE_MAX_IO is set to %s. It is very unlikely that such high pressure will be experienced." % (self.max_io_pressure))
+
+        if self.max_memory_pressure:
+            self.max_memory_pressure = float(self.max_memory_pressure)
+            if self.max_memory_pressure < lower_limit:
+                bb.fatal("Invalid BB_PRESSURE_MAX_MEMORY %s, minimum value is %s." % (self.max_memory_pressure, lower_limit))
+            if self.max_memory_pressure > upper_limit:
+                bb.warn("Your build will be largely unregulated since BB_PRESSURE_MAX_MEMORY is set to %s. It is very unlikely that such high pressure will be experienced." % (self.max_io_pressure))
+            
         # List of setscene tasks which we've covered
         self.scenequeue_covered = set()
         # List of tasks which are covered (including setscene ones)
@@ -2058,21 +2138,33 @@ class RunQueueExecute:
             startevent = sceneQueueTaskStarted(task, self.stats, self.rq)
             bb.event.fire(startevent, self.cfgData)
 
-            taskdepdata = self.sq_build_taskdepdata(task)
-
             taskdep = self.rqdata.dataCaches[mc].task_deps[taskfn]
-            taskhash = self.rqdata.get_task_hash(task)
-            unihash = self.rqdata.get_task_unihash(task)
+            runtask = {
+                'fn' : taskfn,
+                'task' : task,
+                'taskname' : taskname,
+                'taskhash' : self.rqdata.get_task_hash(task),
+                'unihash' : self.rqdata.get_task_unihash(task),
+                'quieterrors' : True,
+                'appends' : self.cooker.collections[mc].get_file_appends(taskfn),
+                'taskdepdata' : self.sq_build_taskdepdata(task),
+                'dry_run' : False,
+                'taskdep': taskdep,
+                'fakerootenv' : self.rqdata.dataCaches[mc].fakerootenv[taskfn],
+                'fakerootdirs' : self.rqdata.dataCaches[mc].fakerootdirs[taskfn],
+                'fakerootnoenv' : self.rqdata.dataCaches[mc].fakerootnoenv[taskfn]
+            }
+
             if 'fakeroot' in taskdep and taskname in taskdep['fakeroot'] and not self.cooker.configuration.dry_run:
                 if not mc in self.rq.fakeworker:
                     self.rq.start_fakeworker(self, mc)
-                self.rq.fakeworker[mc].process.stdin.write(b"<runtask>" + pickle.dumps((taskfn, task, taskname, taskhash, unihash, True, self.cooker.collections[mc].get_file_appends(taskfn), taskdepdata, False)) + b"</runtask>")
+                self.rq.fakeworker[mc].process.stdin.write(b"<runtask>" + pickle.dumps(runtask) + b"</runtask>")
                 self.rq.fakeworker[mc].process.stdin.flush()
             else:
-                self.rq.worker[mc].process.stdin.write(b"<runtask>" + pickle.dumps((taskfn, task, taskname, taskhash, unihash, True, self.cooker.collections[mc].get_file_appends(taskfn), taskdepdata, False)) + b"</runtask>")
+                self.rq.worker[mc].process.stdin.write(b"<runtask>" + pickle.dumps(runtask) + b"</runtask>")
                 self.rq.worker[mc].process.stdin.flush()
 
-            self.build_stamps[task] = bb.build.stampfile(taskname, self.rqdata.dataCaches[mc], taskfn, noextra=True)
+            self.build_stamps[task] = bb.parse.siggen.stampfile_mcfn(taskname, taskfn, extrainfo=False)
             self.build_stamps2.append(self.build_stamps[task])
             self.sq_running.add(task)
             self.sq_live.add(task)
@@ -2132,18 +2224,30 @@ class RunQueueExecute:
                 self.runq_running.add(task)
                 self.stats.taskActive()
                 if not (self.cooker.configuration.dry_run or self.rqdata.setscene_enforce):
-                    bb.build.make_stamp(taskname, self.rqdata.dataCaches[mc], taskfn)
+                    bb.build.make_stamp_mcfn(taskname, taskfn)
                 self.task_complete(task)
                 return True
             else:
                 startevent = runQueueTaskStarted(task, self.stats, self.rq)
                 bb.event.fire(startevent, self.cfgData)
 
-            taskdepdata = self.build_taskdepdata(task)
-
             taskdep = self.rqdata.dataCaches[mc].task_deps[taskfn]
-            taskhash = self.rqdata.get_task_hash(task)
-            unihash = self.rqdata.get_task_unihash(task)
+            runtask = {
+                'fn' : taskfn,
+                'task' : task,
+                'taskname' : taskname,
+                'taskhash' : self.rqdata.get_task_hash(task),
+                'unihash' : self.rqdata.get_task_unihash(task),
+                'quieterrors' : False,
+                'appends' : self.cooker.collections[mc].get_file_appends(taskfn),
+                'taskdepdata' : self.build_taskdepdata(task),
+                'dry_run' : self.rqdata.setscene_enforce,
+                'taskdep': taskdep,
+                'fakerootenv' : self.rqdata.dataCaches[mc].fakerootenv[taskfn],
+                'fakerootdirs' : self.rqdata.dataCaches[mc].fakerootdirs[taskfn],
+                'fakerootnoenv' : self.rqdata.dataCaches[mc].fakerootnoenv[taskfn]
+            }
+
             if 'fakeroot' in taskdep and taskname in taskdep['fakeroot'] and not (self.cooker.configuration.dry_run or self.rqdata.setscene_enforce):
                 if not mc in self.rq.fakeworker:
                     try:
@@ -2153,13 +2257,13 @@ class RunQueueExecute:
                         self.rq.state = runQueueFailed
                         self.stats.taskFailed()
                         return True
-                self.rq.fakeworker[mc].process.stdin.write(b"<runtask>" + pickle.dumps((taskfn, task, taskname, taskhash, unihash, False, self.cooker.collections[mc].get_file_appends(taskfn), taskdepdata, self.rqdata.setscene_enforce)) + b"</runtask>")
+                self.rq.fakeworker[mc].process.stdin.write(b"<runtask>" + pickle.dumps(runtask) + b"</runtask>")
                 self.rq.fakeworker[mc].process.stdin.flush()
             else:
-                self.rq.worker[mc].process.stdin.write(b"<runtask>" + pickle.dumps((taskfn, task, taskname, taskhash, unihash, False, self.cooker.collections[mc].get_file_appends(taskfn), taskdepdata, self.rqdata.setscene_enforce)) + b"</runtask>")
+                self.rq.worker[mc].process.stdin.write(b"<runtask>" + pickle.dumps(runtask) + b"</runtask>")
                 self.rq.worker[mc].process.stdin.flush()
 
-            self.build_stamps[task] = bb.build.stampfile(taskname, self.rqdata.dataCaches[mc], taskfn, noextra=True)
+            self.build_stamps[task] = bb.parse.siggen.stampfile_mcfn(taskname, taskfn, extrainfo=False)
             self.build_stamps2.append(self.build_stamps[task])
             self.runq_running.add(task)
             self.stats.taskActive()
@@ -2172,10 +2276,9 @@ class RunQueueExecute:
 
         # No more tasks can be run. If we have deferred setscene tasks we should run them.
         if self.sq_deferred:
-            tid = self.sq_deferred.pop(list(self.sq_deferred.keys())[0])
-            logger.warning("Runqeueue deadlocked on deferred tasks, forcing task %s" % tid)
-            if tid not in self.runq_complete:
-                self.sq_task_failoutright(tid)
+            deferred_tid = list(self.sq_deferred.keys())[0]
+            blocking_tid = self.sq_deferred.pop(deferred_tid)
+            logger.warning("Runqueue deadlocked on deferred tasks, forcing task %s blocked by %s" % (deferred_tid, blocking_tid))
             return True
 
         if self.failed_tids:
@@ -2332,8 +2435,7 @@ class RunQueueExecute:
                 if self.rqdata.runtaskentries[p].depends and not self.rqdata.runtaskentries[tid].depends.isdisjoint(total):
                     continue
                 orighash = self.rqdata.runtaskentries[tid].hash
-                dc = bb.parse.siggen.get_data_caches(self.rqdata.dataCaches, mc_from_tid(tid))
-                newhash = bb.parse.siggen.get_taskhash(tid, self.rqdata.runtaskentries[tid].depends, dc)
+                newhash = bb.parse.siggen.get_taskhash(tid, self.rqdata.runtaskentries[tid].depends, self.rqdata.dataCaches)
                 origuni = self.rqdata.runtaskentries[tid].unihash
                 newuni = bb.parse.siggen.get_unihash(tid)
                 # FIXME, need to check it can come from sstate at all for determinism?
@@ -2408,6 +2510,28 @@ class RunQueueExecute:
                 self.sq_buildable.remove(tid)
             if tid in self.sq_running:
                 self.sq_running.remove(tid)
+            if tid in self.sqdata.outrightfail:
+                self.sqdata.outrightfail.remove(tid)
+            if tid in self.scenequeue_notcovered:
+                self.scenequeue_notcovered.remove(tid)
+            if tid in self.scenequeue_covered:
+                self.scenequeue_covered.remove(tid)
+            if tid in self.scenequeue_notneeded:
+                self.scenequeue_notneeded.remove(tid)
+
+            (mc, fn, taskname, taskfn) = split_tid_mcfn(tid)
+            self.sqdata.stamps[tid] = bb.parse.siggen.stampfile_mcfn(taskname, taskfn, extrainfo=False)
+
+            if tid in self.stampcache:
+                del self.stampcache[tid]
+
+            if tid in self.build_stamps:
+                del self.build_stamps[tid]
+
+            update_tasks.append(tid)
+
+        update_tasks2 = []
+        for tid in update_tasks:
             harddepfail = False
             for t in self.sqdata.sq_harddeps:
                 if tid in self.sqdata.sq_harddeps[t] and t in self.scenequeue_notcovered:
@@ -2419,39 +2543,25 @@ class RunQueueExecute:
             if not self.sqdata.sq_revdeps[tid]:
                 self.sq_buildable.add(tid)
 
-            if tid in self.sqdata.outrightfail:
-                self.sqdata.outrightfail.remove(tid)
-            if tid in self.scenequeue_notcovered:
-                self.scenequeue_notcovered.remove(tid)
-            if tid in self.scenequeue_covered:
-                self.scenequeue_covered.remove(tid)
-            if tid in self.scenequeue_notneeded:
-                self.scenequeue_notneeded.remove(tid)
+            update_tasks2.append((tid, harddepfail, tid in self.sqdata.valid))
 
-            (mc, fn, taskname, taskfn) = split_tid_mcfn(tid)
-            self.sqdata.stamps[tid] = bb.build.stampfile(taskname + "_setscene", self.rqdata.dataCaches[mc], taskfn, noextra=True)
-
-            if tid in self.stampcache:
-                del self.stampcache[tid]
-
-            if tid in self.build_stamps:
-                del self.build_stamps[tid]
-
-            update_tasks.append((tid, harddepfail, tid in self.sqdata.valid))
-
-        if update_tasks:
+        if update_tasks2:
             self.sqdone = False
-            for tid in [t[0] for t in update_tasks]:
-                h = pending_hash_index(tid, self.rqdata)
-                if h in self.sqdata.hashes and tid != self.sqdata.hashes[h]:
-                    self.sq_deferred[tid] = self.sqdata.hashes[h]
-                    bb.note("Deferring %s after %s" % (tid, self.sqdata.hashes[h]))
-            update_scenequeue_data([t[0] for t in update_tasks], self.sqdata, self.rqdata, self.rq, self.cooker, self.stampcache, self, summary=False)
+            for mc in sorted(self.sqdata.multiconfigs):
+                for tid in sorted([t[0] for t in update_tasks2]):
+                    if mc_from_tid(tid) != mc:
+                        continue
+                    h = pending_hash_index(tid, self.rqdata)
+                    if h in self.sqdata.hashes and tid != self.sqdata.hashes[h]:
+                        self.sq_deferred[tid] = self.sqdata.hashes[h]
+                        bb.note("Deferring %s after %s" % (tid, self.sqdata.hashes[h]))
+            update_scenequeue_data([t[0] for t in update_tasks2], self.sqdata, self.rqdata, self.rq, self.cooker, self.stampcache, self, summary=False)
 
-        for (tid, harddepfail, origvalid) in update_tasks:
+        for (tid, harddepfail, origvalid) in update_tasks2:
             if tid in self.sqdata.valid and not origvalid:
                 hashequiv_logger.verbose("Setscene task %s became valid" % tid)
             if harddepfail:
+                logger.debug2("%s has an unavailable hard dependency so skipping" % (tid))
                 self.sq_task_failoutright(tid)
 
         if changed:
@@ -2726,7 +2836,8 @@ def build_scenequeue_data(sqdata, rqdata, rq, cooker, stampcache, sqrq):
         (mc, fn, taskname, taskfn) = split_tid_mcfn(tid)
         realtid = tid + "_setscene"
         idepends = rqdata.taskData[mc].taskentries[realtid].idepends
-        sqdata.stamps[tid] = bb.build.stampfile(taskname + "_setscene", rqdata.dataCaches[mc], taskfn, noextra=True)
+        sqdata.stamps[tid] = bb.parse.siggen.stampfile_mcfn(taskname, taskfn, extrainfo=False)
+
         for (depname, idependtask) in idepends:
 
             if depname not in rqdata.taskData[mc].build_targets:
@@ -2805,7 +2916,7 @@ def build_scenequeue_data(sqdata, rqdata, rq, cooker, stampcache, sqrq):
     found = {}
     for tid in rqdata.runq_setscene_tids:
         (mc, fn, taskname, taskfn) = split_tid_mcfn(tid)
-        stamps = bb.build.find_stale_stamps(taskname, rqdata.dataCaches[mc], taskfn)
+        stamps = bb.build.find_stale_stamps(taskname, taskfn)
         if stamps:
             if mc not in found:
                 found[mc] = {}
@@ -2821,7 +2932,7 @@ def check_setscene_stamps(tid, rqdata, rq, stampcache, noexecstamp=False):
     taskdep = rqdata.dataCaches[mc].task_deps[taskfn]
 
     if 'noexec' in taskdep and taskname in taskdep['noexec']:
-        bb.build.make_stamp(taskname + "_setscene", rqdata.dataCaches[mc], taskfn)
+        bb.build.make_stamp_mcfn(taskname + "_setscene", taskfn)
         return True, False
 
     if rq.check_stamp_task(tid, taskname + "_setscene", cache=stampcache):
@@ -2851,11 +2962,13 @@ def update_scenequeue_data(tids, sqdata, rqdata, rq, cooker, stampcache, sqrq, s
         if noexec:
             sqdata.noexec.add(tid)
             sqrq.sq_task_skip(tid)
+            logger.debug2("%s is noexec so skipping setscene" % (tid))
             continue
 
         if stamppresent:
             sqdata.stamppresent.add(tid)
             sqrq.sq_task_skip(tid)
+            logger.debug2("%s has a valid stamp, skipping" % (tid))
             continue
 
         tocheck.add(tid)
@@ -2876,6 +2989,7 @@ def update_scenequeue_data(tids, sqdata, rqdata, rq, cooker, stampcache, sqrq, s
         if tid in sqrq.sq_deferred:
             continue
         sqdata.outrightfail.add(tid)
+        logger.debug2("%s already handled (fallthrough), skipping" % (tid))
 
 class TaskFailure(Exception):
     """

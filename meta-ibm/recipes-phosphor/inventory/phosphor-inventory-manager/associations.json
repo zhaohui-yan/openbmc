@@ -27,6 +27,15 @@
                 [
                     "/xyz/openbmc_project/led/physical/cffps1_69"
                 ]
+            },
+	    {
+                "types": {
+                    "rType": "powered_by",
+                    "fType": "powering"
+                },
+                "paths": [
+                    "/xyz/openbmc_project/inventory/system/chassis"
+                ]
             }
         ]
     },
@@ -58,8 +67,16 @@
                 [
                     "/xyz/openbmc_project/led/physical/cffps1_68"
                 ]
+            },
+            {
+                "types": {
+                    "rType": "powered_by",
+                    "fType": "powering"
+                },
+                "paths": [
+                    "/xyz/openbmc_project/inventory/system/chassis"
+                ]
             }
-
         ]
     },
     {
@@ -87,6 +104,15 @@
                 "paths":
                 [
                     "/xyz/openbmc_project/led/physical/fan0"
+                ]
+            },
+            {
+                "types": {
+                    "rType": "cooled_by",
+                    "fType": "cooling"
+                },
+                "paths": [
+                    "/xyz/openbmc_project/inventory/system/chassis"
                 ]
             }
         ]
@@ -117,6 +143,15 @@
                 [
                     "/xyz/openbmc_project/led/physical/fan1"
                 ]
+            },
+            {
+                "types": {
+                    "rType": "cooled_by",
+                    "fType": "cooling"
+                },
+                "paths": [
+                    "/xyz/openbmc_project/inventory/system/chassis"
+                ]
             }
         ]
     },
@@ -146,6 +181,15 @@
                 [
                     "/xyz/openbmc_project/led/physical/fan2"
                 ]
+            },
+            {
+                "types": {
+                    "rType": "cooled_by",
+                    "fType": "cooling"
+                },
+                "paths": [
+                    "/xyz/openbmc_project/inventory/system/chassis"
+                ]
             }
         ]
     },
@@ -174,6 +218,15 @@
                 "paths":
                 [
                     "/xyz/openbmc_project/led/physical/fan3"
+                ]
+            },
+            {
+                "types": {
+                    "rType": "cooled_by",
+                    "fType": "cooling"
+                },
+                "paths": [
+                    "/xyz/openbmc_project/inventory/system/chassis"
                 ]
             }
         ]

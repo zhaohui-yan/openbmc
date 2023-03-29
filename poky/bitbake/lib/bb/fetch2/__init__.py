@@ -469,6 +469,7 @@ def uri_replace(ud, uri_find, uri_replace, replacements, d, mirrortarball=None):
                     basename = os.path.basename(mirrortarball)
                     # Kill parameters, they make no sense for mirror tarballs
                     uri_decoded[5] = {}
+                    uri_find_decoded[5] = {}
                 elif ud.localpath and ud.method.supports_checksum(ud):
                     basename = os.path.basename(ud.localpath)
                 if basename:
@@ -517,7 +518,7 @@ def fetcher_init(d):
     else:
         raise FetchError("Invalid SRCREV cache policy of: %s" % srcrev_policy)
 
-    _checksum_cache.init_cache(d)
+    _checksum_cache.init_cache(d.getVar("BB_CACHEDIR"))
 
     for m in methods:
         if hasattr(m, "init"):
@@ -545,7 +546,7 @@ def mirror_from_string(data):
         bb.warn('Invalid mirror data %s, should have paired members.' % data)
     return list(zip(*[iter(mirrors)]*2))
 
-def verify_checksum(ud, d, precomputed={}):
+def verify_checksum(ud, d, precomputed={}, localpath=None, fatal_nochecksum=True):
     """
     verify the MD5 and SHA256 checksum for downloaded src
 
@@ -563,13 +564,16 @@ def verify_checksum(ud, d, precomputed={}):
     if ud.ignore_checksums or not ud.method.supports_checksum(ud):
         return {}
 
+    if localpath is None:
+        localpath = ud.localpath
+
     def compute_checksum_info(checksum_id):
         checksum_name = getattr(ud, "%s_name" % checksum_id)
 
         if checksum_id in precomputed:
             checksum_data = precomputed[checksum_id]
         else:
-            checksum_data = getattr(bb.utils, "%s_file" % checksum_id)(ud.localpath)
+            checksum_data = getattr(bb.utils, "%s_file" % checksum_id)(localpath)
 
         checksum_expected = getattr(ud, "%s_expected" % checksum_id)
 
@@ -595,7 +599,7 @@ def verify_checksum(ud, d, precomputed={}):
             checksum_lines = ["SRC_URI[%s] = \"%s\"" % (ci["name"], ci["data"])]
 
     # If no checksum has been provided
-    if ud.method.recommends_checksum(ud) and all(ci["expected"] is None for ci in checksum_infos):
+    if fatal_nochecksum and ud.method.recommends_checksum(ud) and all(ci["expected"] is None for ci in checksum_infos):
         messages = []
         strict = d.getVar("BB_STRICT_CHECKSUM") or "0"
 
@@ -627,7 +631,7 @@ def verify_checksum(ud, d, precomputed={}):
     for ci in checksum_infos:
         if ci["expected"] and ci["expected"] != ci["data"]:
             messages.append("File: '%s' has %s checksum '%s' when '%s' was " \
-                            "expected" % (ud.localpath, ci["id"], ci["data"], ci["expected"]))
+                            "expected" % (localpath, ci["id"], ci["data"], ci["expected"]))
             bad_checksum = ci["data"]
 
     if bad_checksum:
@@ -977,6 +981,7 @@ def build_mirroruris(origud, mirrors, ld):
 
                 try:
                     newud = FetchData(newuri, ld)
+                    newud.ignore_checksums = True
                     newud.setup_localpath(ld)
                 except bb.fetch2.BBFetchException as e:
                     logger.debug("Mirror fetch failure for url %s (original url: %s)" % (newuri, origud.url))
@@ -1097,6 +1102,8 @@ def try_mirror_url(fetch, origud, ud, ld, check = False):
 
 def ensure_symlink(target, link_name):
     if not os.path.exists(link_name):
+        dirname = os.path.dirname(link_name)
+        bb.utils.mkdirhier(dirname)
         if os.path.islink(link_name):
             # Broken symbolic link
             os.unlink(link_name)
@@ -1220,23 +1227,21 @@ def get_checksum_file_list(d):
     SRC_URI as a space-separated string
     """
     fetch = Fetch([], d, cache = False, localonly = True)
-
-    dl_dir = d.getVar('DL_DIR')
     filelist = []
     for u in fetch.urls:
         ud = fetch.ud[u]
-
         if ud and isinstance(ud.method, local.Local):
+            found = False
             paths = ud.method.localpaths(ud, d)
             for f in paths:
                 pth = ud.decodedurl
-                if f.startswith(dl_dir):
-                    # The local fetcher's behaviour is to return a path under DL_DIR if it couldn't find the file anywhere else
-                    if os.path.exists(f):
-                        bb.warn("Getting checksum for %s SRC_URI entry %s: file not found except in DL_DIR" % (d.getVar('PN'), os.path.basename(f)))
-                    else:
-                        bb.warn("Unable to get checksum for %s SRC_URI entry %s: file could not be found" % (d.getVar('PN'), os.path.basename(f)))
+                if os.path.exists(f):
+                    found = True
                 filelist.append(f + ":" + str(os.path.exists(f)))
+            if not found:
+                bb.fatal(("Unable to get checksum for %s SRC_URI entry %s: file could not be found"
+                            "\nThe following paths were searched:"
+                            "\n%s") % (d.getVar('PN'), os.path.basename(f), '\n'.join(paths)))
 
     return " ".join(filelist)
 

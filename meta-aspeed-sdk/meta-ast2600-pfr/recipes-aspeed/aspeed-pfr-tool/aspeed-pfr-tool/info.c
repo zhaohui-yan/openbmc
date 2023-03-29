@@ -29,6 +29,15 @@ void show_info(ARGUMENTS args)
 	printf("BMC PFM Active Minor Version         : 0x%02x\n",
 			i2cReadByteData(args, MB_BMC_PFM_ACTIVE_MINOR_VER));
 
+#ifdef ENABLE_PFR_SPDM_ATTESTATION
+	printf("AFM Active SVN                       : 0x%02x\n",
+			i2cReadByteData(args, MB_BMC_AFM_ACTIVE_SVN));
+	printf("AFM Active Major Version             : 0x%02x\n",
+			i2cReadByteData(args, MB_BMC_AFM_ACTIVE_MAJOR_VER));
+	printf("AFM Active Minor Version             : 0x%02x\n",
+			i2cReadByteData(args, MB_BMC_AFM_ACTIVE_MINOR_VER));
+#endif
+
 	printf("\nPCH/CPU PFM Recovery SVN             : 0x%02x\n",
 			i2cReadByteData(args, MB_PCH_PFM_RECOVERY_SVN));
 	printf("PCH/CPU PFM Recovery Major Version   : 0x%02x\n",
@@ -42,4 +51,13 @@ void show_info(ARGUMENTS args)
 			i2cReadByteData(args, MB_BMC_PFM_RECOVERY_MAJOR_VER));
 	printf("BMC PFM Recovery Minor Version       : 0x%02x\n",
 			i2cReadByteData(args, MB_BMC_PFM_RECOVERY_MINOR_VER));
+
+#ifdef ENABLE_PFR_SPDM_ATTESTATION
+	printf("AFM Recovery SVN                     : 0x%02x\n",
+			i2cReadByteData(args, MB_BMC_AFM_RECOVERY_SVN));
+	printf("AFM Recovery Major Version           : 0x%02x\n",
+			i2cReadByteData(args, MB_BMC_AFM_RECOVERY_MAJOR_VER));
+	printf("AFM Recovery Minor Version           : 0x%02x\n",
+			i2cReadByteData(args, MB_BMC_AFM_RECOVERY_MINOR_VER));
+#endif
 }

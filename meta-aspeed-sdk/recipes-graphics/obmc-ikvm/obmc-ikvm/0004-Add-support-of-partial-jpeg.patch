@@ -1,6 +1,6 @@
-From 0bbd4cbcc367a87c619cc0ca46c5bf1a368e4a6c Mon Sep 17 00:00:00 2001
-From: Jammy Huang <jammy_huang@aspeedtech.com>
-Date: Thu, 2 Jun 2022 16:33:12 +0800
+From 6b925015cfd977d99eb992f5f80a101e476ceb27 Mon Sep 17 00:00:00 2001
+From: Steven Lee <steven_lee@aspeedtech.com>
+Date: Mon, 6 Feb 2023 17:33:37 +0800
 Subject: [PATCH] Add support of partial jpeg
 
 Partial jpeg is a standard jpeg but only include the changed blocks to
@@ -20,10 +20,10 @@ Signed-off-by: Jammy Huang <jammy_huang@aspeedtech.com>
  4 files changed, 36 insertions(+), 2 deletions(-)
 
 diff --git a/ikvm_args.cpp b/ikvm_args.cpp
-index 850c6c5..675f63e 100644
+index 77f9f7b..34ddc5c 100644
 --- a/ikvm_args.cpp
 +++ b/ikvm_args.cpp
-@@ -39,7 +39,7 @@ Args::Args(int argc, char* argv[]) : frameRate(30), subsampling(0), format(0), c
+@@ -40,7 +40,7 @@ Args::Args(int argc, char* argv[]) : frameRate(30), subsampling(0), format(0), c
                  break;
              case 'm':
                  format = (int)strtol(optarg, NULL, 0);
@@ -33,10 +33,10 @@ index 850c6c5..675f63e 100644
                  break;
              case 'h':
 diff --git a/ikvm_server.cpp b/ikvm_server.cpp
-index 6bf61e3..25a3dbe 100644
+index ccd4dee..e8223c3 100644
 --- a/ikvm_server.cpp
 +++ b/ikvm_server.cpp
-@@ -165,7 +165,13 @@ void Server::sendFrame()
+@@ -167,7 +167,13 @@ void Server::sendFrame()
          else
          {
              cl->tightEncoding = rfbEncodingTight;
@@ -52,7 +52,7 @@ index 6bf61e3..25a3dbe 100644
              cl->updateBuf[cl->ublen++] = (char)(rfbTightJpeg << 4);
          }
 diff --git a/ikvm_video.cpp b/ikvm_video.cpp
-index 3c4e35b..89990d8 100644
+index ffe1149..fdd9e21 100644
 --- a/ikvm_video.cpp
 +++ b/ikvm_video.cpp
 @@ -20,6 +20,7 @@
@@ -63,7 +63,7 @@ index 3c4e35b..89990d8 100644
  
  namespace ikvm
  {
-@@ -70,6 +71,7 @@ void Video::getFrame()
+@@ -69,6 +70,7 @@ void Video::getFrame()
      v4l2_buffer buf;
      fd_set fds;
      timeval tv;
@@ -71,7 +71,7 @@ index 3c4e35b..89990d8 100644
  
      if (fd < 0)
      {
-@@ -112,6 +114,18 @@ void Video::getFrame()
+@@ -111,6 +113,18 @@ void Video::getFrame()
                  {
                      buffers[buf.index].payload = buf.bytesused;
                      buffers[buf.index].sequence = buf.sequence;
@@ -90,7 +90,7 @@ index 3c4e35b..89990d8 100644
                      buffersDone.push_back(buf.index);
                  }
                  else
-@@ -464,6 +478,8 @@ void Video::start()
+@@ -463,6 +477,8 @@ void Video::start()
      }
  
      switch (format) {
@@ -100,14 +100,14 @@ index 3c4e35b..89990d8 100644
          case 0:
              fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_JPEG;
 diff --git a/ikvm_video.hpp b/ikvm_video.hpp
-index 0cc0b76..4794de1 100644
+index 0246d25..d3d8123 100644
 --- a/ikvm_video.hpp
 +++ b/ikvm_video.hpp
 @@ -6,6 +6,7 @@
  #include <string>
  #include <vector>
  #include <deque>
-+ #include <linux/videodev2.h>
++#include <linux/videodev2.h>
  
  namespace ikvm
  {
@@ -128,7 +128,7 @@ index 0cc0b76..4794de1 100644
      /* @brief Number of bits per component of a pixel */
      static const int bitsPerSample;
      /* @brief Number of bytes of storage for a pixel */
-@@ -190,6 +201,7 @@ class Video
+@@ -189,6 +200,7 @@ class Video
          size_t payload;
          size_t size;
          uint32_t sequence;

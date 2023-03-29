@@ -1,3 +1,5 @@
+.. SPDX-License-Identifier: CC-BY-SA-2.0-UK
+
 Release 3.2 (gatesgarth)
 ========================
 
@@ -11,7 +13,7 @@ Minimum system requirements
 
 ``gcc`` version 6.0 is now required at minimum on the build host. For older
 host distributions where this is not available, you can use the
-``buildtools-extended-tarball`` (easily installable using
+:term:`buildtools-extended` tarball (easily installable using
 ``scripts/install-buildtools``).
 
 
@@ -23,7 +25,7 @@ Removed recipes
 The following recipes have been removed:
 
 - ``bjam-native``: replaced by ``boost-build-native``
-- ``avahi-ui``: folded into the main ``avahi`` recipe - the GTK UI can be disabled using :term:`PACKAGECONFIG` for ``avahi``.
+- ``avahi-ui``: folded into the main ``avahi`` recipe --- the GTK UI can be disabled using :term:`PACKAGECONFIG` for ``avahi``.
 - ``build-compare``: no longer needed with the removal of the ``packagefeed-stability`` class
 - ``dhcp``: obsolete, functionally replaced by ``dhcpcd`` and ``kea``
 - ``libmodulemd-v1``: replaced by ``libmodulemd``
@@ -37,7 +39,7 @@ Removed classes
 
 The following classes (.bbclass files) have been removed:
 
--  ``spdx``: obsolete - the Yocto Project is a strong supporter of SPDX, but this class was old code using a dated approach and had the potential to be misleading. The ``meta-sdpxscanner`` layer is a much more modern and active approach to handling this and is recommended as a replacement.
+-  ``spdx``: obsolete --- the Yocto Project is a strong supporter of SPDX, but this class was old code using a dated approach and had the potential to be misleading. The ``meta-sdpxscanner`` layer is a much more modern and active approach to handling this and is recommended as a replacement.
 
 - ``packagefeed-stability``: this class had become obsolete with the advent of hash equivalence and reproducible builds.
 
@@ -46,7 +48,7 @@ pseudo path filtering and mismatch behaviour
 --------------------------------------------
 
 pseudo now operates on a filtered subset of files. This is a significant change
-to the way pseudo operates within OpenEmbedded - by default, pseudo monitors and
+to the way pseudo operates within OpenEmbedded --- by default, pseudo monitors and
 logs (adds to its database) any file created or modified whilst in a ``fakeroot``
 environment. However, there are large numbers of files that we simply don't care
 about the permissions of whilst in that ``fakeroot`` context, for example ${:term:`S`}, ${:term:`B`}, ${:term:`T`},
@@ -60,7 +62,7 @@ pseudo as the interprocess round trip to the server is avoided.
 
 There is a possible complication where some existing recipe may break, for
 example, a recipe was found to be writing to ``${B}/install`` for
-``make install`` in ``do_install`` and since ``${B}`` is listed as not to be tracked,
+``make install`` in :ref:`ref-tasks-install` and since ``${B}`` is listed as not to be tracked,
 there were errors trying to ``chown root`` for files in this location. Another
 example was the ``tcl`` recipe where the source directory :term:`S` is set to a
 subdirectory of the source tree but files were written out to the directory
@@ -68,7 +70,7 @@ structure above that subdirectory. For these types of cases in your own recipes,
 extend :term:`PSEUDO_IGNORE_PATHS` to cover additional paths that pseudo should not
 be monitoring.
 
-In addition, pseudo's behaviour on mismatches has now been changed - rather
+In addition, pseudo's behaviour on mismatches has now been changed --- rather
 than doing what turns out to be a rather dangerous "fixup" if it sees a file
 with a different path but the same inode as another file it has previously seen,
 pseudo will throw an ``abort()`` and direct you to a :yocto_wiki:`wiki page </Pseudo_Abort>`
@@ -137,10 +139,10 @@ DHCP server/client replaced
 
 The ``dhcp`` software package has become unmaintained and thus has been
 functionally replaced by ``dhcpcd`` (client) and ``kea`` (server). You will
-need to replace references to the recipe/package names as appropriate - most
+need to replace references to the recipe/package names as appropriate --- most
 commonly, at the package level ``dhcp-client`` should be replaced by
 ``dhcpcd`` and ``dhcp-server`` should be replaced by ``kea``. If you have any
-custom configuration files for these they will need to be adapted - refer to
+custom configuration files for these they will need to be adapted --- refer to
 the upstream documentation for ``dhcpcd`` and ``kea`` for further details.
 
 
@@ -175,13 +177,23 @@ errors:
 
 In addition, the following new checks were added and default to triggering an error:
 
-- :ref:`shebang-size <qa-check-shebang-size>`: Check for shebang (#!) lines longer than 128 characters, which can give an error at runtime depending on the operating system.
+- :ref:`shebang-size <qa-check-shebang-size>`: Check for shebang (#!) lines
+  longer than 128 characters, which can give an error at runtime depending on
+  the operating system.
 
-- :ref:`unhandled-features-check <qa-check-unhandled-features-check>`: Check if any of the variables supported by the :ref:`features_check <ref-classes-features_check>` class is set while not inheriting the class itself.
+- :ref:`unhandled-features-check <qa-check-unhandled-features-check>`: Check
+  if any of the variables supported by the :ref:`ref-classes-features_check`
+  class is set while not inheriting the class itself.
 
-- :ref:`missing-update-alternatives <qa-check-missing-update-alternatives>`: Check if the recipe sets the :term:`ALTERNATIVE` variable for any of its packages, and does not inherit the :ref:`update-alternatives <ref-classes-update-alternatives>` class.
+- :ref:`missing-update-alternatives <qa-check-missing-update-alternatives>`:
+  Check if the recipe sets the :term:`ALTERNATIVE` variable for any of its
+  packages, and does not inherit the :ref:`ref-classes-update-alternatives`
+  class.
 
-- A trailing slash or duplicated slashes in the value of :term:`S` or :term:`B` will now trigger a warning so that they can be removed and path comparisons can be more reliable - remove any instances of these in your recipes if the warning is displayed.
+- A trailing slash or duplicated slashes in the value of :term:`S` or :term:`B`
+  will now trigger a warning so that they can be removed and path comparisons
+  can be more reliable --- remove any instances of these in your recipes if the
+  warning is displayed.
 
 
 .. _migration-3.2-src-uri-file-globbing:
@@ -191,7 +203,7 @@ Globbing no longer supported in ``file://`` entries in ``SRC_URI``
 
 Globbing (``*`` and ``?`` wildcards) in ``file://`` URLs within :term:`SRC_URI`
 did not properly support file checksums, thus changes to the source files
-would not always change the do_fetch task checksum, and consequently would
+would not always change the :ref:`ref-tasks-fetch` task checksum, and consequently would
 not ensure that the changed files would be incorporated in subsequent builds.
 
 Unfortunately it is not practical to make globbing work generically here, so
@@ -207,9 +219,18 @@ files into a subdirectory and reference that instead.
 deploy class now cleans ``DEPLOYDIR`` before ``do_deploy``
 ----------------------------------------------------------
 
-``do_deploy`` as implemented in the :ref:`deploy <ref-classes-deploy>` class now cleans up ${:term:`DEPLOYDIR`} before running, just as ``do_install`` cleans up ${:term:`D`} before running. This reduces the risk of :term:`DEPLOYDIR` being accidentally contaminated by files from previous runs, possibly even with different config, in case of incremental builds.
+:ref:`ref-tasks-deploy` as implemented in the :ref:`ref-classes-deploy` class
+now cleans up ${:term:`DEPLOYDIR`} before running, just as
+:ref:`ref-tasks-install` cleans up ${:term:`D`} before running. This reduces
+the risk of :term:`DEPLOYDIR` being accidentally contaminated by files from
+previous runs, possibly even with different config, in case of incremental
+builds.
 
-Most recipes and classes that inherit the :ref:`deploy <ref-classes-deploy>` class or interact with ``do_deploy`` are unlikely to be affected by this unless they add ``prefuncs`` to ``do_deploy`` *which also* put files into ``${DEPLOYDIR}`` - these should be refactored to use ``do_deploy_prepend`` instead.
+Most recipes and classes that inherit the :ref:`ref-classes-deploy` class or
+interact with :ref:`ref-tasks-deploy` are unlikely to be affected by this
+unless they add ``prefuncs`` to :ref:`ref-tasks-deploy` *which also* put files
+into ``${DEPLOYDIR}`` --- these should be refactored to use
+``do_deploy_prepend`` instead.
 
 
 .. _migration-3.2-nativesdk-sdk-provides-dummy:
@@ -217,7 +238,13 @@ Most recipes and classes that inherit the :ref:`deploy <ref-classes-deploy>` cla
 Custom SDK / SDK-style recipes need to include ``nativesdk-sdk-provides-dummy``
 -------------------------------------------------------------------------------
 
-All ``nativesdk`` packages require ``/bin/sh`` due to their postinstall scriptlets, thus this package has to be dummy-provided within the SDK and ``nativesdk-sdk-provides-dummy`` now does this. If you have a custom SDK recipe (or your own SDK-style recipe similar to e.g. ``buildtools-tarball``), you will need to ensure ``nativesdk-sdk-provides-dummy`` or an equivalent is included in :term:`TOOLCHAIN_HOST_TASK`.
+All :ref:`ref-classes-nativesdk` packages require ``/bin/sh`` due
+to their postinstall scriptlets, thus this package has to be dummy-provided
+within the SDK and ``nativesdk-sdk-provides-dummy`` now does this. If you have
+a custom SDK recipe (or your own SDK-style recipe similar to e.g.
+``buildtools-tarball``), you will need to ensure
+``nativesdk-sdk-provides-dummy`` or an equivalent is included in
+:term:`TOOLCHAIN_HOST_TASK`.
 
 
 ``ld.so.conf`` now moved back to main ``glibc`` package
@@ -265,10 +292,10 @@ using the GL options.
 
 .. _migration-3.2-initramfs-suffix:
 
-initramfs images now use a blank suffix
+Initramfs images now use a blank suffix
 ---------------------------------------
 
-The reference initramfs images (``core-image-minimal-initramfs``,
+The reference :term:`Initramfs` images (``core-image-minimal-initramfs``,
 ``core-image-tiny-initramfs`` and ``core-image-testmaster-initramfs``) now
 set an empty string for :term:`IMAGE_NAME_SUFFIX`, which otherwise defaults
 to ``".rootfs"``. These images aren't root filesystems and thus the rootfs
@@ -303,7 +330,7 @@ now need to be changed to ``inherit image-artifact-names``.
 Miscellaneous changes
 ---------------------
 
-- Support for the long-deprecated ``PACKAGE_GROUP`` variable has now been removed - replace any remaining instances with :term:`FEATURE_PACKAGES`.
+- Support for the long-deprecated ``PACKAGE_GROUP`` variable has now been removed --- replace any remaining instances with :term:`FEATURE_PACKAGES`.
 - The ``FILESPATHPKG`` variable, having been previously deprecated, has now been removed. Replace any remaining references with appropriate use of :term:`FILESEXTRAPATHS`.
 - Erroneous use of ``inherit +=`` (instead of ``INHERIT +=``) in a configuration file now triggers an error instead of silently being ignored.
 - ptest support has been removed from the ``kbd`` recipe, as upstream has moved to autotest which is difficult to work with in a cross-compilation environment.

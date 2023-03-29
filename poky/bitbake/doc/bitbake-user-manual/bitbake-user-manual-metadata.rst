@@ -195,22 +195,45 @@ value. However, if ``A`` is not set, the variable is set to "aval".
 Setting a weak default value (??=)
 ----------------------------------
 
-It is possible to use a "weaker" assignment than in the previous section
-by using the "??=" operator. This assignment behaves identical to "?="
-except that the assignment is made at the end of the parsing process
-rather than immediately. Consequently, when multiple "??=" assignments
-exist, the last one is used. Also, any "=" or "?=" assignment will
-override the value set with "??=". Here is an example::
+The weak default value of a variable is the value which that variable
+will expand to if no value has been assigned to it via any of the other
+assignment operators. The "??=" operator takes effect immediately, replacing
+any previously defined weak default value. Here is an example::
 
-   A ??= "somevalue"
-   A ??= "someothervalue"
+   W ??= "x"
+   A := "${W}" # Immediate variable expansion
+   W ??= "y"
+   B := "${W}" # Immediate variable expansion
+   W ??= "z"
+   C = "${W}"
+   W ?= "i"
 
-If ``A`` is set before the above statements are
-parsed, the variable retains its value. If ``A`` is not set, the
-variable is set to "someothervalue".
+After parsing we will have::
 
-Again, this assignment is a "lazy" or "weak" assignment because it does
-not occur until the end of the parsing process.
+   A = "x"
+   B = "y"
+   C = "i"
+   W = "i"
+
+Appending and prepending non-override style will not substitute the weak
+default value, which means that after parsing::
+
+   W ??= "x"
+   W += "y"
+
+we will have::
+
+   W = " y"
+
+On the other hand, override-style appends/prepends/removes are applied after
+any active weak default value has been substituted::
+
+   W ??= "x"
+   W:append = "y"
+
+After parsing we will have::
+
+   W = "xy"
 
 Immediate variable expansion (:=)
 ---------------------------------
@@ -296,6 +319,10 @@ The variable ``D`` becomes "dvaladditional data".
 
    You must control all spacing when you use the override syntax.
 
+.. note::
+
+   The overrides are applied in this order, ":append", ":prepend", ":remove".
+
 It is also possible to append and prepend to shell functions and
 BitBake-style Python functions. See the ":ref:`bitbake-user-manual/bitbake-user-manual-metadata:shell functions`" and ":ref:`bitbake-user-manual/bitbake-user-manual-metadata:bitbake-style python functions`"
 sections for examples.
@@ -307,7 +334,8 @@ Removal (Override Style Syntax)
 
 You can remove values from lists using the removal override style
 syntax. Specifying a value for removal causes all occurrences of that
-value to be removed from the variable.
+value to be removed from the variable. Unlike ":append" and ":prepend",
+there is no need to add a leading or trailing space to the value.
 
 When you use this syntax, BitBake expects one or more strings.
 Surrounding spaces and spacing are preserved. Here is an example::
@@ -327,6 +355,28 @@ The variable ``FOO`` becomes
 
 Like ":append" and ":prepend", ":remove" is applied at variable
 expansion time.
+
+.. note::
+
+   The overrides are applied in this order, ":append", ":prepend", ":remove".
+   This implies it is not possible to re-append previously removed strings.
+   However, one can undo a ":remove" by using an intermediate variable whose
+   content is passed to the ":remove" so that modifying the intermediate
+   variable equals to keeping the string in::
+
+     FOOREMOVE = "123 456 789"
+     FOO:remove = "${FOOREMOVE}"
+     ...
+     FOOREMOVE = "123 789"
+
+   This expands to ``FOO:remove = "123 789"``.
+
+.. note::
+
+   Override application order may not match variable parse history, i.e.
+   the output of ``bitbake -e`` may contain ":remove" before ":append",
+   but the result will be removed string, because ":remove" is handled
+   last.
 
 Override Style Operation Advantages
 -----------------------------------
@@ -397,6 +447,12 @@ them. One extremely common application is to attach some brief
 documentation to a BitBake variable as follows::
 
    CACHE[doc] = "The directory holding the cache of the metadata."
+
+.. note::
+
+   Variable flag names starting with an underscore (``_``) character
+   are allowed but are ignored by ``d.getVarFlags("VAR")``
+   in Python code. Such flag names are used internally by BitBake.
 
 Inline Python Variable Expansion
 --------------------------------
@@ -1898,6 +1954,15 @@ looking at the source code of the ``bb`` module, which is in
 ``bitbake/lib/bb``. For example, ``bitbake/lib/bb/utils.py`` includes
 the commonly used functions ``bb.utils.contains()`` and
 ``bb.utils.mkdirhier()``, which come with docstrings.
+
+Testing and Debugging BitBake Python code
+-----------------------------------------
+
+The OpenEmbedded build system implements a convenient ``pydevshell`` target which
+you can use to access the BitBake datastore and experiment with your own Python
+code. See :yocto_docs:`Using a Python Development Shell
+</dev-manual/python-development-shell.html#using-a-python-development-shell>` in the Yocto
+Project manual for details.
 
 Task Checksums and Setscene
 ===========================

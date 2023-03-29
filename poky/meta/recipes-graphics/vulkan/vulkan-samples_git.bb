@@ -5,13 +5,15 @@ LICENSE = "Apache-2.0"
 
 LIC_FILES_CHKSUM = "file://LICENSE;md5=48aa35cefb768436223a6e7f18dc2a2a"
 
-SRC_URI = "gitsm://github.com/KhronosGroup/Vulkan-Samples.git;branch=master;protocol=https \
-           file://0001-CMakeLists.txt-do-not-hardcode-lib-as-installation-t.patch \
+SRC_URI = "gitsm://github.com/KhronosGroup/Vulkan-Samples.git;branch=main;protocol=https;lfs=0 \
            file://debugfix.patch \
+           file://0001-Do-not-use-LFS64-functions-on-linux-musl.patch;patchdir=third_party/spdlog \
+           file://0001-Deprecate-u8string_view.patch;patchdir=third_party/spdlog \
+           file://0001-parser.h-Including-missing-cstdint.patch \
            "
 
 UPSTREAM_CHECK_COMMITS = "1"
-SRCREV = "0cc04a63583769bd13bcc51229a5a263d59343df"
+SRCREV = "a42d4eab1e5fe7814dfbe91e3bbaf8ab62cf03f6"
 
 UPSTREAM_CHECK_GITTAGREGEX = "These are not the releases you're looking for"
 S = "${WORKDIR}/git"

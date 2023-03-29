@@ -1,3 +1,5 @@
+.. SPDX-License-Identifier: CC-BY-SA-2.0-UK
+
 Release 3.1 (dunfell)
 =====================
 
@@ -125,7 +127,7 @@ renamed to ``features_check``; the ``distro_features_check`` class still
 exists but generates a warning and redirects to the new class. In
 preparation for a future removal of the old class it is recommended that
 you update recipes currently inheriting ``distro_features_check`` to
-inherit :ref:`features_check <ref-classes-features_check>` instead.
+inherit :ref:`ref-classes-features_check` instead.
 
 .. _migration-3.1-removed-classes:
 
@@ -200,7 +202,7 @@ Packaging changes
 -----------------
 
 -  ``intltool`` has been removed from ``packagegroup-core-sdk`` as it is
-   rarely needed to build modern software - gettext can do most of the
+   rarely needed to build modern software --- gettext can do most of the
    things it used to be needed for. ``intltool`` has also been removed
    from ``packagegroup-core-self-hosted`` as it is not needed to for
    standard builds.
@@ -234,14 +236,14 @@ Packaging changes
 Additional warnings
 -------------------
 
-Warnings will now be shown at ``do_package_qa`` time in the following
+Warnings will now be shown at :ref:`ref-tasks-package_qa` time in the following
 circumstances:
 
 -  A recipe installs ``.desktop`` files containing ``MimeType`` keys but
-   does not inherit the new ``mime-xdg`` class
+   does not inherit the new :ref:`ref-classes-mime-xdg` class
 
 -  A recipe installs ``.xml`` files into ``${datadir}/mime/packages``
-   but does not inherit the :ref:`mime <ref-classes-mime>` class
+   but does not inherit the :ref:`ref-classes-mime` class
 
 .. _migration-3.1-x86-live-wic:
 

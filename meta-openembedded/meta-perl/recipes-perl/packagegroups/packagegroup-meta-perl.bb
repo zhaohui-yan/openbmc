@@ -11,14 +11,14 @@ PACKAGES = "\
 
 RDEPENDS:packagegroup-meta-perl = "\
     adduser \
-    compress-raw-bzip2-perl \
-    compress-raw-lzma-perl \
-    compress-raw-zlib-perl \
     libalgorithm-diff-perl \
     libauthen-sasl-perl \
     libauthen-radius-perl \
     libcapture-tiny-perl \
     libcgi-perl \
+    libcompress-raw-bzip2-perl \
+    libcompress-raw-lzma-perl \
+    libcompress-raw-zlib-perl \
     libdbd-sqlite-perl \
     libclass-method-modifiers-perl \
     libdigest-hmac-perl \
@@ -78,7 +78,6 @@ RDEPENDS:packagegroup-meta-perl = "\
     libtest-harness-perl \
     libtest-nowarnings-perl \
     libtest-warn-perl \
-    libtest-warnings-perl \
     libunicode-linebreak-perl \
     po4a \
 "

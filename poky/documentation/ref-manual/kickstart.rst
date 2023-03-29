@@ -82,7 +82,7 @@ the ``part`` and ``partition`` commands:
    source of the data that populates the partition. The most common
    value for this option is "rootfs", but you can use any value that
    maps to a valid source plugin. For information on the source plugins,
-   see the ":ref:`dev-manual/common-tasks:using the wic plugin interface`"
+   see the ":ref:`dev-manual/wic:using the wic plugin interface`"
    section in the Yocto Project Development Tasks Manual.
 
    If you use ``--source rootfs``, Wic creates a partition as large as
@@ -177,7 +177,7 @@ the ``part`` and ``partition`` commands:
 -  ``--part-type``: This option is a Wic-specific option that
    specifies the partition type globally unique identifier (GUID) for
    GPT partitions. You can find the list of partition type GUIDs at
-   https://en.wikipedia.org/wiki/GUID_Partition_Table#Partition_type_GUIDs.
+   :wikipedia:`GUID_Partition_Table#Partition_type_GUIDs`.
 
 -  ``--use-uuid``: This option is a Wic-specific option that causes
    Wic to generate a random GUID for the partition. The generated
@@ -211,14 +211,9 @@ supports the following options:
 .. note::
 
    Bootloader functionality and boot partitions are implemented by the
-   various
-   --source
-   plugins that implement bootloader functionality. The bootloader
+   various source plugins that implement bootloader functionality. The bootloader
    command essentially provides a means of modifying bootloader
    configuration.
-
--  ``--timeout``: Specifies the number of seconds before the
-   bootloader times out and boots the default option.
 
 -  ``--append``: Specifies kernel parameters. These parameters will be
    added to the syslinux :term:`APPEND` or ``grub`` kernel command line.
@@ -227,3 +222,13 @@ supports the following options:
    the bootloader. You can provide a full pathname for the file or a
    file located in the ``canned-wks`` folder. This option overrides
    all other bootloader options.
+
+-  ``--ptable``: Specifies the partition table format. Valid values are:
+
+   -  ``msdos``
+
+   -  ``gpt``
+
+-  ``--timeout``: Specifies the number of seconds before the
+   bootloader times out and boots the default option.
+

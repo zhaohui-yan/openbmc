@@ -9,11 +9,11 @@
 # SPDX-License-Identifier: GPL-2.0-only
 #
 
-__version__ = "2.0.1"
+__version__ = "2.2.0"
 
 import sys
-if sys.version_info < (3, 6, 0):
-    raise RuntimeError("Sorry, python 3.6.0 or later is required for this version of bitbake")
+if sys.version_info < (3, 8, 0):
+    raise RuntimeError("Sorry, python 3.8.0 or later is required for this version of bitbake")
 
 
 class BBHandledException(Exception):
@@ -60,6 +60,10 @@ class BBLoggerMixin(object):
                 return
             if loglevel < bb.msg.loggerDefaultLogLevel:
                 return
+
+        if not isinstance(level, int) or not isinstance(msg, str):
+            mainlogger.warning("Invalid arguments in bbdebug: %s" % repr((level, msg,) + args))
+
         return self.log(loglevel, msg, *args, **kwargs)
 
     def plain(self, msg, *args, **kwargs):

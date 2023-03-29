@@ -9,9 +9,6 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=e3fc50a88d0a364313df4b21ef20c29e"
 inherit meson pkgconfig
 inherit obmc-phosphor-dbus-service
 
-RPROVIDES:${PN} += "virtual/obmc-watchdog"
-PROVIDES += "virtual/obmc-watchdog"
-
 DEPENDS += "cli11"
 DEPENDS += "sdbusplus"
 DEPENDS += "sdeventplus"
@@ -20,7 +17,7 @@ DEPENDS += "phosphor-logging"
 DEPENDS += "systemd"
 
 SRC_URI += "git://github.com/openbmc/phosphor-watchdog;branch=master;protocol=https"
-SRCREV = "90b400938fbed35040d9adf17c2af897b1046e12"
+SRCREV = "d1b1e79b74238694c7a25f873ace2ff6dab1b683"
 S = "${WORKDIR}/git"
 
 EXTRA_OEMESON = " \

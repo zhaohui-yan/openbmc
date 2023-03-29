@@ -6,6 +6,9 @@ PACKAGECONFIG:append:witherspoon-tacoma = " host-dump-transport-pldm"
 PACKAGECONFIG:append:p10bmc = " openpower-dumps-extension"
 PACKAGECONFIG:append:witherspoon-tacoma = " openpower-dumps-extension"
 
+SYSTEMD_SERVICE:${PN}-manager:p10bmc += "clear_hostdumps_poweroff.service"
+SYSTEMD_SERVICE:${PN}-manager:witherspoon-tacoma += "clear_hostdumps_poweroff.service"
+
 install_ibm_plugins() {
     install ${S}/tools/dreport.d/ibm.d/plugins.d/* ${D}${dreport_plugin_dir}/
 }

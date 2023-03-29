@@ -19,6 +19,7 @@ incdir = include_directories(
 ## create a MAP of  "options : feature_flag"
 feature_map = {
     'mctp' : '-DENABLE_PFR_MCTP',
+    'attestation' : '-DENABLE_PFR_SPDM_ATTESTATION',
 }
 
 # Get the options status and build a project summary to show which flags are

@@ -1,4 +1,4 @@
-From c9776635e2a0629ff5d9bd87bf7a84f367ee08f8 Mon Sep 17 00:00:00 2001
+From e67ac7ce930adb0a5840cda2adc56be5ebcae372 Mon Sep 17 00:00:00 2001
 From: Troy Lee <troy_lee@aspeedtech.com>
 Date: Wed, 20 Jul 2022 09:45:35 +0800
 Subject: [PATCH] bmcweb: fixes virtual media buffer overflow
@@ -8,10 +8,10 @@ Subject: [PATCH] bmcweb: fixes virtual media buffer overflow
  1 file changed, 18 insertions(+), 2 deletions(-)
 
 diff --git a/include/vm_websocket.hpp b/include/vm_websocket.hpp
-index ebf0a69..1b695f7 100644
+index 188bcf2ad..5cfc6a83a 100644
 --- a/include/vm_websocket.hpp
 +++ b/include/vm_websocket.hpp
-@@ -46,7 +46,16 @@ class Handler : public std::enable_shared_from_this<Handler>
+@@ -48,7 +48,16 @@ class Handler : public std::enable_shared_from_this<Handler>
          {
              return;
          }
@@ -29,7 +29,7 @@ index ebf0a69..1b695f7 100644
      }
  
      void connect()
-@@ -202,8 +211,15 @@ inline void requestRoutes(App& app)
+@@ -205,8 +214,15 @@ inline void requestRoutes(App& app)
          })
          .onmessage([](crow::websocket::Connection& conn,
                        const std::string& data, bool) {
@@ -46,4 +46,6 @@ index ebf0a69..1b695f7 100644
              {
                  BMCWEB_LOG_ERROR << "Buffer overrun when writing "
                                   << data.length() << " bytes";
+-- 
+2.25.1
 

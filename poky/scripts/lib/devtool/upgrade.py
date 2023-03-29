@@ -88,7 +88,7 @@ def _rename_recipe_files(oldrecipe, bpn, oldpv, newpv, path):
     _rename_recipe_dirs(oldpv, newpv, path)
     return _rename_recipe_file(oldrecipe, bpn, oldpv, newpv, path)
 
-def _write_append(rc, srctree, same_dir, no_same_dir, rev, copied, workspace, d):
+def _write_append(rc, srctreebase, srctree, same_dir, no_same_dir, rev, copied, workspace, d):
     """Writes an append file"""
     if not os.path.exists(rc):
         raise DevtoolError("bbappend not created because %s does not exist" % rc)
@@ -104,6 +104,11 @@ def _write_append(rc, srctree, same_dir, no_same_dir, rev, copied, workspace, d)
     af = os.path.join(appendpath, '%s.bbappend' % brf)
     with open(af, 'w') as f:
         f.write('FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"\n\n')
+        # Local files can be modified/tracked in separate subdir under srctree
+        # Mostly useful for packages with S != WORKDIR
+        f.write('FILESPATH:prepend := "%s:"\n' %
+                os.path.join(srctreebase, 'oe-local-files'))
+        f.write('# srctreebase: %s\n' % srctreebase)
         f.write('inherit externalsrc\n')
         f.write(('# NOTE: We use pn- overrides here to avoid affecting'
                  'multiple variants in the case where the recipe uses BBCLASSEXTEND\n'))
@@ -119,20 +124,19 @@ def _write_append(rc, srctree, same_dir, no_same_dir, rev, copied, workspace, d)
             f.write('# original_files: %s\n' % ' '.join(copied))
     return af
 
-def _cleanup_on_error(rf, srctree):
-    rfp = os.path.split(rf)[0] # recipe folder
-    rfpp = os.path.split(rfp)[0] # recipes folder
-    if os.path.exists(rfp):
-        shutil.rmtree(rfp)
-    if not len(os.listdir(rfpp)):
-        os.rmdir(rfpp)
+def _cleanup_on_error(rd, srctree):
+    rdp = os.path.split(rd)[0] # recipes folder
+    if os.path.exists(rd):
+        shutil.rmtree(rd)
+    if not len(os.listdir(rdp)):
+        os.rmdir(rdp)
     srctree = os.path.abspath(srctree)
     if os.path.exists(srctree):
         shutil.rmtree(srctree)
 
-def _upgrade_error(e, rf, srctree, keep_failure=False, extramsg=None):
-    if rf and not keep_failure:
-        _cleanup_on_error(rf, srctree)
+def _upgrade_error(e, rd, srctree, keep_failure=False, extramsg=None):
+    if not keep_failure:
+        _cleanup_on_error(rd, srctree)
     logger.error(e)
     if extramsg:
         logger.error(extramsg)
@@ -337,7 +341,10 @@ def _create_new_recipe(newpv, md5, sha256, srcrev, srcbranch, srcsubdir_old, src
         replacing = True
         new_src_uri = []
         for entry in src_uri:
-            scheme, network, path, user, passwd, params = bb.fetch2.decodeurl(entry)
+            try:
+                scheme, network, path, user, passwd, params = bb.fetch2.decodeurl(entry)
+            except bb.fetch2.MalformedUrl as e:
+                raise DevtoolError("Could not decode SRC_URI: {}".format(e))
             if replacing and scheme in ['git', 'gitsm']:
                 branch = params.get('branch', 'master')
                 if rd.expand(branch) != srcbranch:
@@ -426,7 +433,7 @@ def _create_new_recipe(newpv, md5, sha256, srcrev, srcbranch, srcsubdir_old, src
     try:
         rd = tinfoil.parse_recipe_file(fullpath, False)
     except bb.tinfoil.TinfoilCommandFailed as e:
-        _upgrade_error(e, fullpath, srctree, keep_failure, 'Parsing of upgraded recipe failed')
+        _upgrade_error(e, os.path.dirname(fullpath), srctree, keep_failure, 'Parsing of upgraded recipe failed')
     oe.recipeutils.patch_recipe(rd, fullpath, newvalues)
 
     return fullpath, copied
@@ -522,14 +529,7 @@ def upgrade(args, config, basepath, workspace):
         else:
             srctree = standard.get_default_srctree(config, pn)
 
-        # Check that recipe isn't using a shared workdir
-        s = os.path.abspath(rd.getVar('S'))
-        workdir = os.path.abspath(rd.getVar('WORKDIR'))
-        srctree_s = srctree
-        if s.startswith(workdir) and s != workdir and os.path.dirname(s) != workdir:
-            # Handle if S is set to a subdirectory of the source
-            srcsubdir = os.path.relpath(s, workdir).split(os.sep, 1)[1]
-            srctree_s = os.path.join(srctree, srcsubdir)
+        srctree_s = standard.get_real_srctree(srctree, rd.getVar('S'), rd.getVar('WORKDIR'))
 
         # try to automatically discover latest version and revision if not provided on command line
         if not args.version and not args.srcrev:
@@ -568,13 +568,12 @@ def upgrade(args, config, basepath, workspace):
             new_licenses = _extract_licenses(srctree_s, (rd.getVar('LIC_FILES_CHKSUM') or ""))
             license_diff = _generate_license_diff(old_licenses, new_licenses)
             rf, copied = _create_new_recipe(args.version, md5, sha256, args.srcrev, srcbranch, srcsubdir1, srcsubdir2, config.workspace_path, tinfoil, rd, license_diff, new_licenses, srctree, args.keep_failure)
-        except bb.process.CmdError as e:
-            _upgrade_error(e, rf, srctree, args.keep_failure)
-        except DevtoolError as e:
-            _upgrade_error(e, rf, srctree, args.keep_failure)
+        except (bb.process.CmdError, DevtoolError) as e:
+            recipedir = os.path.join(config.workspace_path, 'recipes', rd.getVar('BPN'))
+            _upgrade_error(e, recipedir, srctree, args.keep_failure)
         standard._add_md5(config, pn, os.path.dirname(rf))
 
-        af = _write_append(rf, srctree_s, args.same_dir, args.no_same_dir, rev2,
+        af = _write_append(rf, srctree, srctree_s, args.same_dir, args.no_same_dir, rev2,
                         copied, config.workspace_path, rd)
         standard._add_md5(config, pn, af)
 

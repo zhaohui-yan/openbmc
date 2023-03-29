@@ -107,7 +107,7 @@ Additionally, because the test strategies are visible to you as a
 developer, you can validate your projects. This section overviews the
 available test infrastructure used in the Yocto Project. For information
 on how to run available tests on your projects, see the
-":ref:`dev-manual/common-tasks:performing automated runtime testing`"
+":ref:`dev-manual/runtime-testing:performing automated runtime testing`"
 section in the Yocto Project Development Tasks Manual.
 
 The QA/testing infrastructure is woven into the project to the point
@@ -127,14 +127,14 @@ consists of the following pieces:
    an ARM target, did the build produce ARM binaries. If, for example,
    the build produced PPC binaries then there is a problem.
 
--  :ref:`ref-classes-testimage*`: This class
+-  :ref:`ref-classes-testimage`: This class
    performs runtime testing of images after they are built. The tests
    are usually used with :doc:`QEMU </dev-manual/qemu>`
    to boot the images and check the combined runtime result boot
    operation and functions. However, the test can also use the IP
    address of a machine to test.
 
--  :ref:`ptest <dev-manual/common-tasks:testing packages with ptest>`:
+-  :ref:`ptest <dev-manual/packages:testing packages with ptest>`:
    Runs tests against packages produced during the build for a given
    piece of software. The test allows the packages to be run within a
    target image.

@@ -15,6 +15,7 @@ SRC_URI = "http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-4.2/ntp-${PV}.tar.g
            file://reproducibility-fixed-path-to-posix-shell.patch \
            file://0001-libntp-Do-not-use-PTHREAD_STACK_MIN-on-glibc.patch \
            file://0001-test-Fix-build-with-new-compiler-defaults-to-fno-com.patch \
+           file://0001-sntp-Fix-types-in-check-for-pthread_detach.patch \
            file://ntpd \
            file://ntp.conf \
            file://ntpdate \
@@ -29,7 +30,31 @@ SRC_URI = "http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-4.2/ntp-${PV}.tar.g
 SRC_URI[sha256sum] = "f65840deab68614d5d7ceb2d0bb9304ff70dcdedd09abb79754a87536b849c19"
 
 # CVE-2016-9312 is only for windows.
-CVE_CHECK_IGNORE += "CVE-2016-9312"
+# The other CVEs are not correctly identified because cve-check
+# is not able to check the version correctly (it only checks for 4.2.8 omitting p15 that makes the difference)
+CVE_CHECK_IGNORE += "\
+    CVE-2016-9312 \
+    CVE-2015-5146 \
+    CVE-2015-5300 \
+    CVE-2015-7975 \
+    CVE-2015-7976 \
+    CVE-2015-7977 \
+    CVE-2015-7978 \
+    CVE-2015-7979 \
+    CVE-2015-8138 \
+    CVE-2015-8139 \
+    CVE-2015-8140 \
+    CVE-2015-8158 \
+    CVE-2016-1547 \
+    CVE-2016-2516 \
+    CVE-2016-2517 \
+    CVE-2016-2519 \
+    CVE-2016-7429 \
+    CVE-2016-7433 \
+    CVE-2016-9310 \
+    CVE-2016-9311 \
+"
+
 
 inherit autotools update-rc.d useradd systemd pkgconfig
 
@@ -114,8 +139,9 @@ PACKAGES += "ntpdate sntp ntpdc ntpq ${PN}-tickadj ${PN}-utils"
 # ntp originally includes tickadj. It's split off for inclusion in small firmware images on platforms
 # with wonky clocks (e.g. OpenSlug)
 RDEPENDS:${PN} = "${PN}-tickadj"
-# ntpd require libgcc for execution
+# ntpd & sntp require libgcc for execution due to phtread_cancel/pthread_exit calls
 RDEPENDS:${PN} += "libgcc"
+RDEPENDS:sntp += "libgcc"
 # Handle move from bin to utils package
 RPROVIDES:${PN}-utils = "${PN}-bin"
 RREPLACES:${PN}-utils = "${PN}-bin"

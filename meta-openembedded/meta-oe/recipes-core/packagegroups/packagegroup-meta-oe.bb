@@ -77,14 +77,16 @@ RDEPENDS:packagegroup-meta-oe-benchmarks = "\
     qperf \
     s-suite \
     stressapptest \
-    sysbench \
     tinymembench \
     tiobench \
     whetstone \
 "
-RDEPENDS:packagegroup-meta-oe-benchmarks:append:armv7a = " cpuburn-arm"
-RDEPENDS:packagegroup-meta-oe-benchmarks:append:armv7ve = " cpuburn-arm"
-RDEPENDS:packagegroup-meta-oe-benchmarks:append:aarch64 = " cpuburn-arm"
+RDEPENDS:packagegroup-meta-oe-benchmarks:append:armv7a = " cpuburn-arm sysbench"
+RDEPENDS:packagegroup-meta-oe-benchmarks:append:armv7ve = " cpuburn-arm sysbench"
+RDEPENDS:packagegroup-meta-oe-benchmarks:append:aarch64 = " cpuburn-arm sysbench"
+RDEPENDS:packagegroup-meta-oe-benchmarks:append:x86 = " sysbench"
+RDEPENDS:packagegroup-meta-oe-benchmarks:append:x86-64 = " sysbench"
+RDEPENDS:packagegroup-meta-oe-benchmarks:append:mips = " sysbench"
 
 RDEPENDS:packagegroup-meta-oe-benchmarks:remove:mipsarch = "libhugetlbfs"
 RDEPENDS:packagegroup-meta-oe-benchmarks:remove:mips64 = "tinymembench"
@@ -187,7 +189,6 @@ RDEPENDS:packagegroup-meta-oe-core = "\
     distro-feed-configs \
     mm-common \
     ${@bb.utils.contains("DISTRO_FEATURES", "systemd", "ndctl", "", d)} \
-    opencl-icd-loader \
     pim435 \
     proxy-libintl \
     safec \
@@ -222,7 +223,6 @@ RDEPENDS:packagegroup-meta-oe-dbs ="\
     psqlodbc \
     rocksdb \
     soci \
-    sqlite \
 "
 RDEPENDS:packagegroup-meta-oe-dbs:remove:libc-musl:powerpc = "rocksdb"
 
@@ -301,10 +301,8 @@ RDEPENDS:packagegroup-meta-oe-devtools ="\
     python3-distutils-extra \
     python3-pycups \
     rapidjson \
-    sip3 \
     squashfs-tools-ng \
     uftrace \
-    unifex \
     valijson \
     libxerces-c \
     xerces-c-samples \
@@ -659,7 +657,6 @@ RDEPENDS:packagegroup-meta-oe-kernel:remove:riscv64 = "crash makedumpfile oprofi
 RDEPENDS:packagegroup-meta-oe-kernel:remove:riscv32 = "crash makedumpfile oprofile"
 
 RDEPENDS:packagegroup-meta-oe-multimedia ="\
-    alsa-oss \
     ${@bb.utils.contains("LICENSE_FLAGS_ACCEPTED", "commercial", "faad2", "", d)} \
     dirsplit \
     genisoimage \
@@ -692,8 +689,6 @@ RDEPENDS:packagegroup-meta-oe-multimedia ="\
     ${@bb.utils.contains("DISTRO_FEATURES", "x11", "pavucontrol", "", d)} \
     libopusenc \
 "
-
-RDEPENDS:packagegroup-meta-oe-multimedia:remove:libc-musl = "alsa-oss"
 
 RDEPENDS:packagegroup-meta-oe-navigation ="\
     geos \
@@ -832,7 +827,6 @@ RDEPENDS:packagegroup-meta-oe-support ="\
     liblinebreak \
     mailcap \
     liboauth \
-    libol \
     mg \
     monit \
     mscgen \
@@ -1006,7 +1000,7 @@ RDEPENDS:packagegroup-meta-oe-fortran-packages = "\
 # They wont be built as part of images but might be interesting to include
 # with dev-pkgs images
 #
-# opencl-headers sdbus-c++-libsystemd boost-url nlohmann-fifo sqlite-orm
+# opencl-headers sdbus-c++-libsystemd nlohmann-fifo sqlite-orm
 # nlohmann-json exprtk liblightmodbus p8platform gnome-doc-utils-stub
 # glm ttf-mplus xbitmaps ceres-solver cli11 fftw gnulib libeigen ade
 # spdlog span-lite uthash websocketpp catch2 properties-cpp cpp-netlib

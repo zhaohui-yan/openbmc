@@ -85,13 +85,22 @@ typedef enum {
 	MB_BMC_PFM_RECOVERY_MINOR_VER = 0x1F,
 	/* Hash value of CPLD RoT HW + FW; read-only for CPU/BMC */
 	MB_CPLD_HASH = 0x20,
-#ifdef	ENABLE_PFR_MCTP
+#ifdef ENABLE_PFR_MCTP
 	/* Status of BMC, write from BMC allowed only until BMC signals boot complete, write from BMC
 	 * re-allowed on BMC reset
 	 */
 	MB_BMC_CHECKPOINT = 0x60,
 #endif
-
+#ifdef ENABLE_PFR_SPDM_ATTESTATION
+	/* Info on Active AFM; set by CPLD RoT; read-only for CPU/BMC */
+	MB_BMC_AFM_ACTIVE_SVN = 0x74,
+	MB_BMC_AFM_ACTIVE_MAJOR_VER = 0x75,
+	MB_BMC_AFM_ACTIVE_MINOR_VER = 0x76,
+	/* Info on Recovery AFM; set by CPLD RoT; read-only for CPU/BMC */
+	MB_BMC_AFM_RECOVERY_SVN = 0x77,
+	MB_BMC_AFM_RECOVERY_MAJOR_VER = 0x78,
+	MB_BMC_AFM_RECOVERY_MINOR_VER = 0x79,
+#endif
 } MB_REGFILE_OFFSET_ENUM;
 
 typedef enum {
