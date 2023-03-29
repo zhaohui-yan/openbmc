@@ -19,7 +19,7 @@ Why it matters
 ==============
 
 The project aligns with the `Reproducible Builds project
-<https://reproducible-builds.org/>`_, which shares information about why
+<https://reproducible-builds.org/>`__, which shares information about why
 reproducibility matters. The primary focus of the project is the ability to
 detect security issues being introduced. However, from a Yocto Project
 perspective, it is also hugely important that our builds are deterministic. When
@@ -71,7 +71,7 @@ things we do within the build system to ensure reproducibility include:
 .. note::
 
    Because of an open bug in GCC, using ``DISTRO_FEATURES:append = " lto"`` or
-   adding ``-flto`` (Link Time Optimization) to ``CFLAGS`` makes the resulting
+   adding ``-flto`` (Link Time Optimization) to :term:`CFLAGS` makes the resulting
    binary non-reproducible, in that it depends on the full absolute build path
    to ``recipe-sysroot-native``, so installing the Yocto Project in a different
    directory results in a different binary.

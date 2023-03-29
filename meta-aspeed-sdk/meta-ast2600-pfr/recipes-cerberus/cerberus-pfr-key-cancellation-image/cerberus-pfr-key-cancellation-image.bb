@@ -25,8 +25,8 @@ do_install() {
     install -m 0644 ${S}/key_management_tools/*.* ${PFR_KEY_MANAGEMENT_TOOLS_DIR}
 
     cd ${PFR_KEY_MANAGEMENT_TOOLS_DIR}
-    python3 key_management_tool.py cancellation_key0_image_generator.config
-    python3 key_management_tool.py cancellation_key1_image_generator.config
+    python3 key_management_tool.py cancel_key_manifest0_keys.config
+    python3 key_management_tool.py cancel_key_manifest1_keys.config
     cd ${S}
 
     install -d ${D}${datadir}/cerberus

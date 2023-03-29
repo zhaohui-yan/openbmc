@@ -5,12 +5,7 @@ FAN_PACKAGES:append:ibm-ac-server = " \
         phosphor-cooling-type \
         "
 
-FAN_PACKAGES:append:mihawk = " \
-        phosphor-cooling-type \
-        "
-
 PACKAGECONFIG:append:ibm-ac-server = " cooling-type"
-PACKAGECONFIG:append:mihawk = " cooling-type"
 
 TMPL_COOLING = "phosphor-cooling-type@.service"
 INSTFMT_COOLING = "phosphor-cooling-type@{0}.service"
@@ -20,14 +15,10 @@ FMT_COOLING = "../${TMPL_COOLING}:${MULTI_USR_TGT}.requires/${INSTFMT_COOLING}"
 FILES:phosphor-cooling-type:append:ibm-ac-server = " ${bindir}/phosphor-cooling-type"
 SYSTEMD_SERVICE:phosphor-cooling-type:append:ibm-ac-server = " ${TMPL_COOLING}"
 SYSTEMD_LINK:phosphor-cooling-type:append:ibm-ac-server = " ${@compose_list(d, 'FMT_COOLING', 'OBMC_CHASSIS_INSTANCES')}"
-FILES:phosphor-cooling-type:append:mihawk = " ${bindir}/phosphor-cooling-type"
-SYSTEMD_SERVICE:phosphor-cooling-type:append:mihawk = " ${TMPL_COOLING}"
-SYSTEMD_LINK:phosphor-cooling-type:append:mihawk = " ${@compose_list(d, 'FMT_COOLING', 'OBMC_CHASSIS_INSTANCES')}"
 
 COOLING_ENV_FMT = "obmc/phosphor-fan/phosphor-cooling-type-{0}.conf"
 
 SYSTEMD_ENVIRONMENT_FILE:phosphor-cooling-type:append:ibm-ac-server = " ${@compose_list(d, 'COOLING_ENV_FMT', 'OBMC_CHASSIS_INSTANCES')}"
-SYSTEMD_ENVIRONMENT_FILE:phosphor-cooling-type:append:mihawk = " ${@compose_list(d, 'COOLING_ENV_FMT', 'OBMC_CHASSIS_INSTANCES')}"
 
 #These services are protected by the watchdog
 SYSTEMD_OVERRIDE:phosphor-fan-control:witherspoon += "fan-watchdog-monitor.conf:phosphor-fan-control-init@0.service.d/fan-watchdog-monitor.conf"
@@ -58,10 +49,9 @@ SYSTEMD_LINK:${PN}-control:witherspoon += "${@compose_list(d, 'FMT_CONTROL_PWRON
 
 # Enable the use of JSON on the fan applications that support it
 PACKAGECONFIG:append:witherspoon = " json"
-EXTRA_OECONF:append:witherspoon = " --disable-json-control"
+EXTRA_OEMESON:append:witherspoon = " -Djson-control=disabled"
 
 PACKAGECONFIG:append:p10bmc = " json sensor-monitor"
-FAN_PACKAGES:append:p10bmc = " sensor-monitor"
 
 # Set the appropriate i2c address used within the overridden phosphor-fan-control@.service
 # file that's used for witherspoon type(including witherspoon-tacoma) machines

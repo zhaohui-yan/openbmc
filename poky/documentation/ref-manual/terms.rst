@@ -21,7 +21,7 @@ universal, the list includes them just in case:
 
       Information in append files extends or overrides the information in the
       similarly-named recipe file. For an example of an append file in use, see
-      the    ":ref:`dev-manual/common-tasks:appending other layers metadata with your layer`"
+      the    ":ref:`dev-manual/layers:appending other layers metadata with your layer`"
       section in the Yocto Project Development Tasks Manual.
 
       When you name an append file, you can use the "``%``" wildcard character
@@ -64,31 +64,31 @@ universal, the list includes them just in case:
       builds. The area is created when you ``source`` the setup environment
       script that is found in the Source Directory
       (i.e. :ref:`ref-manual/structure:\`\`oe-init-build-env\`\``). The
-      :term:`TOPDIR` variable points to the Build Directory.
+      :term:`TOPDIR` variable points to the :term:`Build Directory`.
 
-      You have a lot of flexibility when creating the Build Directory.
+      You have a lot of flexibility when creating the :term:`Build Directory`.
       Following are some examples that show how to create the directory.  The
       examples assume your :term:`Source Directory` is named ``poky``:
 
-         -  Create the Build Directory inside your Source Directory and let
-            the name of the Build Directory default to ``build``:
+         -  Create the :term:`Build Directory` inside your Source Directory and let
+            the name of the :term:`Build Directory` default to ``build``:
 
             .. code-block:: shell
 
                $ cd poky
                $ source oe-init-build-env
 
-         -  Create the Build Directory inside your home directory and
+         -  Create the :term:`Build Directory` inside your home directory and
             specifically name it ``test-builds``:
 
             .. code-block:: shell
 
                $ source poky/oe-init-build-env test-builds
 
-         -  Provide a directory path and specifically name the Build
-            Directory. Any intermediate folders in the pathname must exist.
-            This next example creates a Build Directory named
-            ``YP-&DISTRO;`` within the existing directory ``mybuilds``:
+         -  Provide a directory path and specifically name the
+            :term:`Build Directory`. Any intermediate folders in the pathname
+            must exist.  This next example creates a :term:`Build Directory`
+            named ``YP-&DISTRO;`` within the existing directory ``mybuilds``:
 
             .. code-block:: shell
 
@@ -96,18 +96,36 @@ universal, the list includes them just in case:
 
       .. note::
 
-         By default, the Build Directory contains :term:`TMPDIR`, which is a
+         By default, the :term:`Build Directory` contains :term:`TMPDIR`, which is a
          temporary directory the build system uses for its work. :term:`TMPDIR` cannot
-         be under NFS. Thus, by default, the Build Directory cannot be under
-         NFS. However, if you need the Build Directory to be under NFS, you can
+         be under NFS. Thus, by default, the :term:`Build Directory` cannot be under
+         NFS. However, if you need the :term:`Build Directory` to be under NFS, you can
          set this up by setting :term:`TMPDIR` in your ``local.conf`` file to use a local
          drive. Doing so effectively separates :term:`TMPDIR` from :term:`TOPDIR`, which is the
-         Build Directory.
+         :term:`Build Directory`.
 
    :term:`Build Host`
       The system used to build images in a Yocto Project Development
       environment. The build system is sometimes referred to as the development
       host.
+
+   :term:`buildtools`
+      Build tools in binary form, providing required versions of development
+      tools (such as Git, GCC, Python and make), to run the OpenEmbedded build
+      system on a development host without such minimum versions.
+
+      See the ":ref:`system-requirements-buildtools`" paragraph in the
+      Reference Manual for details about downloading or building an archive
+      of such tools.
+
+   :term:`buildtools-extended`
+      A set of :term:`buildtools` binaries extended with additional development
+      tools, such as a required version of the GCC compiler to run the
+      OpenEmbedded build system.
+
+   :term:`buildtools-make`
+      A variant of :term:`buildtools`, just providing the required
+      version of ``make`` to run the OpenEmbedded build system.
 
    :term:`Classes`
       Files that provide for logic encapsulation and inheritance so that
@@ -138,14 +156,12 @@ universal, the list includes them just in case:
       which contains multiple (and typically related) sub-layers which can
       be included independently in your project's ``bblayers.conf`` file.
 
-      In some cases, such as with OpenEmbedded's
-      `meta-openembedded <https://github.com/openembedded/meta-openembedded>`_
+      In some cases, such as with OpenEmbedded's :oe_git:`meta-openembedded </meta-openembedded>`
       layer, the top level ``meta-openembedded/`` directory is not itself an actual layer,
       so you would never explicitly include it in a ``bblayers.conf`` file;
       rather, you would include any number of its layer subdirectories, such as
-      `meta-openembedded/meta-oe <https://github.com/openembedded/meta-openembedded/tree/master/meta-oe>`_,
-      `meta-openembedded/meta-python <https://github.com/openembedded/meta-openembedded/tree/master/meta-python>`_
-      and so on.
+      :oe_git:`meta-oe </meta-openembedded/tree/meta-oe>`, :oe_git:`meta-python
+      </meta-openembedded/tree/meta-python>` and so on.
 
       On the other hand, some container layers (such as
       :yocto_git:`meta-security </meta-security>`)
@@ -205,7 +221,7 @@ universal, the list includes them just in case:
       ":ref:`overview-manual/yp-intro:The Yocto Project Layer
       Model`" section in the Yocto Project Overview and Concepts Manual. For
       more detailed information on layers, see the
-      ":ref:`dev-manual/common-tasks:Understanding and Creating
+      ":ref:`dev-manual/layers:Understanding and Creating
       Layers`" section in the Yocto Project Development Tasks Manual. For a
       discussion specifically on BSP Layers, see the ":ref:`bsp-guide/bsp:BSP
       Layers`" section in the Yocto Project Board Support Packages (BSP)
@@ -270,7 +286,7 @@ universal, the list includes them just in case:
       your Linux distribution.
 
       Another point worth noting is that historically within the Yocto
-      Project, recipes were referred to as packages - thus, the existence
+      Project, recipes were referred to as packages --- thus, the existence
       of several BitBake variables that are seemingly mis-named, (e.g.
       :term:`PR`, :term:`PV`, and
       :term:`PE`).
@@ -323,6 +339,23 @@ universal, the list includes them just in case:
       :term:`build host<Build Host>` and other components, that can
       work on specific hardware.
 
+   :term:`SBOM`
+      This term means *Software Bill of Materials*. When you distribute
+      software, it offers a description of all the components you used,
+      their corresponding licenses, their dependencies, the changes that were
+      applied and the known vulnerabilities that were fixed.
+
+      This can be used by the recipients of the software to assess
+      their exposure to license compliance and security vulnerability issues.
+
+      See the :wikipedia:`Software Supply Chain <Software_supply_chain>`
+      article on Wikipedia for more details.
+
+      The OpenEmbedded Build System can generate such documentation for your
+      project, in :term:`SPDX` format, based on all the metadata it used to
+      build the software images. See the ":ref:`dev-manual/sbom:creating
+      a software bill of materials`" section of the Development Tasks manual.
+
    :term:`Source Directory`
      This term refers to the directory structure
      created as a result of creating a local copy of the ``poky`` Git
@@ -369,7 +402,7 @@ universal, the list includes them just in case:
      Directory created by unpacking a released tarball as compared to
      cloning ``git://git.yoctoproject.org/poky``. When you unpack a
      tarball, you have an exact copy of the files based on the time of
-     release - a fixed release point. Any changes you make to your local
+     release --- a fixed release point. Any changes you make to your local
      files in the Source Directory are on top of the release and will
      remain local only. On the other hand, when you clone the ``poky`` Git
      repository, you have an active development repository with access to
@@ -382,6 +415,42 @@ universal, the list includes them just in case:
      branches, and tags, see the
      ":ref:`overview-manual/development-environment:repositories, tags, and branches`"
      section in the Yocto Project Overview and Concepts Manual.
+
+   :term:`SPDX`
+      This term means *Software Package Data Exchange*, and is used as a open
+      standard for providing a *Software Bill of Materials* (:term:`SBOM`).
+      This standard is developed through a `Linux Foundation project
+      <https://spdx.dev/>`__ and is used by the OpenEmbedded Build System to
+      provide an :term:`SBOM` associated to each a software image.
+
+      For details, see Wikipedia's :wikipedia:`SPDX page <Software_Package_Data_Exchange>`
+      and the ":ref:`dev-manual/sbom:creating a software bill of materials`"
+      section of the Development Tasks manual.
+
+   :term:`Sysroot`
+      When cross-compiling, the target file system may be differently laid
+      out and contain different things compared to the host system. The concept
+      of a *sysroot* is directory which looks like the target filesystem and
+      can be used to cross-compile against.
+
+      In the context of cross-compiling toolchains, a *sysroot*
+      typically contains C library and kernel headers, plus the
+      compiled binaries for the C library. A *multilib toolchain*
+      can contain multiple variants of the C library binaries,
+      each compiled for a target instruction set (such as ``armv5``,
+      ``armv7`` and ``armv8``), and possibly optimized for a specific CPU core.
+
+      In the more specific context of the OpenEmbedded build System and
+      of the Yocto Project, each recipe has two sysroots:
+
+      -  A *target sysroot* contains all the **target** libraries and headers
+         needed to build the recipe.
+
+      -  A *native sysroot* contains all the **host** files and executables
+         needed to build the recipe.
+
+      See the :term:`SYSROOT_* <SYSROOT_DESTDIR>` variables controlling
+      how sysroots are created and stored.
 
    :term:`Task`
       A per-recipe unit of execution for BitBake (e.g.

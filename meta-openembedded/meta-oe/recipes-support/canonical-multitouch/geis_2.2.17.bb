@@ -15,13 +15,14 @@ LIC_FILES_CHKSUM = " \
 
 inherit autotools pkgconfig python3native lib_package features_check
 
-REQUIRED_DISTRO_FEATURES = "x11"
+REQUIRED_DISTRO_FEATURES = "x11 opengl"
 
 DEPENDS += "grail dbus-glib python3 virtual/libx11 libxext libxi libxcb dbus frame"
 
 SRC_URI = "https://launchpad.net/${BPN}/trunk/${PV}/+download/${BPN}-${PV}.tar.xz \
            file://fix-indentation-for-gcc6.patch \
            file://0001-libgeis-Compare-the-first-character-of-string-to-nul.patch \
+           file://0001-provide-function-declaration-with-prototypes.patch \
            "
 
 UPSTREAM_CHECK_URI = "https://launchpad.net/geis/trunk"

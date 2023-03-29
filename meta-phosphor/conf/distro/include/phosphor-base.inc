@@ -1,5 +1,8 @@
 require conf/distro/include/phosphor-defaults.inc
 
+# Match the distro codename from upstream poky.
+DISTRO_CODENAME ?= "langdale"
+
 # Override these in poky based distros
 POKY_DEFAULT_DISTRO_FEATURES = "largefile opengl ptest multiarch wayland vulkan"
 POKY_DEFAULT_EXTRA_RDEPENDS = "packagegroup-core-boot"
@@ -116,6 +119,7 @@ include conf/distro/include/openbmc-phosphor/${MACHINE}.inc
 
 IMAGE_CLASSES:append = " image_types_phosphor phosphor-rootfs-postcommands"
 IMAGE_CLASSES:append:npcm7xx = " image_types_phosphor_nuvoton"
+IMAGE_CLASSES:append:npcm8xx = " image_types_phosphor_nuvoton_npcm8xx"
 
 IMAGE_INSTALL:append = " dbus-broker libnss-systemd"
 
@@ -133,7 +137,7 @@ LAYER_CONF_VERSION ?= "8"
 KERNEL_CLASSES:append = " obmc-phosphor-kernel-version"
 
 # Some packages have directory trees of YAML files arranged based on
-# canonical organization names.  'xyz/openbmc_project' should be used
-# everywhere in phosphor, but some layers may append this with their
-# own organization(s).
-OBMC_ORG_YAML_SUBDIRS += " xyz/openbmc_project"
+# canonical organization names.  'org/freedesktop' and 'xyz/openbmc_project'
+# should be used everywhere in phosphor, but some layers may append this with
+# their own organization(s).
+OBMC_ORG_YAML_SUBDIRS += " org/freedesktop xyz/openbmc_project"

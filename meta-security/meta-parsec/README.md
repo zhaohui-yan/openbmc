@@ -48,6 +48,7 @@ PKCS11 and MBED-CRYPTO providers build-in.
 - DISTRO_FEATURES contains "tmp2" and
 - "tpm-layer" (meta-tpm) is included in BBLAYERS
 
+The trusted service provider depends on libts recipe from meta-arm layer. 
 
 You can use PACKAGECONFIG for Parsec servic recipe to define
 what providers should be built in. For example:
@@ -99,6 +100,7 @@ The tests are run against:
 - all providers pre-configured in the Parsec config file included in the image.
 - PKCS11 and TPM providers with software backends if softhsm and
   swtpm packages included in the image.
+- TS Provider if Parsec is built with it included.
 
 Meta-parsec also contains a recipe for `security-parsec-image` image with Parsec,
 softhsm and swtpm included.
@@ -214,7 +216,7 @@ systemctl start parsec
   The IBM Software TPM service can be used for manual testing of the provider by
 including it into your test image:
 
-    IMAGE_INSTALL:append = " ibmswtpm2 tpm2-tools libtss2 libtss2-tcti-mssim"
+    IMAGE_INSTALL:append = " swtpm tpm2-tools libtss2 libtss2-tcti-mssim"
 
 Inside the running VM:
 - Stop Parsec

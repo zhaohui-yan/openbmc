@@ -1,0 +1,15 @@
+header:
+  version: 11
+  includes:
+    - ci/base.yml
+    - ci/meta-openembedded.yml
+
+local_conf_header:
+    extrapackages: |
+    # Intentionally blank to prevent perf from being added to the image in base.yml
+
+distro: poky-tiny
+
+target:
+  - corstone1000-image
+  - perf

@@ -22,7 +22,7 @@ PAM_DEPS = "libpam libpam-runtime pam-plugin-env pam-plugin-limits"
 RCONFLICTS:${PN} = "atd"
 RREPLACES:${PN} = "atd"
 
-SRC_URI = "http://software.calhariz.com/at/${BPN}_${PV}.orig.tar.gz \
+SRC_URI = "${DEBIAN_MIRROR}/main/a/at/${BPN}_${PV}.orig.tar.gz \
            file://posixtm.c \
            file://posixtm.h \
            file://file_replacement_with_gplv2.patch \
@@ -52,8 +52,10 @@ INITSCRIPT_PARAMS = "defaults"
 
 SYSTEMD_SERVICE:${PN} = "atd.service"
 
-do_configure:prepend() {
-	cp -f ${WORKDIR}/posixtm.[ch] ${S}
+do_patch[postfuncs] += "copy_posix_files"
+
+copy_posix_files() {
+    cp -f ${WORKDIR}/posixtm.[ch] ${S}
 }
 
 do_install () {

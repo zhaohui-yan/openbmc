@@ -34,7 +34,6 @@ RDEPENDS:${PN}-fans = " \
 
 SUMMARY:${PN}-flash = "Supermicro Flash"
 RDEPENDS:${PN}-flash = " \
-        obmc-control-bmc \
         "
 
 SUMMARY:${PN}-system = "Supermicro System"
@@ -42,6 +41,6 @@ RDEPENDS:${PN}-system = " \
         bmcweb \
         entity-manager \
         dbus-sensors \
-        phosphor-webui \
+        webui-vue \
         ipmitool \
         "

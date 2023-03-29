@@ -117,7 +117,7 @@ upstream Linux kernel development and are managed by the Yocto Project
 team's Yocto Linux kernel development strategy. It is the Yocto Project
 team's policy to not back-port minor features to the released Yocto
 Linux kernel. They only consider back-porting significant technological
-jumps - and, that is done after a complete gap analysis. The reason
+jumps --- and, that is done after a complete gap analysis. The reason
 for this policy is that back-porting any small to medium sized change
 from an evolving Linux kernel can easily create mismatches,
 incompatibilities and very subtle errors.
@@ -319,8 +319,7 @@ image.
 
 The following figure shows the temporary file structure created on your
 host system when you build the kernel using BitBake. This
-:term:`Build Directory` contains all the
-source files used during the build.
+:term:`Build Directory` contains all the source files used during the build.
 
 .. image:: figures/kernel-overview-2-generic.png
    :align: center

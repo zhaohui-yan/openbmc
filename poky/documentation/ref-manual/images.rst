@@ -18,11 +18,11 @@ image you want.
    are going to build an image using non-GPLv3 and similarly licensed
    components, you must make the following changes in the ``local.conf``
    file before using the BitBake command to build the minimal or base
-   image::
+   image:
 
-           1. Comment out the EXTRA_IMAGE_FEATURES line
-           2. Set INCOMPATIBLE_LICENSE = "GPL-3.0* LGPL-3.0* AGPL-3.0*"
+   #. Comment out the :term:`EXTRA_IMAGE_FEATURES` line
 
+   #. Set :term:`INCOMPATIBLE_LICENSE` to "GPL-3.0* LGPL-3.0* AGPL-3.0*"
 
 From within the ``poky`` Git repository, you can use the following
 command to display the list of directories within the :term:`Source Directory`
@@ -78,11 +78,11 @@ Following is a list of supported recipes:
    libraries you can use in a host development environment.
 
 -  ``core-image-minimal-initramfs``: A ``core-image-minimal`` image that
-   has the Minimal RAM-based Initial Root Filesystem (initramfs) as part
+   has the Minimal RAM-based Initial Root Filesystem (:term:`Initramfs`) as part
    of the kernel, which allows the system to find the first "init"
    program more efficiently. See the
    :term:`PACKAGE_INSTALL` variable for
-   additional information helpful when working with initramfs images.
+   additional information helpful when working with :term:`Initramfs` images.
 
 -  ``core-image-minimal-mtdutils``: A ``core-image-minimal`` image that
    has support for the Minimal MTD Utilities, which let the user
@@ -117,17 +117,17 @@ Following is a list of supported recipes:
    deployed to a separate partition so that you can boot into it and use
    it to deploy a second image to be tested. You can find more
    information about runtime testing in the
-   ":ref:`dev-manual/common-tasks:performing automated runtime testing`"
+   ":ref:`dev-manual/runtime-testing:performing automated runtime testing`"
    section in the Yocto Project Development Tasks Manual.
 
 -  ``core-image-testmaster-initramfs``: A RAM-based Initial Root
-   Filesystem (initramfs) image tailored for use with the
+   Filesystem (:term:`Initramfs`) image tailored for use with the
    ``core-image-testmaster`` image.
 
 -  ``core-image-weston``: A very basic Wayland image with a terminal.
    This image provides the Wayland protocol libraries and the reference
    Weston compositor. For more information, see the
-   ":ref:`dev-manual/common-tasks:using wayland and weston`"
+   ":ref:`dev-manual/wayland:using wayland and weston`"
    section in the Yocto Project Development Tasks Manual.
 
 -  ``core-image-x11``: A very basic X11 image with a terminal.

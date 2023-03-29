@@ -62,6 +62,8 @@ Project metadata:
 
 -  *keyboard:* Hardware has a keyboard
 
+-  *numa:* Hardware has non-uniform memory access
+
 -  *pcbios:* Support for booting through BIOS
 
 -  *pci:* Hardware has a PCI bus
@@ -69,6 +71,8 @@ Project metadata:
 -  *pcmcia:* Hardware has PCMCIA or CompactFlash sockets
 
 -  *phone:* Mobile phone (voice) support
+
+-  *qemu-usermode:* QEMU can support user-mode emulation for this machine
 
 -  *qvga:* Machine has a QVGA (320x240) display
 
@@ -100,7 +104,9 @@ packages, and they can go beyond simply controlling the installation of
 a package or packages. In most cases, the presence or absence of a
 feature translates to the appropriate option supplied to the configure
 script during the :ref:`ref-tasks-configure` task for
-the recipes that optionally support the feature.
+the recipes that optionally support the feature. Appropriate options
+must be supplied, and enabling/disabling :term:`PACKAGECONFIG` for the
+concerned packages is one way of supplying such options.
 
 Some distro features are also machine features. These select features
 make sense to be controlled both at the machine and distribution
@@ -108,11 +114,22 @@ configuration level. See the
 :term:`COMBINED_FEATURES` variable for more
 information.
 
-This list only represents features as shipped with the Yocto Project
-metadata:
+.. note::
 
--  *alsa:* Include ALSA support (OSS compatibility kernel modules
-   installed if available).
+   :term:`DISTRO_FEATURES` is normally independent of kernel configuration,
+   so if a feature specified in :term:`DISTRO_FEATURES` also relies on
+   support in the kernel, you will also need to ensure that support is
+   enabled in the kernel configuration.
+
+This list only represents features as shipped with the Yocto Project
+metadata, as extra layers can define their own:
+
+-  *3g:* Include support for cellular data.
+
+-  *acl:* Include :wikipedia:`Access Control List <Access-control_list>` support.
+
+-  *alsa:* Include :wikipedia:`Advanced Linux Sound Architecture <Advanced_Linux_Sound_Architecture>`
+   support (OSS compatibility kernel modules installed if available).
 
 -  *api-documentation:* Enables generation of API documentation during
    recipe builds. The resulting documentation is added to SDK tarballs
@@ -125,38 +142,80 @@ metadata:
 
 -  *cramfs:* Include CramFS support.
 
+-  *debuginfod:* Include support for getting ELF debugging information through
+   a :ref:`debuginfod <dev-manual/debugging:using the debuginfod server method>`
+   server.
+
 -  *directfb:* Include DirectFB support.
 
 -  *ext2:* Include tools for supporting for devices with internal
    HDD/Microdrive for storing files (instead of Flash only devices).
 
+-  *gobject-introspection-data:* Include data to support
+   `GObject Introspection <https://gi.readthedocs.io/en/latest/>`__.
+
 -  *ipsec:* Include IPSec support.
+
+-  *ipv4:* Include IPv4 support.
 
 -  *ipv6:* Include IPv6 support.
 
 -  *keyboard:* Include keyboard support (e.g. keymaps will be loaded
    during boot).
 
+-  *multiarch:* Enable building applications with multiple architecture
+   support.
+
+-  *ld-is-gold:* Use the :wikipedia:`gold <Gold_(linker)>`
+   linker instead of the standard GCC linker (bfd).
+
 -  *ldconfig:* Include support for ldconfig and ``ld.so.conf`` on the
    target.
 
+-  *lto:* Enable `Link-Time Optimisation <https://gcc.gnu.org/wiki/LinkTimeOptimization>`__.
+
+-  *nfc:* Include support for
+   `Near Field Communication <https://en.wikipedia.org/wiki/Near-field_communication>`__.
+
 -  *nfs:* Include NFS client support (for mounting NFS exports on
    device).
+
+-  *nls:* Include National Language Support (NLS).
 
 -  *opengl:* Include the Open Graphics Library, which is a
    cross-language, multi-platform application programming interface used
    for rendering two and three-dimensional graphics.
 
+-  *overlayfs:* Include `OverlayFS <https://docs.kernel.org/filesystems/overlayfs.html>`__
+   support.
+
+-  *pam:* Include :wikipedia:`Pluggable Authentication Module (PAM) <Pluggable_authentication_module>`
+   support.
+
 -  *pci:* Include PCI bus support.
 
 -  *pcmcia:* Include PCMCIA/CompactFlash support.
+
+-  *polkit:* Include :wikipedia:`Polkit <Polkit>` support.
 
 -  *ppp:* Include PPP dialup support.
 
 -  *ptest:* Enables building the package tests where supported by
    individual recipes. For more information on package tests, see the
-   ":ref:`dev-manual/common-tasks:testing packages with ptest`" section
+   ":ref:`dev-manual/packages:testing packages with ptest`" section
    in the Yocto Project Development Tasks Manual.
+
+-  *pulseaudio:* Include support for
+   `PulseAudio <https://www.freedesktop.org/wiki/Software/PulseAudio/>`__.
+
+-  *selinux:* Include support for
+   :wikipedia:`Security-Enhanced Linux (SELinux) <Security-Enhanced_Linux>`
+   (requires `meta-selinux <https://layers.openembedded.org/layerindex/layer/meta-selinux/>`__).
+
+-  *seccomp:* Enables building applications with
+   :wikipedia:`seccomp <Seccomp>` support, to
+   allow them to strictly restrict the system calls that they are allowed
+   to invoke.
 
 -  *smbfs:* Include SMB networks client support (for mounting
    Samba/Microsoft Windows shares on device).
@@ -176,12 +235,23 @@ metadata:
    directories into their respective counterparts in the ``/usr``
    directory to provide better package and application compatibility.
 
+-  *vfat:* Include :wikipedia:`FAT filesystem <File_Allocation_Table>`
+   support.
+
+-  *vulkan:* Include support for the :wikipedia:`Vulkan API <Vulkan>`.
+
 -  *wayland:* Include the Wayland display server protocol and the
    library that supports it.
 
 -  *wifi:* Include WiFi support (integrated only).
 
 -  *x11:* Include the X server and libraries.
+
+-  *xattr:* Include support for
+   :wikipedia:`extended file attributes <Extended_file_attributes>`.
+
+-  *zeroconf:* Include support for
+   `zero configuration networking <https://en.wikipedia.org/wiki/Zero-configuration_networking>`__.
 
 .. _ref-features-image:
 
@@ -198,17 +268,19 @@ application problems or profile applications.
 
 Here are the image features available for all images:
 
--  *allow-empty-password:* Allows Dropbear and OpenSSH to accept root
-   logins and logins from accounts having an empty password string.
+-  *allow-empty-password:* Allows Dropbear and OpenSSH to accept
+   logins from accounts having an empty password string.
+
+-  *allow-root-login:* Allows Dropbear and OpenSSH to accept root logins.
 
 -  *dbg-pkgs:* Installs debug symbol packages for all packages installed
    in a given image.
 
 -  *debug-tweaks:* Makes an image suitable for development (e.g. allows
-   root logins without passwords and enables post-installation logging).
-   See the 'allow-empty-password', 'empty-root-password', and
-   'post-install-logging' features in this list for additional
-   information.
+   root logins, logins without passwords ---including root ones, and enables
+   post-installation logging). See the ``allow-empty-password``,
+   ``allow-root-login``, ``empty-root-password``, and ``post-install-logging``
+   features in this list for additional information.
 
 -  *dev-pkgs:* Installs development packages (headers and extra library
    links) for all packages installed in a given image.
@@ -216,8 +288,22 @@ Here are the image features available for all images:
 -  *doc-pkgs:* Installs documentation packages for all packages
    installed in a given image.
 
--  *empty-root-password:* Sets the root password to an empty string,
-   which allows logins with a blank password.
+-  *empty-root-password:* This feature or ``debug-tweaks`` is required if
+   you want to allow root login with an empty password. If these features
+   are not present in :term:`IMAGE_FEATURES`, a non-empty password is
+   forced in ``/etc/passwd`` and ``/etc/shadow`` if such files exist.
+
+   .. note::
+       ``empty-root-passwd`` doesn't set an empty root password by itself.
+       You get an initial empty root password thanks to the
+       :oe_git:`base-passwd </openembedded-core/tree/meta/recipes-core/base-passwd/>`
+       and :oe_git:`shadow </openembedded-core/tree/meta/recipes-extended/shadow/>`
+       recipes, and the presence of ``empty-root-passwd`` or ``debug-tweaks``
+       just disables the mechanism which forces an non-empty password for the
+       root user.
+
+-  *lic-pkgs:* Installs license packages for all packages installed in a
+   given image.
 
 -  *overlayfs-etc:* Configures the ``/etc`` directory to be in ``overlayfs``.
    This allows to store device specific information elsewhere, especially
@@ -239,9 +325,21 @@ Here are the image features available for all images:
 
 -  *read-only-rootfs:* Creates an image whose root filesystem is
    read-only. See the
-   ":ref:`dev-manual/common-tasks:creating a read-only root filesystem`"
+   ":ref:`dev-manual/read-only-rootfs:creating a read-only root filesystem`"
    section in the Yocto Project Development Tasks Manual for more
    information.
+
+-  *read-only-rootfs-delayed-postinsts:* when specified in conjunction
+   with ``read-only-rootfs``, specifies that post-install scripts are
+   still permitted (this assumes that the root filesystem will be made
+   writeable for the first boot; this feature does not do anything to
+   ensure that - it just disables the check for post-install scripts.)
+
+-  *serial-autologin-root:* when specified in conjunction with
+   ``empty-root-password`` will automatically login as root on the
+   serial console. This of course opens up a security hole if the
+   serial console is potentially accessible to an attacker, so use
+   with caution.
 
 -  *splash:* Enables showing a splash screen during boot. By default,
    this screen is provided by ``psplash``, which does allow
@@ -250,12 +348,17 @@ Here are the image features available for all images:
    different package name (or names) within the image recipe or at the
    distro configuration level.
 
+-  *stateless-rootfs:*: specifies that the image should be created as
+   stateless - when using ``systemd``, ``systemctl-native`` will not
+   be run on the image, leaving the image for population at runtime by
+   systemd.
+
 -  *staticdev-pkgs:* Installs static development packages, which are
    static libraries (i.e. ``*.a`` files), for all packages installed in
    a given image.
 
 Some image features are available only when you inherit the
-:ref:`core-image <ref-classes-core-image>` class. The current list of
+:ref:`ref-classes-core-image` class. The current list of
 these valid features is as follows:
 
 -  *hwcodecs:* Installs hardware acceleration codecs.
@@ -268,6 +371,21 @@ these valid features is as follows:
 
 -  *ssh-server-dropbear:* Installs the Dropbear minimal SSH server.
 
+   .. note::
+
+      As of the 4.1 release, the ``ssh-server-dropbear`` feature also
+      recommends the ``openssh-sftp-server`` package, which by default
+      will be pulled into the image. This is because recent versions of
+      the OpenSSH ``scp`` client now use the SFTP protocol, and thus
+      require an SFTP server to be present to connect to. However, if
+      you wish to use the Dropbear ssh server `without` the SFTP server
+      installed, you can either remove ``ssh-server-dropbear`` from
+      ``IMAGE_FEATURES`` and add ``dropbear`` to :term:`IMAGE_INSTALL`
+      instead, or alternatively still use the feature but set
+      :term:`BAD_RECOMMENDATIONS` as follows::
+
+         BAD_RECOMMENDATIONS += "openssh-sftp-server"
+
 -  *ssh-server-openssh:* Installs the OpenSSH SSH server, which is more
    full-featured than Dropbear. Note that if both the OpenSSH SSH server
    and the Dropbear minimal SSH server are present in
@@ -276,7 +394,7 @@ these valid features is as follows:
 
 -  *tools-debug:* Installs debugging tools such as ``strace`` and
    ``gdb``. For information on GDB, see the
-   ":ref:`dev-manual/common-tasks:debugging with the gnu project debugger (gdb) remotely`" section
+   ":ref:`dev-manual/debugging:debugging with the gnu project debugger (gdb) remotely`" section
    in the Yocto Project Development Tasks Manual. For information on
    tracing and profiling, see the :doc:`/profile-manual/index`.
 
@@ -284,6 +402,8 @@ these valid features is as follows:
 
 -  *tools-testapps:* Installs device testing tools (e.g. touchscreen
    debugging).
+
+-  *weston:* Installs Weston (reference Wayland environment).
 
 -  *x11:* Installs the X server.
 

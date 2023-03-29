@@ -32,11 +32,13 @@ SRC_URI = "git://github.com/mongodb/mongo.git;branch=v4.4;protocol=https \
            file://PTHREAD_STACK_MIN.patch \
            file://0001-add-explict-static_cast-size_t-to-maxMemoryUsageByte.patch \
            file://0001-server-Adjust-the-cache-alignment-assumptions.patch \
+           file://0001-The-std-lib-unary-binary_function-base-classes-are-d.patch \
            "
 SRC_URI:append:libc-musl ="\
            file://0001-Mark-one-of-strerror_r-implementation-glibc-specific.patch \
            file://0002-Fix-default-stack-size-to-256K.patch \
            file://0004-wiredtiger-Disable-strtouq-on-musl.patch \
+           file://0001-wiredtiger-Avoid-using-off64_t.patch \
            "
 
 SRC_URI:append:toolchain-clang = "\
@@ -44,6 +46,12 @@ SRC_URI:append:toolchain-clang = "\
            "
 
 S = "${WORKDIR}/git"
+
+CVE_CHECK_IGNORE += "\
+    CVE-2014-8180 \
+    CVE-2017-18381 \
+    CVE-2017-2665 \
+"
 
 COMPATIBLE_HOST ?= '(x86_64|i.86|powerpc64|arm|aarch64).*-linux'
 

@@ -7,6 +7,7 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=2caced0b25dfefd4c601d92bd15116de"
 SRC_URI = " \
     https://www.kernel.org/pub/software/libs/${BPN}/${BP}.tar.xz \
     file://run-ptest \
+    file://0001-build-don-t-expect-automake-to-set-PYTHON.patch \
 "
 
 SRC_URI[md5sum] = "28e79f6f70fee1da9079558d8b7b3736"
@@ -19,7 +20,8 @@ PACKAGECONFIG[cxx] = "--enable-bindings-cxx,--disable-bindings-cxx"
 PACKAGECONFIG[python3] = "--enable-bindings-python,--disable-bindings-python,python3"
 
 # Enable cxx bindings by default.
-PACKAGECONFIG ?= "cxx"
+PACKAGECONFIG ?= "cxx \
+		  ${@bb.utils.contains('PTEST_ENABLED', '1', 'tests', '', d)}"
 
 # Always build tools - they don't have any additional
 # requirements over the library.
@@ -55,8 +57,6 @@ RRECOMMENDS:${PN}-ptest += " \
     ${@bb.utils.contains('PACKAGECONFIG', 'python3', 'python3-unittest', '', d)} \
 "
 RDEPENDS:${PN}-ptest += "bats python3-packaging"
-
-PACKAGECONFIG:append = " ${@bb.utils.contains('DISTRO_FEATURES', 'ptest', 'tests', '', d)}"
 
 do_install_ptest() {
     install -d ${D}${PTEST_PATH}/tests

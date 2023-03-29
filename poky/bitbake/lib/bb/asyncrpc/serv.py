@@ -1,4 +1,6 @@
 #
+# Copyright BitBake Contributors
+#
 # SPDX-License-Identifier: GPL-2.0-only
 #
 
@@ -40,7 +42,7 @@ class AsyncServerConnection(object):
 
             # Read protocol and version
             client_protocol = await self.reader.readline()
-            if client_protocol is None:
+            if not client_protocol:
                 return
 
             (client_proto_name, client_proto_version) = client_protocol.decode('utf-8').rstrip().split()
@@ -57,7 +59,7 @@ class AsyncServerConnection(object):
             # an empty line to signal the end of the headers
             while True:
                 line = await self.reader.readline()
-                if line is None:
+                if not line:
                     return
 
                 line = line.decode('utf-8').rstrip()
@@ -150,6 +152,13 @@ class AsyncServer(object):
                 # maximum compatibility
                 s.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, 1)
                 s.setsockopt(socket.SOL_TCP, socket.TCP_QUICKACK, 1)
+
+                # Enable keep alives. This prevents broken client connections
+                # from persisting on the server for long periods of time.
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 30)
+                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 15)
+                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 4)
 
             name = self.server.sockets[0].getsockname()
             if self.server.sockets[0].family == socket.AF_INET6:

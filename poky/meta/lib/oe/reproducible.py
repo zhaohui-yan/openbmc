@@ -1,4 +1,6 @@
 #
+# Copyright OpenEmbedded Contributors
+#
 # SPDX-License-Identifier: GPL-2.0-only
 #
 import os
@@ -113,7 +115,8 @@ def get_source_date_epoch_from_git(d, sourcedir):
         return None
 
     bb.debug(1, "git repository: %s" % gitpath)
-    p = subprocess.run(['git', '--git-dir', gitpath, 'log', '-1', '--pretty=%ct'], check=True, stdout=subprocess.PIPE)
+    p = subprocess.run(['git', '-c', 'log.showSignature=false', '--git-dir', gitpath, 'log', '-1', '--pretty=%ct'],
+                       check=True, stdout=subprocess.PIPE)
     return int(p.stdout.decode('utf-8'))
 
 def get_source_date_epoch_from_youngest_file(d, sourcedir):
@@ -152,7 +155,6 @@ def fixed_source_date_epoch(d):
 def get_source_date_epoch(d, sourcedir):
     return (
         get_source_date_epoch_from_git(d, sourcedir) or
-        get_source_date_epoch_from_known_files(d, sourcedir) or
         get_source_date_epoch_from_youngest_file(d, sourcedir) or
         fixed_source_date_epoch(d)       # Last resort
     )

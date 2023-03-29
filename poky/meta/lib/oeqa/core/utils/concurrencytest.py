@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 #
+# Copyright OpenEmbedded Contributors
+#
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
 # Modified for use in OE by Richard Purdie, 2018
@@ -57,6 +59,7 @@ class BBThreadsafeForwardingResult(ThreadsafeForwardingResult):
         self.outputbuf = output
         self.finalresult = finalresult
         self.finalresult.buffer = True
+        self.target = target
 
     def _add_result_with_semaphore(self, method, test, *args, **kwargs):
         self.semaphore.acquire()
@@ -65,13 +68,14 @@ class BBThreadsafeForwardingResult(ThreadsafeForwardingResult):
                 self.result.starttime[test.id()] = self._test_start.timestamp()
                 self.result.threadprogress[self.threadnum].append(test.id())
                 totalprogress = sum(len(x) for x in self.result.threadprogress.values())
-                self.result.progressinfo[test.id()] = "%s: %s/%s %s/%s (%ss) (%s)" % (
+                self.result.progressinfo[test.id()] = "%s: %s/%s %s/%s (%ss) (%s failed) (%s)" % (
                     self.threadnum,
                     len(self.result.threadprogress[self.threadnum]),
                     self.totalinprocess,
                     totalprogress,
                     self.totaltests,
                     "{0:.2f}".format(time.time()-self._test_start.timestamp()),
+                    self.target.failed_tests,
                     test.id())
         finally:
             self.semaphore.release()
