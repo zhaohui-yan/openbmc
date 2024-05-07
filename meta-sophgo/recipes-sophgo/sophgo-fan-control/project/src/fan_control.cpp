@@ -463,6 +463,7 @@ void setupPowerMatch(const std::shared_ptr<sdbusplus::asio::connection>& conn)
                         //关闭定时器，按默认风速控制
                     cancel_auto_timer();
                     cancel_sensor_monitor_timer();
+                    g_aicard_temp = 0xff;
                 }
             }
         });
@@ -484,6 +485,7 @@ void setupPowerMatch(const std::shared_ptr<sdbusplus::asio::connection>& conn)
             } else {
                 std::cout << "power off 00." << "\n";
                 std::cout.flush();
+                g_aicard_temp = -1;
             }
 
         },
@@ -750,6 +752,7 @@ double readTempValue(std::string readPath, std::string serviceName)
     } else if (string_starts_with(readPath, "/xyz/openbmc_project/")) {
         if (string_starts_with(readPath, "/xyz/openbmc_project/sensors/temperature/AiCard_Temp")) {
             value = g_aicard_temp;
+            // std::cout << "Aicard temp : " << g_aicard_temp << std::endl;
         } else {
             value = dbusPropertyRead(readPath, serviceName);
         }
@@ -954,7 +957,7 @@ void cycle_sensor_monitor(const boost::system::error_code& ec)
                     }
 
                 } else if (value >= config.shutdownThreshold) {
-                    std::cout << name << "high temperature,force power off." << std::endl;
+                    std::cout << name << " high temperature " << value << ",force power off." << std::endl;
                     outputMax = 100;
                     forcePowerOff(conn);
                     /* if (!config.state)  */{
@@ -1071,6 +1074,7 @@ int main(int argc, char* argv[])
         [](const double& newValue, double& value) {
             value = newValue;
             g_aicard_temp = newValue;
+            // std::cout << "aicard temp : " << g_aicard_temp << std::endl;
             return 1;
         });
 
