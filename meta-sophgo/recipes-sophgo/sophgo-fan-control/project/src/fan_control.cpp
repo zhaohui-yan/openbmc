@@ -465,7 +465,11 @@ void setupPowerMatch(const std::shared_ptr<sdbusplus::asio::connection>& conn)
                         //关闭定时器，按默认风速控制
                     cancel_auto_timer();
                     cancel_sensor_monitor_timer();
+<<<<<<< HEAD
                     g_aicard_temp = -1;
+=======
+                    g_aicard_temp = 0xff;
+>>>>>>> e5602caeed90ea3a428d8ec6b962381d7815c444
                 }
             }
         });
@@ -757,11 +761,15 @@ double readTempValue(std::string readPath, std::string serviceName)
     } else if (string_starts_with(readPath, "/xyz/openbmc_project/")) {
         if (string_starts_with(readPath, "/xyz/openbmc_project/sensors/temperature/AiCard_Temp")) {
             value = g_aicard_temp;
+<<<<<<< HEAD
             if (g_aicard_temp_pre != g_aicard_temp) {
                 std::cout << "Aicard temp : " << g_aicard_temp << "Pre" << g_aicard_temp_pre <<std::endl;
             }
             g_aicard_temp_pre = g_aicard_temp;
 
+=======
+            // std::cout << "Aicard temp : " << g_aicard_temp << std::endl;
+>>>>>>> e5602caeed90ea3a428d8ec6b962381d7815c444
         } else {
             value = dbusPropertyRead(readPath, serviceName);
         }
