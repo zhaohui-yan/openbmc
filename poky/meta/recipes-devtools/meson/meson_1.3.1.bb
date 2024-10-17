@@ -12,12 +12,11 @@ SRC_URI = "${GITHUB_BASE_URI}/download/${PV}/meson-${PV}.tar.gz \
            file://meson-setup.py \
            file://meson-wrapper \
            file://0001-python-module-do-not-manipulate-the-environment-when.patch \
-           file://disable-rpath-handling.patch \
            file://0001-Make-CPU-family-warnings-fatal.patch \
            file://0002-Support-building-allarch-recipes-again.patch \
-           file://0001-Check-for-clang-before-guessing-gcc-or-lcc.patch \
            "
-SRC_URI[sha256sum] = "aa50a4ba4557c25e7d48446abfde857957dcdf58385fffbe670ba0e8efacce05"
+SRC_URI[sha256sum] = "6020568bdede1643d4fb41e28215be38eff5d52da28ac7d125457c59e0032ad7"
+UPSTREAM_CHECK_REGEX = "(?P<pver>\d+(\.\d+)+)$"
 
 inherit python_setuptools_build_meta github-releases
 
@@ -32,7 +31,7 @@ do_install:append () {
 	# Upstream is discussing ways to solve the issue properly, until then let's
 	# just not install the problematic files.
 	# More info: http://benno.id.au/blog/2013/01/15/python-determinism
-	rm ${D}${libdir}/python*/site-packages/mesonbuild/dependencies/__pycache__/mpi.cpython*
+	rm -f ${D}${libdir}/python*/site-packages/mesonbuild/dependencies/__pycache__/mpi.cpython*
 }
 
 BBCLASSEXTEND = "native nativesdk"
@@ -66,6 +65,10 @@ def generate_native_link_template(d):
         loader = 'ld-linux-aarch64.so.1'
     elif 'ppc64le' in build_arch:
         loader = 'ld64.so.2'
+    elif 'loongarch64' in build_arch:
+        loader = 'ld-linux-loongarch-lp64d.so.1'
+    elif 'riscv64' in build_arch:
+        loader = 'ld-linux-riscv64-lp64d.so.1'
 
     if loader:
         val += ['-Wl,--dynamic-linker=@{OECORE_NATIVE_SYSROOT}${base_libdir_native}/' + loader]
