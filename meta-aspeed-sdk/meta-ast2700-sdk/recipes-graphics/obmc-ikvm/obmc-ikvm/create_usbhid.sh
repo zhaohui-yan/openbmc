@@ -9,7 +9,7 @@ if [ "$2" = "1" ]; then
           $(( (cpu_rev_id >> 16) & 0xFF )) -eq 0x00 ]]; then
         dev_name="12021000.usb-vhub"  # For AST2700 A0
     else
-        dev_name="12062000.usb-vhub"  # For AST2700 A1
+        dev_name="12021000.usb-vhub"  # For AST2700 A1
     fi
 else
     hid_conf_directory="/sys/kernel/config/usb_gadget/obmc_hid"

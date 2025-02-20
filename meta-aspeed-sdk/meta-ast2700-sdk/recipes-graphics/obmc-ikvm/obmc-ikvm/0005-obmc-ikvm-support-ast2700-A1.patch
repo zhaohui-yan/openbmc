@@ -1,33 +1,30 @@
-From 81db8a8e28ea1df24e3552e9c33a4656d62149ae Mon Sep 17 00:00:00 2001
+From 244902a0874eab8790d02ea68f249766638ffa1e Mon Sep 17 00:00:00 2001
 From: Vince Chang <vince_chang@aspeedtech.com>
 Date: Wed, 8 Jan 2025 09:58:28 +0800
 Subject: [PATCH] obmc-ikvm: support ast2700 A1
 
-For AST2700-A1:  (Temporary solution)
-Node0 KVM and VM use 0x12060000
-Node1 KVM and VM use 0x12062000
+For AST2700-A1:
+Node0 KVM and VM use 0x12060000 (PCIe-EHCI-vHUB + PCIe-XHCI-PHY)
+Node1 KVM and VM use 0x12021000 (PCIe-XHCI-vHUB)
 
 Signed-off-by: Vince Chang <vince_chang@aspeedtech.com>
 ---
- ikvm_input.hpp | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ ikvm_input.hpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/ikvm_input.hpp b/ikvm_input.hpp
-index 0669f81..8bbe462 100644
+index 0669f81..5bc190c 100644
 --- a/ikvm_input.hpp
 +++ b/ikvm_input.hpp
-@@ -85,9 +85,9 @@ class Input
+@@ -85,7 +85,7 @@ class Input
          "/sys/kernel/config/usb_gadget/obmc_hid1/UDC";
      /* @brief Path to the USB virtual hub */
      static constexpr const char* USB_VHUB_PATH =
 -        "/sys/bus/platform/devices/12011000.usb-vhub";
 +        "/sys/bus/platform/devices/12060000.usb-vhub";
      static constexpr const char* USB_VHUB_PATH_1 =
--        "/sys/bus/platform/devices/12021000.usb-vhub";
-+        "/sys/bus/platform/devices/12062000.usb-vhub";
+         "/sys/bus/platform/devices/12021000.usb-vhub";
      /* @brief Retry limit for writing an HID report */
-     static constexpr int HID_REPORT_RETRY_MAX = 5;
-     /*
 -- 
 2.25.1
 
