@@ -9,8 +9,8 @@ PE = "1"
 BRANCH="aspeed-master-v2023.10"
 SRC_URI = "git://github.com/AspeedTech-BMC/u-boot.git;protocol=https;branch=${BRANCH}"
 
-# Tag for v00.05.05
-SRCREV = "6b879ba4c001b73f39f1f9fc81b77e7f588570c8"
+# Tag for v00.05.05+
+SRCREV = "db7a6dd7383ccdba5383884654794073c73b6e1e"
 
 S = "${WORKDIR}/git"
 B = "${WORKDIR}/build"

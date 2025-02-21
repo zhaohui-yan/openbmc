@@ -10,9 +10,9 @@ SRC_URI = " git://github.com/AspeedTech-BMC/cerberus.git;protocol=https;branch=$
             file://recovery_tools \
           "
 
-PV = "v02.04+git"
-# Tag v02.04
-SRCREV = "b31d0b6f135c47a2591f1f3600c1ac1799c5725e"
+PV = "v03.00+git"
+# Tag v03.00
+SRCREV = "14cc8ba99aea8db8928c810092da3ff28d45be1b"
 BRANCH = "aspeed-master"
 
 S = "${WORKDIR}/git"
