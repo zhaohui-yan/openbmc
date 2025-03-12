@@ -26,6 +26,10 @@ UBOOT_FIT_TSP_ARCH ?= "arm"
 UBOOT_FIT_TSP_OS ?= "zephyr"
 UBOOT_FIT_TSP_LOADADDRESS ?= "0xae000000"
 UBOOT_FIT_TSP_ENTRYPOINT ?= "0xae000000"
+UBOOT_FIT_IBEXFW_ARCH ?= "riscv"
+UBOOT_FIT_IBEXFW_OS ?= "zephyr"
+UBOOT_FIT_IBEXFW_LOADADDRESS ?= "0x14ba8000"
+UBOOT_FIT_IBEXFW_ENTRYPOINT ?= "0x14ba8000"
 
 # kernel fitimage
 # Use lzma compressed algorithm instead of gzip to save the code size.
@@ -52,6 +56,7 @@ UBOOT_FIT_ARM_TRUSTED_FIRMWARE_IMAGE ?= "${DEPLOY_DIR_IMAGE}/${TFA_BUILD_TARGET}
 UBOOT_FIT_TEE_IMAGE ?= "${DEPLOY_DIR_IMAGE}/optee/tee-raw.bin"
 UBOOT_FIT_SSP_IMAGE ?= "${DEPLOY_DIR_IMAGE}/ast2700-ssp.bin"
 UBOOT_FIT_TSP_IMAGE ?= "${DEPLOY_DIR_IMAGE}/ast2700-tsp.bin"
+UBOOT_FIT_IBEXFW_IMAGE ?= "${DEPLOY_DIR_IMAGE}/ast2700-ibex-fw.bin"
 
 # zephyr pre-built toolchain
 ZEPHYR_TOOLCHAIN_VARIANT = "zephyr"
