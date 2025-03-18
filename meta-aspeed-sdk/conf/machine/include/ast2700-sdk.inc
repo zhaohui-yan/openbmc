@@ -61,8 +61,11 @@ UBOOT_FIT_IBEXFW_IMAGE ?= "${DEPLOY_DIR_IMAGE}/ast2700-ibex-fw.bin"
 # zephyr pre-built toolchain
 ZEPHYR_TOOLCHAIN_VARIANT = "zephyr"
 
-# bootmcu
 PREFERRED_PROVIDER_virtual/bootmcu ?= "bootmcu-spl"
+PREFERRED_PROVIDER_virtual/ssp ?= "ssp"
+PREFERRED_PROVIDER_virtual/tsp ?= "tsp"
+PREFERRED_PROVIDER_virtual/ibexfw ?= "ibexfw"
+
 # Do not support zephyr
 #PREFERRED_PROVIDER_virtual/bootmcu ?= "zephyr-aspeed-bootmcu-prebuilt"
 #PREFERRED_PROVIDER_virtual/bootmcu ?= "zephyr-aspeed-bootmcu"

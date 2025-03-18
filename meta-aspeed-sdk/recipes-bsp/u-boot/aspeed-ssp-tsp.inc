@@ -92,7 +92,7 @@ uboot_fitimage_user_image() {
 }
 
 do_compile[depends] += " \
-    ${@bb.utils.contains('MACHINE_FEATURES', 'ast-ssp', 'ssp:do_deploy', '', d)} \
-    ${@bb.utils.contains('MACHINE_FEATURES', 'ast-tsp', 'tsp:do_deploy', '', d)} \
-    ${@bb.utils.contains('MACHINE_FEATURES', 'ast-ibexfw', 'ibexfw:do_deploy', '', d)} \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'ast-ssp', 'virtual/ssp:do_deploy', '', d)} \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'ast-tsp', 'virtual/tsp:do_deploy', '', d)} \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'ast-ibexfw', 'virtual/ibexfw:do_deploy', '', d)} \
     "
