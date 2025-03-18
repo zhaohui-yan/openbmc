@@ -58,14 +58,12 @@ UBOOT_FIT_SSP_IMAGE ?= "${DEPLOY_DIR_IMAGE}/ast2700-ssp.bin"
 UBOOT_FIT_TSP_IMAGE ?= "${DEPLOY_DIR_IMAGE}/ast2700-tsp.bin"
 UBOOT_FIT_IBEXFW_IMAGE ?= "${DEPLOY_DIR_IMAGE}/ast2700-ibex-fw.bin"
 
+PREFERRED_PROVIDER_virtual/bootmcu ?= "bootmcu-spl"
+
 # zephyr pre-built toolchain
 ZEPHYR_TOOLCHAIN_VARIANT = "zephyr"
 
-PREFERRED_PROVIDER_virtual/bootmcu ?= "bootmcu-spl"
 PREFERRED_PROVIDER_virtual/ssp ?= "ssp"
 PREFERRED_PROVIDER_virtual/tsp ?= "tsp"
 PREFERRED_PROVIDER_virtual/ibexfw ?= "ibexfw"
 
-# Do not support zephyr
-#PREFERRED_PROVIDER_virtual/bootmcu ?= "zephyr-aspeed-bootmcu-prebuilt"
-#PREFERRED_PROVIDER_virtual/bootmcu ?= "zephyr-aspeed-bootmcu"
