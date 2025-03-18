@@ -56,7 +56,7 @@ UBOOT_FIT_ARM_TRUSTED_FIRMWARE_IMAGE ?= "${DEPLOY_DIR_IMAGE}/${TFA_BUILD_TARGET}
 UBOOT_FIT_TEE_IMAGE ?= "${DEPLOY_DIR_IMAGE}/optee/tee-raw.bin"
 UBOOT_FIT_SSP_IMAGE ?= "${DEPLOY_DIR_IMAGE}/zephyr-aspeed-ssp.bin"
 UBOOT_FIT_TSP_IMAGE ?= "${DEPLOY_DIR_IMAGE}/zephyr-aspeed-tsp.bin"
-UBOOT_FIT_IBEXFW_IMAGE ?= "${DEPLOY_DIR_IMAGE}/ast2700-ibex-fw.bin"
+UBOOT_FIT_IBEXFW_IMAGE ?= "${DEPLOY_DIR_IMAGE}/zephyr-aspeed-ibexfw.bin"
 
 PREFERRED_PROVIDER_virtual/bootmcu ?= "bootmcu-spl"
 
@@ -70,5 +70,6 @@ ZEPHYR_BOARD_SSP ?= "ast2700_evb/ast2700/ssp"
 PREFERRED_PROVIDER_virtual/tsp ?= "zephyr-aspeed-tsp"
 ZEPHYR_BOARD_TSP ?= "ast2700_evb/ast2700/tsp"
 
-PREFERRED_PROVIDER_virtual/ibexfw ?= "ibexfw"
+PREFERRED_PROVIDER_virtual/ibexfw ?= "zephyr-aspeed-ibexfw"
+ZEPHYR_BOARD_IBEXFW ?= "ast2700_evb/ast2700/bootmcu"
 
