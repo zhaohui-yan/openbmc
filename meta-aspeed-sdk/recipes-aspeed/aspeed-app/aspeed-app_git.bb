@@ -7,8 +7,8 @@ SRC_URI = "git://github.com/AspeedTech-BMC/aspeed_app.git;protocol=https;branch=
 
 PV = "1.0+git"
 
-# Tag for v00.01.15
-SRCREV = "17fbdd6a88bc27cec15a8fd26a23187bc317d162"
+# Tag for v00.01.16
+SRCREV = "e74fc6e1fa56c16feb2fe32ccd6ca57c055684ef"
 BRANCH = "master"
 
 S = "${WORKDIR}/git"

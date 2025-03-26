@@ -5,6 +5,7 @@ LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://${ASPEEDSDKBASE}/LICENSE;md5=a3740bd0a194cd6dcafdc482a200a56f"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
+PROVIDES += "virtual/tsp"
 PR = "r0"
 
 TSP_FIRMWARE ?= "ast2700-tsp.bin"
