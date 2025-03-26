@@ -68,9 +68,16 @@ do_deploy () {
             python3 ${STAGING_BINDIR_NATIVE}/recovery_spl_extraction.py -i ${SOURCE_IMAGE_DIR}/${BOOTMCU_FW_BINARY}
             install -m 0644 ${SOURCE_IMAGE_DIR}/recovery_${BOOTMCU_FW_BINARY} ${OUTPUT_IMAGE_DIR}/.
 
+            # Generate AST2700 A1 I2C/I3C recovery image
+            install -m 0644 ${DEPLOY_DIR_IMAGE}/u-boot.bin ${SOURCE_IMAGE_DIR}/.
+            dd if=${SOURCE_IMAGE_DIR}/u-boot.bin of=${OUTPUT_IMAGE_DIR}/u-boot-fit-header.bin bs=64 count=1
+
             # Deploy AST2700 A1 SPL recovery image
             install -d ${DEPLOYDIR}
             install -m 644 ${OUTPUT_IMAGE_DIR}/recovery_${BOOTMCU_FW_BINARY} ${DEPLOYDIR}/.
+
+            # Deploy AST2700 A1 I2C/I3C recovery image
+            install -m 644 ${OUTPUT_IMAGE_DIR}/u-boot-fit-header.bin ${DEPLOYDIR}/.
         fi
     elif [ "${SOC_FAMILY}" = "aspeed-g6" ] ; then
         install -m 0644 ${SOURCE_IMAGE_DIR}/${SOURCE_IMAGE} ${SOURCE_IMAGE_DIR}/${RECOVERY_SOURCE_IMAGE}
@@ -88,6 +95,7 @@ do_deploy[depends] += " \
     virtual/kernel:do_deploy \
     virtual/bootloader:do_deploy \
     ${@bb.utils.contains('MACHINE_FEATURES', 'ast-bootmcu', 'virtual/bootmcu:do_deploy', '', d)} \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'ast-caliptra', 'caliptra:do_deploy', '', d)} \
     "
 
 addtask deploy before do_build after do_compile

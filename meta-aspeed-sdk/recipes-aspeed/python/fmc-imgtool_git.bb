@@ -6,10 +6,10 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=522c9891674011c4a2390d828772384d"
 
 BRANCH="master"
-SRC_URI = "git://github.com/AspeedTech-BMC/fmc_imgtool.git;protocol=ssh;branch=${BRANCH}"
+SRC_URI = "git://github.com/AspeedTech-BMC/fmc_imgtool.git;protocol=https;branch=${BRANCH}"
 
-# Tag for v00.01.00+
-SRCREV = "df36305bfa09d896478fce628cffa6ad0d422c82"
+# Tag for v00.01.01
+SRCREV = "071d8e49f565691cdd11b1649de3f7cf912133da"
 
 PV = "1.0+git"
 
