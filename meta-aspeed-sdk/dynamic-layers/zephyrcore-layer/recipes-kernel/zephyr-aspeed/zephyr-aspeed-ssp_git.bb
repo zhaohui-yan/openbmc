@@ -8,7 +8,7 @@ PROVIDES += "virtual/ssp"
 PV = "1.0+git"
 
 # Tag for v00.03.01
-SRCREV_zephyr = "294f7cf489b447cc69dead5eed05eaada434828a"
+SRCREV_zephyr = "807ec0d7de758f7e11880ced45ea109ee8803d6a"
 ZEPHYR_BRANCH = "aspeed-main-v3.7.0"
 
 ZEPHYR_BOARD_SSP ??= "ast2700_evb/ast2700/ssp"
