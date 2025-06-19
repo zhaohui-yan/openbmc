@@ -1,0 +1,265 @@
+From 170ecaf3a37c7557ddefd1e33392d3f4e9d3380e Mon Sep 17 00:00:00 2001
+From: "zhaohui.yan" <zhaohui.yan@sophgo.com>
+Date: Fri, 13 Jun 2025 17:58:03 +0800
+Subject: [PATCH 1/1] TS1000: Fix a crash and support for 6.7+ kernel.
+
+---
+ .../ip-mib/data_access/systemstats_linux.c    | 71 ++++++++++---------
+ 1 file changed, 39 insertions(+), 32 deletions(-)
+
+diff --git a/agent/mibgroup/ip-mib/data_access/systemstats_linux.c b/agent/mibgroup/ip-mib/data_access/systemstats_linux.c
+index e0b4e68..8e25c21 100644
+--- a/agent/mibgroup/ip-mib/data_access/systemstats_linux.c
++++ b/agent/mibgroup/ip-mib/data_access/systemstats_linux.c
+@@ -40,13 +40,13 @@ netsnmp_access_systemstats_arch_init(void)
+ 
+   Ip: Forwarding DefaultTTL InReceives InHdrErrors InAddrErrors ForwDatagrams InUnknownProtos InDiscards InDelivers OutRequests OutDiscards OutNoRoutes ReasmTimeout ReasmReqds ReasmOKs ReasmFails FragOKs FragFails FragCreates
+   Ip: 2 64 7083534 0 0 0 0 0 6860233 6548963 0 0 1 286623 63322 1 259920 0 0
+-  
++
+   Icmp: InMsgs InErrors InDestUnreachs InTimeExcds InParmProbs InSrcQuenchs InRedirects InEchos InEchoReps InTimestamps InTimestampReps InAddrMasks InAddrMaskReps OutMsgs OutErrors OutDestUnreachs OutTimeExcds OutParmProbs OutSrcQuenchs OutRedirects OutEchos OutEchoReps OutTimestamps OutTimestampReps OutAddrMasks OutAddrMaskReps
+   Icmp: 335 36 254 72 0 0 0 0 9 0 0 0 0 257 0 257 0 0 0 0 0 0 0 0 0 0
+-  
++
+   Tcp: RtoAlgorithm RtoMin RtoMax MaxConn ActiveOpens PassiveOpens AttemptFails EstabResets CurrEstab InSegs OutSegs RetransSegs InErrs OutRsts
+   Tcp: 1 200 120000 -1 5985 55 27 434 10 5365077 5098096 10902 2 4413
+-  
++
+   Udp: InDatagrams NoPorts InErrors OutDatagrams
+   Udp: 1491094 122 0 1466178
+ */
+@@ -73,7 +73,7 @@ netsnmp_access_systemstats_container_arch_load(netsnmp_container* container,
+         snmp_log(LOG_ERR, "no container specified/found for access_systemstats_\n");
+         return -1;
+     }
+-    
++
+     /*
+      * load v4 and v6 stats. Even if one fails, try the other.
+      * If they have the same rc, return it. if the differ, return
+@@ -85,7 +85,7 @@ netsnmp_access_systemstats_container_arch_load(netsnmp_container* container,
+     rc2 = _systemstats_v6(container, load_flags);
+     if ((rc1 == rc2) || (rc1 < rc2))
+         return rc1;
+-        
++
+     return rc2;
+ #else
+     return rc1;
+@@ -93,7 +93,7 @@ netsnmp_access_systemstats_container_arch_load(netsnmp_container* container,
+ }
+ 
+ /*
+- * Based on load_flags, load ipSystemStatsTable or ipIfStatsTable for ipv4 entries. 
++ * Based on load_flags, load ipSystemStatsTable or ipIfStatsTable for ipv4 entries.
+  */
+ static int
+ _systemstats_v4(netsnmp_container* container, u_int load_flags)
+@@ -101,10 +101,10 @@ _systemstats_v4(netsnmp_container* container, u_int load_flags)
+     FILE           *devin;
+     char            line[1024];
+     netsnmp_systemstats_entry *entry = NULL;
+-    int             scan_count;
++    int             scan_count, expected_scan_count;
+     char           *stats, *start = line;
+     int             len;
+-    unsigned long long scan_vals[19];
++    unsigned long long scan_vals[20];
+ 
+     DEBUGMSGTL(("access:systemstats:container:arch", "load v4 (flags %x)\n",
+                 load_flags));
+@@ -126,10 +126,17 @@ _systemstats_v4(netsnmp_container* container, u_int load_flags)
+      */
+     NETSNMP_IGNORE_RESULT(fgets(line, sizeof(line), devin));
+     len = strlen(line);
+-    if (224 != len) {
++    switch (len) {
++        case 224:
++        expected_scan_count = 19;
++        break;
++        case 237:
++        expected_scan_count = 20;
++        break;
++        default:
+         fclose(devin);
+         snmp_log(LOG_ERR, "systemstats_linux: unexpected header length in /proc/net/snmp."
+-                 " %d != 224\n", len);
++                 " %d not in { 224, 237 } \n", len);
+         return -4;
+     }
+ 
+@@ -178,20 +185,20 @@ _systemstats_v4(netsnmp_container* container, u_int load_flags)
+         memset(scan_vals, 0x0, sizeof(scan_vals));
+         scan_count = sscanf(stats,
+                             "%llu %llu %llu %llu %llu %llu %llu %llu %llu %llu"
+-                            "%llu %llu %llu %llu %llu %llu %llu %llu %llu",
++                            "%llu %llu %llu %llu %llu %llu %llu %llu %llu %llu",
+                             &scan_vals[0],&scan_vals[1],&scan_vals[2],
+                             &scan_vals[3],&scan_vals[4],&scan_vals[5],
+                             &scan_vals[6],&scan_vals[7],&scan_vals[8],
+                             &scan_vals[9],&scan_vals[10],&scan_vals[11],
+                             &scan_vals[12],&scan_vals[13],&scan_vals[14],
+                             &scan_vals[15],&scan_vals[16],&scan_vals[17],
+-                            &scan_vals[18]);
++                            &scan_vals[18],&scan_vals[19]);
+         DEBUGMSGTL(("access:systemstats", "  read %d values\n", scan_count));
+ 
+-        if(scan_count != 19) {
++         if(scan_count != expected_scan_count) {
+             snmp_log(LOG_ERR,
+                      "error scanning systemstats data (expected %d, got %d)\n",
+-                     19, scan_count);
++                     expected_scan_count, scan_count);
+             netsnmp_access_systemstats_entry_free(entry);
+             return -4;
+         }
+@@ -262,7 +269,7 @@ _systemstats_v4(netsnmp_container* container, u_int load_flags)
+ 
+     return 0;
+ }
+-    
++
+ #define IP_EXT_HEAD "IpExt:"
+ static int
+ _additional_systemstats_v4(netsnmp_systemstats_entry* entry,
+@@ -358,13 +365,13 @@ _additional_systemstats_v4(netsnmp_systemstats_entry* entry,
+ 
+     return retval;
+ }
+-   
++
+ #if defined (NETSNMP_ENABLE_IPV6)
+ 
+ /*
+  * Load one /proc/net/snmp6 - like file (e.g. /proc/net/dev_snmp6)
+- */ 
+-static int 
++ */
++static int
+ _systemstats_v6_load_file(netsnmp_systemstats_entry *entry, FILE *devin)
+ {
+     char            line[1024];
+@@ -526,7 +533,7 @@ _systemstats_v6_load_file(netsnmp_systemstats_entry *entry, FILE *devin)
+                 rc = 1;
+         } else
+             rc = 1;
+-        
++
+         if (rc)
+             DEBUGMSGTL(("access:systemstats", "unknown stat %s\n", line));
+     }
+@@ -542,19 +549,19 @@ _systemstats_v6_load_file(netsnmp_systemstats_entry *entry, FILE *devin)
+ /*
+  * load ipSystemStatsTable for ipv6 entries
+  */
+-static int 
++static int
+ _systemstats_v6_load_systemstats(netsnmp_container* container, u_int load_flags)
+ {
+     FILE *devin;
+     netsnmp_systemstats_entry *entry = NULL;
+     const char     *filename = "/proc/net/snmp6";
+     int rc = 0;
+-    
++
+     entry = netsnmp_access_systemstats_entry_create(2, 0,
+             "ipSystemStatsTable.ipv6");
+     if(NULL == entry)
+         return -3;
+-    
++
+     /*
+      * try to open file. If we can't, that's ok - maybe the module hasn't
+      * been loaded yet.
+@@ -567,7 +574,7 @@ _systemstats_v6_load_systemstats(netsnmp_container* container, u_int load_flags)
+         netsnmp_access_systemstats_entry_free(entry);
+         return 0;
+     }
+-    
++
+     rc = _systemstats_v6_load_file(entry, devin);
+ 
+     fclose(devin);
+@@ -592,7 +599,7 @@ _systemstats_v6_load_systemstats(netsnmp_container* container, u_int load_flags)
+ /*
+  * load ipIfStatsTable for ipv6 entries
+  */
+-static int 
++static int
+ _systemstats_v6_load_ifstats(netsnmp_container* container, u_int load_flags)
+ {
+     DIR            *dev_snmp6_dir;
+@@ -604,7 +611,7 @@ _systemstats_v6_load_ifstats(netsnmp_container* container, u_int load_flags)
+     char           *scan_str;
+     uintmax_t       scan_val;
+     netsnmp_systemstats_entry *entry = NULL;
+-            
++
+     /*
+      * try to open /proc/net/dev_snmp6 directory. If we can't, that' ok -
+      * maybe it is not supported by the current running kernel.
+@@ -614,14 +621,14 @@ _systemstats_v6_load_ifstats(netsnmp_container* container, u_int load_flags)
+         "Failed to load IPv6 IfStats Table (linux)\n"));
+         return 0;
+     }
+-    
++
+     /*
+      * Read each per interface statistics proc file
+      */
+     while ((dev_snmp6_entry = readdir(dev_snmp6_dir)) != NULL) {
+         if (dev_snmp6_entry->d_name[0] == '.')
+             continue;
+-    
++
+         if (snprintf(dev_filename, DEV_FILENAME_LEN, "%s/%s", DEV_SNMP6_DIRNAME,
+                 dev_snmp6_entry->d_name) > DEV_FILENAME_LEN) {
+             snmp_log(LOG_ERR, "Interface name %s is too long\n",
+@@ -634,7 +641,7 @@ _systemstats_v6_load_ifstats(netsnmp_container* container, u_int load_flags)
+             snmp_log_perror(dev_filename);
+             continue;
+         }
+-    
++
+         /*
+          * If a stat file name is made of digits, the name is interface index.
+          * If it is an interface name, the file includes a line labeled ifIndex.
+@@ -648,7 +655,7 @@ _systemstats_v6_load_ifstats(netsnmp_container* container, u_int load_flags)
+                 fclose(devin);
+                 continue;
+             }
+-    
++
+             if (0 != strncmp(start, IFINDEX_LINE, 7)) {
+                 snmp_log(LOG_ERR, "%s doesn't include ifIndex line",
+                         dev_filename);
+@@ -664,7 +671,7 @@ _systemstats_v6_load_ifstats(netsnmp_container* container, u_int load_flags)
+             }
+             scan_val = strtoull(scan_str, NULL, 0);
+         }
+-        
++
+         entry = netsnmp_access_systemstats_entry_create(2, scan_val,
+                 "ipIfStatsTable.ipv6");
+         if(NULL == entry) {
+@@ -672,7 +679,7 @@ _systemstats_v6_load_ifstats(netsnmp_container* container, u_int load_flags)
+             closedir(dev_snmp6_dir);
+             return -3;
+         }
+-        
++
+         _systemstats_v6_load_file(entry, devin);
+         CONTAINER_INSERT(container, entry);
+         fclose(devin);
+@@ -682,7 +689,7 @@ _systemstats_v6_load_ifstats(netsnmp_container* container, u_int load_flags)
+ }
+ 
+ /*
+- * Based on load_flags, load ipSystemStatsTable or ipIfStatsTable for ipv6 entries. 
++ * Based on load_flags, load ipSystemStatsTable or ipIfStatsTable for ipv6 entries.
+  */
+ static int
+ _systemstats_v6(netsnmp_container* container, u_int load_flags)
+-- 
+2.25.1
+

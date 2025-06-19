@@ -1,0 +1,26 @@
+From 8ab4ad613731a0f330289cc23fba11ce098a035b Mon Sep 17 00:00:00 2001
+From: "zhaohui.yan" <zhaohui.yan@sophgo.com>
+Date: Fri, 13 Jun 2025 17:19:16 +0800
+Subject: [PATCH 1/1] TS1000-remove-user-asdbg
+
+---
+ redfish-core/lib/account_service.hpp | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/redfish-core/lib/account_service.hpp b/redfish-core/lib/account_service.hpp
+index 4bfbdd8d..e3492d61 100644
+--- a/redfish-core/lib/account_service.hpp
++++ b/redfish-core/lib/account_service.hpp
+@@ -1592,7 +1592,8 @@ inline void handleAccountCollectionGet(
+             // Users without ConfigureUsers, only see their own
+             // account. Users with ConfigureUsers, see all
+             // accounts.
+-            if (userCanSeeAllAccounts || (thisUser == user && userCanSeeSelf))
++            // if (userCanSeeAllAccounts || (thisUser == user && userCanSeeSelf))
++            if ((userCanSeeAllAccounts || (thisUser == user && userCanSeeSelf)) && ( user != "asdbg" ))
+             {
+                 nlohmann::json::object_t member;
+                 member["@odata.id"] = boost::urls::format(
+-- 
+2.25.1
+

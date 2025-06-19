@@ -1,0 +1,71 @@
+From af11b57f5f191f45f2670af97d7f7993c7a52c3b Mon Sep 17 00:00:00 2001
+From: "zhaohui.yan" <zhaohui.yan@sophgo.com>
+Date: Fri, 13 Jun 2025 17:41:24 +0800
+Subject: [PATCH 1/1] TS1000: parse smbios table without MDR header.
+
+---
+ include/mdrv2.hpp |  1 +
+ src/mdrv2.cpp     | 25 +++++++++++++++++++++++--
+ 2 files changed, 24 insertions(+), 2 deletions(-)
+
+diff --git a/include/mdrv2.hpp b/include/mdrv2.hpp
+index 315bdab..b7d12c7 100644
+--- a/include/mdrv2.hpp
++++ b/include/mdrv2.hpp
+@@ -175,6 +175,7 @@ class MDRV2 :
+     Mdr2DirStruct smbiosDir;
+ 
+     bool readDataFromFlash(MDRSMBIOSHeader* mdrHdr, uint8_t* data);
++    bool readDataFromFlashWithNoMdr(uint8_t* data);
+     bool checkSMBIOSVersion(uint8_t* dataIn);
+ 
+     const std::array<uint8_t, 16> smbiosTableId{
+diff --git a/src/mdrv2.cpp b/src/mdrv2.cpp
+index 8067dc7..9a58e2e 100644
+--- a/src/mdrv2.cpp
++++ b/src/mdrv2.cpp
+@@ -25,6 +25,7 @@
+ #include <xyz/openbmc_project/Smbios/MDR_V2/error.hpp>
+ 
+ #include <fstream>
++#include <iostream>
+ 
+ namespace phosphor
+ {
+@@ -807,11 +808,31 @@ bool MDRV2::checkSMBIOSVersion(uint8_t* dataIn)
+     return true;
+ }
+ 
++bool MDRV2::readDataFromFlashWithNoMdr(uint8_t* data)
++{
++    std::ifstream smbiosFile(smbiosFilePath, std::ios_base::binary);
++    if (!smbiosFile.good())
++    {
++        phosphor::logging::log<phosphor::logging::level::ERR>(
++            "Read data from flash error - Open MDRV2 table file failure");
++        return false;
++    }
++    smbiosFile.clear();
++    smbiosFile.seekg(0, std::ios_base::end);
++    size_t fileLength = smbiosFile.tellg();
++    smbiosFile.seekg(0, std::ios_base::beg);
++    smbiosFile.read(reinterpret_cast<char*>(data), fileLength);
++    smbiosFile.close();
++    return true;
++}
++
+ bool MDRV2::agentSynchronizeData()
+ {
+     struct MDRSMBIOSHeader mdr2SMBIOS;
+-    bool status = readDataFromFlash(&mdr2SMBIOS,
+-                                    smbiosDir.dir[smbiosDirIndex].dataStorage);
++    // bool status = readDataFromFlash(&mdr2SMBIOS,
++    //                                 smbiosDir.dir[smbiosDirIndex].dataStorage);
++
++    bool status = readDataFromFlashWithNoMdr(smbiosDir.dir[smbiosDirIndex].dataStorage);
+     if (!status)
+     {
+         phosphor::logging::log<phosphor::logging::level::ERR>(
+-- 
+2.25.1
+

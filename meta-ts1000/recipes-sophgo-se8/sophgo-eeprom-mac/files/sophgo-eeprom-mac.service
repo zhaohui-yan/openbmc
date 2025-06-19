@@ -1,0 +1,10 @@
+[Unit]
+Description=get mac address from eeprom
+ConditionPathExists=/usr/sbin/eeprom-mac.sh
+After=systemd-networkd.service
+Requires=systemd-networkd.service
+[Service]
+ExecStart=/bin/sh -c '/usr/sbin/eeprom-mac.sh'
+
+[Install]
+WantedBy=sysinit.target

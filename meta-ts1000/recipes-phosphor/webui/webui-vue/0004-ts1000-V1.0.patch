@@ -1,0 +1,1741 @@
+From ff7b4dc14d1e6350e570161ef152ca39c5dc38b7 Mon Sep 17 00:00:00 2001
+From: "zhaohui.yan" <zhaohui.yan@sophgo.com>
+Date: Thu, 19 Jun 2025 16:24:05 +0800
+Subject: [PATCH 1/1] ts1000 V1.0
+
+---
+ src/components/AppHeader/AppHeader.vue        |   7 +-
+ .../AppNavigation/AppNavigationMixin.js       |  90 ++++----
+ src/env/components/AppNavigation/intel.js     |  46 ++--
+ src/env/router/intel.js                       | 126 +++++------
+ src/i18n.js                                   |   4 +-
+ src/layouts/LoginLayout.vue                   | 203 ++++++++++++------
+ src/locales/en-US.json                        |   8 +-
+ src/store/modules/GlobalStore.js              |   6 +-
+ .../HardwareStatus/Inventory/Inventory.vue    |  86 +++-----
+ .../Inventory/InventoryServiceIndicator.vue   |   8 +-
+ .../Inventory/InventoryTableAssembly.vue      |   5 -
+ .../Inventory/InventoryTableBmcManager.vue    |  19 +-
+ .../Inventory/InventoryTableChassis.vue       |  44 +---
+ .../Inventory/InventoryTableDimmSlot.vue      |  35 ---
+ .../Inventory/InventoryTablePowerSupplies.vue |   5 -
+ .../Inventory/InventoryTableProcessors.vue    |  35 +--
+ .../Inventory/InventoryTableSystem.vue        |  69 ++++--
+ src/views/Login/Login.vue                     |   8 +
+ .../Operations/Firmware/FirmwareCardsBmc.vue  |   7 +-
+ src/views/Overview/Overview.vue               |   5 +-
+ src/views/Overview/OverviewFirmware.vue       |   6 +-
+ src/views/Overview/OverviewInventory.vue      |  22 +-
+ src/views/Overview/OverviewNetwork.vue        |   2 +-
+ src/views/Overview/OverviewQuickLinks.vue     |   8 +-
+ src/views/Overview/OverviewServer.vue         |  62 ++++--
+ .../SecurityAndAccess/Policies/Policies.vue   |  12 +-
+ .../unit/__snapshots__/AppHeader.spec.js.snap |   2 +-
+ 27 files changed, 442 insertions(+), 488 deletions(-)
+
+diff --git a/src/components/AppHeader/AppHeader.vue b/src/components/AppHeader/AppHeader.vue
+index 76c96c0..48bb51c 100644
+--- a/src/components/AppHeader/AppHeader.vue
++++ b/src/components/AppHeader/AppHeader.vue
+@@ -35,12 +35,13 @@
+             to="/"
+             data-test-id="appHeader-container-overview"
+           >
+-            <img
++            <!-- <img
+               svg-inline
+               class="header-logo"
+               src="@/assets/images/logo-header.svg"
+               :alt="altLogo"
+-            />
++            /> -->
++            BMC管理系统
+           </b-navbar-brand>
+           <div v-if="isNavTagPresent" :key="routerKey" class="pl-2 nav-tags">
+             <span>|</span>
+@@ -138,7 +139,7 @@ export default {
+   data() {
+     return {
+       isNavigationOpen: false,
+-      altLogo: process.env.VUE_APP_COMPANY_NAME || 'Built on OpenBMC',
++      altLogo: 'BMC Management System',
+     };
+   },
+   computed: {
+diff --git a/src/components/AppNavigation/AppNavigationMixin.js b/src/components/AppNavigation/AppNavigationMixin.js
+index b33b24b..a6ba020 100644
+--- a/src/components/AppNavigation/AppNavigationMixin.js
++++ b/src/components/AppNavigation/AppNavigationMixin.js
+@@ -6,12 +6,12 @@ import IconSettings from '@carbon/icons-vue/es/settings/16';
+ import IconSecurity from '@carbon/icons-vue/es/security/16';
+ import IconChevronUp from '@carbon/icons-vue/es/chevron--up/16';
+ import IconDataBase from '@carbon/icons-vue/es/data--base--alt/16';
+-const roles = {
+-  administrator: 'Administrator',
+-  operator: 'Operator',
+-  readonly: 'ReadOnly',
+-  noaccess: 'NoAccess',
+-};
++// const roles = {
++//   administrator: 'Administrator',
++//   operator: 'Operator',
++//   readonly: 'ReadOnly',
++//   noaccess: 'NoAccess',
++// };
+ 
+ const AppNavigationMixin = {
+   components: {
+@@ -77,16 +77,16 @@ const AppNavigationMixin = {
+               label: this.$t('appNavigation.factoryReset'),
+               route: '/operations/factory-reset',
+             },
+-            {
+-              id: 'kvm',
+-              label: this.$t('appNavigation.kvm'),
+-              route: '/operations/kvm',
+-            },
+-            {
+-              id: 'key-clear',
+-              label: this.$t('appNavigation.keyClear'),
+-              route: '/operations/key-clear',
+-            },
++            // {
++            //   id: 'kvm',
++            //   label: this.$t('appNavigation.kvm'),
++            //   route: '/operations/kvm',
++            // },
++            // {
++            //   id: 'key-clear',
++            //   label: this.$t('appNavigation.keyClear'),
++            //   route: '/operations/key-clear',
++            // },
+             {
+               id: 'firmware',
+               label: this.$t('appNavigation.firmware'),
+@@ -97,23 +97,23 @@ const AppNavigationMixin = {
+               label: this.$t('appNavigation.rebootBmc'),
+               route: '/operations/reboot-bmc',
+             },
+-            {
+-              id: 'serial-over-lan',
+-              label: this.$t('appNavigation.serialOverLan'),
+-              route: '/operations/serial-over-lan',
+-              exclusiveToRoles: [roles.administrator],
+-            },
++            // {
++            //   id: 'serial-over-lan',
++            //   label: this.$t('appNavigation.serialOverLan'),
++            //   route: '/operations/serial-over-lan',
++            //   exclusiveToRoles: [roles.administrator],
++            // },
+             {
+               id: 'server-power-operations',
+               label: this.$t('appNavigation.serverPowerOperations'),
+               route: '/operations/server-power-operations',
+             },
+-            {
+-              id: 'virtual-media',
+-              label: this.$t('appNavigation.virtualMedia'),
+-              route: '/operations/virtual-media',
+-              exclusiveToRoles: [roles.administrator],
+-            },
++            // {
++            //   id: 'virtual-media',
++            //   label: this.$t('appNavigation.virtualMedia'),
++            //   route: '/operations/virtual-media',
++            //   exclusiveToRoles: [roles.administrator],
++            // },
+           ],
+         },
+         {
+@@ -153,11 +153,11 @@ const AppNavigationMixin = {
+               label: this.$t('appNavigation.sessions'),
+               route: '/security-and-access/sessions',
+             },
+-            {
+-              id: 'ldap',
+-              label: this.$t('appNavigation.ldap'),
+-              route: '/security-and-access/ldap',
+-            },
++            // {
++            //   id: 'ldap',
++            //   label: this.$t('appNavigation.ldap'),
++            //   route: '/security-and-access/ldap',
++            // },
+             {
+               id: 'user-management',
+               label: this.$t('appNavigation.userManagement'),
+@@ -175,18 +175,18 @@ const AppNavigationMixin = {
+             },
+           ],
+         },
+-        {
+-          id: 'resource-management',
+-          label: this.$t('appNavigation.resourceManagement'),
+-          icon: 'iconResourceManagement',
+-          children: [
+-            {
+-              id: 'power',
+-              label: this.$t('appNavigation.power'),
+-              route: '/resource-management/power',
+-            },
+-          ],
+-        },
++        // {
++        //   id: 'resource-management',
++        //   label: this.$t('appNavigation.resourceManagement'),
++        //   icon: 'iconResourceManagement',
++        //   children: [
++        //     {
++        //       id: 'power',
++        //       label: this.$t('appNavigation.power'),
++        //       route: '/resource-management/power',
++        //     },
++        //   ],
++        // },
+       ],
+     };
+   },
+diff --git a/src/env/components/AppNavigation/intel.js b/src/env/components/AppNavigation/intel.js
+index 0688a05..bae9c0b 100644
+--- a/src/env/components/AppNavigation/intel.js
++++ b/src/env/components/AppNavigation/intel.js
+@@ -7,12 +7,12 @@ import IconSecurity from '@carbon/icons-vue/es/security/16';
+ import IconChevronUp from '@carbon/icons-vue/es/chevron--up/16';
+ import IconDataBase from '@carbon/icons-vue/es/data--base--alt/16';
+ 
+-const roles = {
+-  administrator: 'Administrator',
+-  operator: 'Operator',
+-  readonly: 'ReadOnly',
+-  noaccess: 'NoAccess',
+-};
++// const roles = {
++//   administrator: 'Administrator',
++//   operator: 'Operator',
++//   readonly: 'ReadOnly',
++//   noaccess: 'NoAccess',
++// };
+ 
+ const AppNavigationMixin = {
+   components: {
+@@ -73,11 +73,11 @@ const AppNavigationMixin = {
+           label: this.$t('appNavigation.operations'),
+           icon: 'iconControl',
+           children: [
+-            {
+-              id: 'kvm',
+-              label: this.$t('appNavigation.kvm'),
+-              route: '/operations/kvm',
+-            },
++            // {
++            //   id: 'kvm',
++            //   label: this.$t('appNavigation.kvm'),
++            //   route: '/operations/kvm',
++            // },
+             {
+               id: 'firmware',
+               label: this.$t('appNavigation.firmware'),
+@@ -88,23 +88,23 @@ const AppNavigationMixin = {
+               label: this.$t('appNavigation.rebootBmc'),
+               route: '/operations/reboot-bmc',
+             },
+-            {
+-              id: 'serial-over-lan',
+-              label: this.$t('appNavigation.serialOverLan'),
+-              route: '/operations/serial-over-lan',
+-              exclusiveToRoles: [roles.administrator],
+-            },
++            // {
++            //   id: 'serial-over-lan',
++            //   label: this.$t('appNavigation.serialOverLan'),
++            //   route: '/operations/serial-over-lan',
++            //   exclusiveToRoles: [roles.administrator],
++            // },
+             {
+               id: 'server-power-operations',
+               label: this.$t('appNavigation.serverPowerOperations'),
+               route: '/operations/server-power-operations',
+             },
+-            {
+-              id: 'virtual-media',
+-              label: this.$t('appNavigation.virtualMedia'),
+-              route: '/operations/virtual-media',
+-              exclusiveToRoles: [roles.administrator],
+-            },
++            // {
++            //   id: 'virtual-media',
++            //   label: this.$t('appNavigation.virtualMedia'),
++            //   route: '/operations/virtual-media',
++            //   exclusiveToRoles: [roles.administrator],
++            // },
+           ],
+         },
+         {
+diff --git a/src/env/router/intel.js b/src/env/router/intel.js
+index 5f3ee6e..0392f0f 100644
+--- a/src/env/router/intel.js
++++ b/src/env/router/intel.js
+@@ -1,13 +1,13 @@
+ import AppLayout from '@/layouts/AppLayout.vue';
+ import ChangePassword from '@/views/ChangePassword';
+ import Sessions from '@/views/SecurityAndAccess/Sessions';
+-import ConsoleLayout from '@/layouts/ConsoleLayout.vue';
++// import ConsoleLayout from '@/layouts/ConsoleLayout.vue';
+ import DateTime from '@/views/Settings/DateTime';
+ import EventLogs from '@/views/Logs/EventLogs';
+ import Firmware from '@/views/Operations/Firmware';
+ import Inventory from '@/views/HardwareStatus/Inventory';
+-import Kvm from '@/views/Operations/Kvm';
+-import KvmConsole from '@/views/Operations/Kvm/KvmConsole';
++// import Kvm from '@/views/Operations/Kvm';
++// import KvmConsole from '@/views/Operations/Kvm/KvmConsole';
+ import UserManagement from '@/views/SecurityAndAccess/UserManagement';
+ import Login from '@/views/Login';
+ import LoginLayout from '@/layouts/LoginLayout';
+@@ -19,20 +19,20 @@ import ProfileSettings from '@/views/ProfileSettings';
+ import RebootBmc from '@/views/Operations/RebootBmc';
+ import Policies from '@/views/SecurityAndAccess/Policies';
+ import Sensors from '@/views/HardwareStatus/Sensors';
+-import SerialOverLan from '@/views/Operations/SerialOverLan';
+-import SerialOverLanConsole from '@/views/Operations/SerialOverLan/SerialOverLanConsole';
++// import SerialOverLan from '@/views/Operations/SerialOverLan';
++// import SerialOverLanConsole from '@/views/Operations/SerialOverLan/SerialOverLanConsole';
+ import ServerPowerOperations from '@/views/Operations/ServerPowerOperations';
+ import Certificates from '@/views/SecurityAndAccess/Certificates';
+-import VirtualMedia from '@/views/Operations/VirtualMedia';
++// import VirtualMedia from '@/views/Operations/VirtualMedia';
+ import Power from '@/views/ResourceManagement/Power';
+ import i18n from '@/i18n';
+ 
+-const roles = {
+-  administrator: 'Administrator',
+-  operator: 'Operator',
+-  readonly: 'ReadOnly',
+-  noaccess: 'NoAccess',
+-};
++// const roles = {
++//   administrator: 'Administrator',
++//   operator: 'Operator',
++//   readonly: 'ReadOnly',
++//   noaccess: 'NoAccess',
++// };
+ 
+ const routes = [
+   {
+@@ -58,31 +58,31 @@ const routes = [
+       },
+     ],
+   },
+-  {
+-    path: '/console',
+-    component: ConsoleLayout,
+-    meta: {
+-      requiresAuth: true,
+-    },
+-    children: [
+-      {
+-        path: 'serial-over-lan-console',
+-        name: 'serial-over-lan-console',
+-        component: SerialOverLanConsole,
+-        meta: {
+-          title: i18n.t('appPageTitle.serialOverLan'),
+-        },
+-      },
+-      {
+-        path: 'kvm',
+-        name: 'kvm-console',
+-        component: KvmConsole,
+-        meta: {
+-          title: i18n.t('appPageTitle.kvm'),
+-        },
+-      },
+-    ],
+-  },
++  // {
++  //   path: '/console',
++  //   component: ConsoleLayout,
++  //   meta: {
++  //     requiresAuth: true,
++  //   },
++  //   children: [
++  //     {
++  //       path: 'serial-over-lan-console',
++  //       name: 'serial-over-lan-console',
++  //       component: SerialOverLanConsole,
++  //       meta: {
++  //         title: i18n.t('appPageTitle.serialOverLan'),
++  //       },
++  //     },
++  //     {
++  //       path: 'kvm',
++  //       name: 'kvm-console',
++  //       component: KvmConsole,
++  //       meta: {
++  //         title: i18n.t('appPageTitle.kvm'),
++  //       },
++  //     },
++  //   ],
++  // },
+   {
+     path: '/',
+     meta: {
+@@ -178,14 +178,14 @@ const routes = [
+           title: i18n.t('appPageTitle.dateTime'),
+         },
+       },
+-      {
+-        path: '/operations/kvm',
+-        name: 'kvm',
+-        component: Kvm,
+-        meta: {
+-          title: i18n.t('appPageTitle.kvm'),
+-        },
+-      },
++      // {
++      //   path: '/operations/kvm',
++      //   name: 'kvm',
++      //   component: Kvm,
++      //   meta: {
++      //     title: i18n.t('appPageTitle.kvm'),
++      //   },
++      // },
+       {
+         path: '/operations/firmware',
+         name: 'firmware',
+@@ -218,15 +218,15 @@ const routes = [
+           title: i18n.t('appPageTitle.rebootBmc'),
+         },
+       },
+-      {
+-        path: '/operations/serial-over-lan',
+-        name: 'serial-over-lan',
+-        component: SerialOverLan,
+-        meta: {
+-          title: i18n.t('appPageTitle.serialOverLan'),
+-          exclusiveToRoles: [roles.administrator],
+-        },
+-      },
++      // {
++      //   path: '/operations/serial-over-lan',
++      //   name: 'serial-over-lan',
++      //   component: SerialOverLan,
++      //   meta: {
++      //     title: i18n.t('appPageTitle.serialOverLan'),
++      //     exclusiveToRoles: [roles.administrator],
++      //   },
++      // },
+       {
+         path: '/operations/server-power-operations',
+         name: 'server-power-operations',
+@@ -235,15 +235,15 @@ const routes = [
+           title: i18n.t('appPageTitle.serverPowerOperations'),
+         },
+       },
+-      {
+-        path: '/operations/virtual-media',
+-        name: 'virtual-media',
+-        component: VirtualMedia,
+-        meta: {
+-          title: i18n.t('appPageTitle.virtualMedia'),
+-          exclusiveToRoles: [roles.administrator],
+-        },
+-      },
++      // {
++      //   path: '/operations/virtual-media',
++      //   name: 'virtual-media',
++      //   component: VirtualMedia,
++      //   meta: {
++      //     title: i18n.t('appPageTitle.virtualMedia'),
++      //     exclusiveToRoles: [roles.administrator],
++      //   },
++      // },
+       {
+         path: '*',
+         name: 'page-not-found',
+diff --git a/src/i18n.js b/src/i18n.js
+index c60573c..f0e5599 100644
+--- a/src/i18n.js
++++ b/src/i18n.js
+@@ -22,9 +22,9 @@ function loadLocaleMessages() {
+ 
+ export default new VueI18n({
+   // Get default locale from local storage
+-  locale: window.localStorage.getItem('storedLanguage'),
++  locale: 'zh-ZH',
+   // Locales that don't exist will fallback to English
+-  fallbackLocale: 'en-US',
++  fallbackLocale: 'zh-ZH',
+   // Falling back to fallbackLocale generates two console warnings
+   // Silent fallback suppresses console warnings when using fallback
+   silentFallbackWarn: true,
+diff --git a/src/layouts/LoginLayout.vue b/src/layouts/LoginLayout.vue
+index dba1980..119d75f 100644
+--- a/src/layouts/LoginLayout.vue
++++ b/src/layouts/LoginLayout.vue
+@@ -1,33 +1,36 @@
+ <template>
+-  <main>
++  <main class="auth-layout">
+     <div class="login-container">
+       <div class="login-main">
+-        <div>
+-          <div class="login-brand mb-5">
+-            <img
+-              svg-inline
+-              width="90px"
+-              src="@/assets/images/login-company-logo.svg"
+-              :alt="altLogo"
+-            />
+-          </div>
+-          <h1 v-if="customizableGuiName" class="h3 mb-5">
++        <div class="auth-content">
++          <h1 v-if="customizableGuiName" class="system-title">
+             {{ customizableGuiName }}
+           </h1>
+-          <router-view class="login=form form-background" />
++          <div class="auth-card">
++            <router-view class="login-form" />
++          </div>
++          <div class="auth-footer">
++            <p>BMC Management System &copy; {{ new Date().getFullYear() }}</p>
++          </div>
+         </div>
+       </div>
+       <div class="login-aside">
+-        <div class="login-aside__logo-brand">
+-          <!-- Add Secondary brand logo if needed -->
+-        </div>
+-        <div class="login-aside__logo-bmc">
+-          <img
+-            svg-inline
+-            height="60px"
+-            src="@/assets/images/built-on-openbmc-logo.svg"
+-            alt="Built on OpenBMC"
+-          />
++        <div class="feature-highlights">
++          <div class="feature-item">
++            <div class="feature-icon">🔒</div>
++            <h3>安全管理系统</h3>
++            <p>企业级安全防护与权限控制</p>
++          </div>
++          <div class="feature-item">
++            <div class="feature-icon">⚡</div>
++            <h3>高性能监控</h3>
++            <p>实时监控服务器健康状态</p>
++          </div>
++          <div class="feature-item">
++            <div class="feature-icon">🌐</div>
++            <h3>远程管理</h3>
++            <p>随时随地访问您的服务器</p>
++          </div>
+         </div>
+       </div>
+     </div>
+@@ -40,75 +43,141 @@ export default {
+   data() {
+     return {
+       altLogo: process.env.VUE_APP_COMPANY_NAME || 'OpenBMC',
+-      customizableGuiName: process.env.VUE_APP_GUI_NAME || '',
++      customizableGuiName: process.env.VUE_APP_GUI_NAME || 'BMC 管理系统',
+     };
+   },
+ };
+ </script>
+ 
+ <style lang="scss" scoped>
+-.login-container {
+-  background: gray('100');
+-  display: flex;
+-  flex-direction: column;
+-  gap: $spacer * 2;
+-  max-width: 1400px;
+-  min-width: 320px;
++.auth-layout {
++  background: linear-gradient(135deg, #0d1b3a 0%, #1a3a7a 100%);
+   min-height: 100vh;
+-  justify-content: space-around;
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  padding: 20px;
++}
+ 
+-  @include media-breakpoint-up('md') {
+-    background: $white;
+-    flex-direction: row;
+-  }
++.login-container {
++  display: flex;
++  width: 100%;
++  max-width: 1200px;
++  background: rgba(255, 255, 255, 0.05);
++  border-radius: 16px;
++  overflow: hidden;
++  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
++  backdrop-filter: blur(10px);
+ }
+ 
+ .login-main {
+-  min-height: 50vh;
+-  padding: $spacer * 3;
++  flex: 1;
++  padding: 60px 50px;
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  background: rgba(255, 255, 255, 0.95);
+ 
+-  @include media-breakpoint-up('md') {
+-    background: gray('100');
+-    display: flex;
+-    flex-direction: column;
+-    flex: 1 1 75%;
+-    min-height: 100vh;
+-    justify-content: center;
+-    align-items: center;
++  @media (max-width: 768px) {
++    padding: 40px 20px;
+   }
+ }
+ 
+-.login-form {
+-  @include media-breakpoint-up('md') {
+-    max-width: 360px;
++.auth-content {
++  width: 100%;
++  max-width: 420px;
++  text-align: center;
++}
++
++.system-title {
++  color: #0d1b3a;
++  font-weight: 700;
++  margin-bottom: 40px;
++  font-size: 2rem;
++  letter-spacing: -0.5px;
++}
++
++.auth-card {
++  background: white;
++  border-radius: 12px;
++  padding: 40px 30px;
++  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
++  transition: transform 0.3s ease;
++
++  &:hover {
++    transform: translateY(-5px);
+   }
+ }
+ 
+ .login-aside {
++  flex: 0 0 40%;
++  padding: 60px 40px;
+   display: flex;
+-  align-items: flex-end;
+-  justify-content: flex-end;
+-  gap: $spacer * 1.5;
+-  margin-right: $spacer * 3;
+-  margin-bottom: $spacer;
+-
+-  @include media-breakpoint-up('md') {
+-    min-height: 100vh;
+-    padding-bottom: $spacer;
+-    flex: 1 1 25%;
++  flex-direction: column;
++  justify-content: center;
++  background: rgba(13, 27, 58, 0.8);
++
++  @media (max-width: 992px) {
++    display: none;
++  }
++}
++
++.feature-highlights {
++  color: white;
++}
++
++.feature-item {
++  margin-bottom: 40px;
++  text-align: center;
++
++  &:last-child {
+     margin-bottom: 0;
+   }
+ }
+ 
+-.login-aside__logo-brand:not(:empty) {
+-  &::after {
+-    content: '';
+-    display: inline-block;
+-    height: 2.5rem;
+-    width: 2px;
+-    background-color: gray('200');
+-    margin-left: $spacer * 1.5;
+-    vertical-align: middle;
++.feature-icon {
++  font-size: 2.5rem;
++  margin-bottom: 15px;
++  color: #4dabf7;
++}
++
++.feature-item h3 {
++  font-size: 1.4rem;
++  margin-bottom: 10px;
++  font-weight: 600;
++}
++
++.feature-item p {
++  color: #a0b9e0;
++  font-size: 1rem;
++  line-height: 1.6;
++}
++
++.auth-footer {
++  margin-top: 40px;
++  color: #6c757d;
++  font-size: 0.9rem;
++}
++
++// 响应式调整
++@media (max-width: 992px) {
++  .login-container {
++    flex-direction: column;
++    max-width: 600px;
++  }
++
++  .login-main {
++    padding: 50px 30px;
++  }
++}
++
++@media (max-width: 576px) {
++  .login-container {
++    border-radius: 12px;
++  }
++
++  .auth-card {
++    padding: 30px 20px;
+   }
+ }
+ </style>
+diff --git a/src/locales/en-US.json b/src/locales/en-US.json
+index 8ba7ac9..15ad277 100644
+--- a/src/locales/en-US.json
++++ b/src/locales/en-US.json
+@@ -870,14 +870,14 @@
+         "currentStatus": "Current status",
+         "serverBootSettings": "Boot settings",
+         "serverStatus": "Server status",
+-        "immediateReboot": "Immediate – Server reboots without operating system shutting down; may cause data corruption",
+-        "immediateShutdown": "Immediate - Server shuts down without operating system shutting down; may cause data corruption",
++        "immediateReboot": "Immediate",
++        "immediateShutdown": "Immediate",
+         "lastPowerOperation": "Last power operation",
+         "oneTimeBootWarning": "Pending one time boot. Next boot will be performed with the specified one time boot settings. Subsequent boots will be performed with the default settings.",
+         "operationInProgress": "There are no options to display while a power operation is in progress. When complete, power operations will be displayed here.",
+         "operations": "Operations",
+-        "orderlyReboot": "Orderly – operating system shuts down, then server reboots",
+-        "orderlyShutdown": "Orderly - operating system shuts down, then server shuts down",
++        "orderlyReboot": "Orderly",
++        "orderlyShutdown": "Orderly",
+         "powerOn": "Power on",
+         "reboot": "Reboot",
+         "rebootServer": "Reboot server",
+diff --git a/src/store/modules/GlobalStore.js b/src/store/modules/GlobalStore.js
+index 036dc48..1f44dfe 100644
+--- a/src/store/modules/GlobalStore.js
++++ b/src/store/modules/GlobalStore.js
+@@ -34,10 +34,8 @@ const GlobalStore = {
+     modelType: null,
+     serialNumber: null,
+     serverStatus: 'unreachable',
+-    languagePreference: localStorage.getItem('storedLanguage') || 'en-US',
+-    isUtcDisplay: localStorage.getItem('storedUtcDisplay')
+-      ? JSON.parse(localStorage.getItem('storedUtcDisplay'))
+-      : true,
++    languagePreference: 'zh-ZH',
++    isUtcDisplay: false,
+     username: localStorage.getItem('storedUsername'),
+     isAuthorized: true,
+     userPrivilege: null,
+diff --git a/src/views/HardwareStatus/Inventory/Inventory.vue b/src/views/HardwareStatus/Inventory/Inventory.vue
+index d05e32e..ec6e234 100644
+--- a/src/views/HardwareStatus/Inventory/Inventory.vue
++++ b/src/views/HardwareStatus/Inventory/Inventory.vue
+@@ -28,23 +28,11 @@
+     <!-- BMC manager table -->
+     <table-bmc-manager ref="bmc" />
+ 
+-    <!-- Chassis table -->
+-    <table-chassis ref="chassis" />
+-
+     <!-- DIMM slot table -->
+     <table-dimm-slot ref="dimms" />
+ 
+-    <!-- Fans table -->
+-    <table-fans ref="fans" />
+-
+-    <!-- Power supplies table -->
+-    <table-power-supplies ref="powerSupply" />
+-
+     <!-- Processors table -->
+     <table-processors ref="processors" />
+-
+-    <!-- Assembly table -->
+-    <table-assembly ref="assembly" />
+   </b-container>
+ </template>
+ 
+@@ -52,16 +40,9 @@
+ import PageTitle from '@/components/Global/PageTitle';
+ import ServiceIndicator from './InventoryServiceIndicator';
+ import TableSystem from './InventoryTableSystem';
+-import TablePowerSupplies from './InventoryTablePowerSupplies';
+ import TableDimmSlot from './InventoryTableDimmSlot';
+-import TableFans from './InventoryTableFans';
+-import TableBmcManager from './InventoryTableBmcManager';
+-import TableChassis from './InventoryTableChassis';
+ import TableProcessors from './InventoryTableProcessors';
+-import TableAssembly from './InventoryTableAssembly';
+ import LoadingBarMixin from '@/components/Mixins/LoadingBarMixin';
+-import PageSection from '@/components/Global/PageSection';
+-import JumpLink16 from '@carbon/icons-vue/es/jump-link/16';
+ import JumpLinkMixin from '@/components/Mixins/JumpLinkMixin';
+ import { chunk } from 'lodash';
+ 
+@@ -70,15 +51,8 @@ export default {
+     PageTitle,
+     ServiceIndicator,
+     TableDimmSlot,
+-    TablePowerSupplies,
+     TableSystem,
+-    TableFans,
+-    TableBmcManager,
+-    TableChassis,
+     TableProcessors,
+-    TableAssembly,
+-    PageSection,
+-    JumpLink: JumpLink16,
+   },
+   mixins: [LoadingBarMixin, JumpLinkMixin],
+   beforeRouteLeave(to, from, next) {
+@@ -108,36 +82,36 @@ export default {
+           href: '#chassis',
+           linkText: this.$t('pageInventory.chassis'),
+         },
+-        {
+-          id: 'dimms',
+-          dataRef: 'dimms',
+-          href: '#dimms',
+-          linkText: this.$t('pageInventory.dimmSlot'),
+-        },
+-        {
+-          id: 'fans',
+-          dataRef: 'fans',
+-          href: '#fans',
+-          linkText: this.$t('pageInventory.fans'),
+-        },
+-        {
+-          id: 'powerSupply',
+-          dataRef: 'powerSupply',
+-          href: '#powerSupply',
+-          linkText: this.$t('pageInventory.powerSupplies'),
+-        },
+-        {
+-          id: 'processors',
+-          dataRef: 'processors',
+-          href: '#processors',
+-          linkText: this.$t('pageInventory.processors'),
+-        },
+-        {
+-          id: 'assembly',
+-          dataRef: 'assembly',
+-          href: '#assembly',
+-          linkText: this.$t('pageInventory.assemblies'),
+-        },
++        // {
++        //   id: 'dimms',
++        //   dataRef: 'dimms',
++        //   href: '#dimms',
++        //   linkText: this.$t('pageInventory.dimmSlot'),
++        // },
++        // {
++        //   id: 'fans',
++        //   dataRef: 'fans',
++        //   href: '#fans',
++        //   linkText: this.$t('pageInventory.fans'),
++        // },
++        // {
++        //   id: 'powerSupply',
++        //   dataRef: 'powerSupply',
++        //   href: '#powerSupply',
++        //   linkText: this.$t('pageInventory.powerSupplies'),
++        // },
++        // {
++        //   id: 'processors',
++        //   dataRef: 'processors',
++        //   href: '#processors',
++        //   linkText: this.$t('pageInventory.processors'),
++        // },
++        // {
++        //   id: 'assembly',
++        //   dataRef: 'assembly',
++        //   href: '#assembly',
++        //   linkText: this.$t('pageInventory.assemblies'),
++        // },
+       ],
+     };
+   },
+diff --git a/src/views/HardwareStatus/Inventory/InventoryServiceIndicator.vue b/src/views/HardwareStatus/Inventory/InventoryServiceIndicator.vue
+index 0825ad7..9c980e1 100644
+--- a/src/views/HardwareStatus/Inventory/InventoryServiceIndicator.vue
++++ b/src/views/HardwareStatus/Inventory/InventoryServiceIndicator.vue
+@@ -1,7 +1,5 @@
+ <template>
+-  <page-section
+-    :section-title="$t('pageInventory.systemIndicator.sectionTitle')"
+-  >
++  <page-section>
+     <div class="form-background pl-4 pt-4 pb-1">
+       <b-row>
+         <b-col sm="6" md="3">
+@@ -12,7 +10,7 @@
+             </dd>
+           </dl>
+         </b-col>
+-        <b-col sm="6" md="3">
++        <!-- <b-col sm="6" md="3">
+           <dl>
+             <dt>
+               {{ $t('pageInventory.systemIndicator.identifyLed') }}
+@@ -32,7 +30,7 @@
+               </b-form-checkbox>
+             </dd>
+           </dl>
+-        </b-col>
++        </b-col> -->
+       </b-row>
+     </div>
+   </page-section>
+diff --git a/src/views/HardwareStatus/Inventory/InventoryTableAssembly.vue b/src/views/HardwareStatus/Inventory/InventoryTableAssembly.vue
+index b9f59cc..1f3feb6 100644
+--- a/src/views/HardwareStatus/Inventory/InventoryTableAssembly.vue
++++ b/src/views/HardwareStatus/Inventory/InventoryTableAssembly.vue
+@@ -107,11 +107,6 @@ export default {
+           formatter: this.dataFormatter,
+           sortable: true,
+         },
+-        {
+-          key: 'identifyLed',
+-          label: this.$t('pageInventory.table.identifyLed'),
+-          formatter: this.dataFormatter,
+-        },
+       ],
+       expandRowLabel: expandRowLabel,
+     };
+diff --git a/src/views/HardwareStatus/Inventory/InventoryTableBmcManager.vue b/src/views/HardwareStatus/Inventory/InventoryTableBmcManager.vue
+index cf3ee2b..7ee443b 100644
+--- a/src/views/HardwareStatus/Inventory/InventoryTableBmcManager.vue
++++ b/src/views/HardwareStatus/Inventory/InventoryTableBmcManager.vue
+@@ -54,15 +54,6 @@
+                 <!-- Name -->
+                 <dt>{{ $t('pageInventory.table.name') }}:</dt>
+                 <dd>{{ dataFormatter(item.name) }}</dd>
+-                <!-- Part number -->
+-                <dt>{{ $t('pageInventory.table.partNumber') }}:</dt>
+-                <dd>{{ dataFormatter(item.partNumber) }}</dd>
+-                <!-- Serial number -->
+-                <dt>{{ $t('pageInventory.table.serialNumber') }}:</dt>
+-                <dd>{{ dataFormatter(item.serialNumber) }}</dd>
+-                <!-- Spare part number -->
+-                <dt>{{ $t('pageInventory.table.sparePartNumber') }}:</dt>
+-                <dd>{{ dataFormatter(item.sparePartNumber) }}</dd>
+                 <!-- Model -->
+                 <dt>{{ $t('pageInventory.table.model') }}:</dt>
+                 <dd>{{ dataFormatter(item.model) }}</dd>
+@@ -84,7 +75,7 @@
+                 <dd>{{ dataFormatter(item.powerState) }}</dd>
+                 <!-- Health rollup -->
+                 <dt>{{ $t('pageInventory.table.healthRollup') }}:</dt>
+-                <dd>{{ dataFormatter(item.healthRollup) }}</dd>
++                <dd>OK</dd>
+                 <!-- BMC date and time -->
+                 <dt>{{ $t('pageInventory.table.bmcDateTime') }}:</dt>
+                 <dd>
+@@ -104,9 +95,6 @@
+           <b-row>
+             <b-col class="mt-2" sm="6" xl="6">
+               <dl>
+-                <!-- Manufacturer -->
+-                <dt>{{ $t('pageInventory.table.manufacturer') }}:</dt>
+-                <dd>{{ dataFormatter(item.manufacturer) }}</dd>
+                 <!-- Description -->
+                 <dt>{{ $t('pageInventory.table.description') }}:</dt>
+                 <dd>{{ dataFormatter(item.description) }}</dd>
+@@ -198,11 +186,6 @@ export default {
+           label: this.$t('pageInventory.table.locationNumber'),
+           formatter: this.dataFormatter,
+         },
+-        {
+-          key: 'identifyLed',
+-          label: this.$t('pageInventory.table.identifyLed'),
+-          formatter: this.dataFormatter,
+-        },
+       ],
+       expandRowLabel: expandRowLabel,
+     };
+diff --git a/src/views/HardwareStatus/Inventory/InventoryTableChassis.vue b/src/views/HardwareStatus/Inventory/InventoryTableChassis.vue
+index 18ddfba..27c3833 100644
+--- a/src/views/HardwareStatus/Inventory/InventoryTableChassis.vue
++++ b/src/views/HardwareStatus/Inventory/InventoryTableChassis.vue
+@@ -24,9 +24,9 @@
+       </template>
+ 
+       <!-- Health -->
+-      <template #cell(health)="{ value }">
+-        <status-icon :status="statusIcon(value)" />
+-        {{ value }}
++      <template #cell(health)>
++        <status-icon status="success" />
++        OK
+       </template>
+       <!-- Toggle identify LED -->
+       <template #cell(identifyLed)="row">
+@@ -52,9 +52,6 @@
+                 <!-- Name -->
+                 <dt>{{ $t('pageInventory.table.name') }}:</dt>
+                 <dd>{{ dataFormatter(item.name) }}</dd>
+-                <!-- Part number -->
+-                <dt>{{ $t('pageInventory.table.partNumber') }}:</dt>
+-                <dd>{{ dataFormatter(item.partNumber) }}</dd>
+                 <!-- Serial Number -->
+                 <dt>{{ $t('pageInventory.table.serialNumber') }}:</dt>
+                 <dd>{{ dataFormatter(item.serialNumber) }}</dd>
+@@ -63,24 +60,13 @@
+                 <dd class="mb-2">
+                   {{ dataFormatter(item.model) }}
+                 </dd>
+-                <!-- Asset tag -->
+-                <dt>{{ $t('pageInventory.table.assetTag') }}:</dt>
+-                <dd class="mb-2">
+-                  {{ dataFormatter(item.assetTag) }}
+-                </dd>
+               </dl>
+             </b-col>
+             <b-col class="mt-2" sm="6" xl="6">
+               <dl>
+                 <!-- Status state -->
+                 <dt>{{ $t('pageInventory.table.statusState') }}:</dt>
+-                <dd>{{ dataFormatter(item.statusState) }}</dd>
+-                <!-- Power state -->
+-                <dt>{{ $t('pageInventory.table.power') }}:</dt>
+-                <dd>{{ dataFormatter(item.power) }}</dd>
+-                <!-- Health rollup -->
+-                <dt>{{ $t('pageInventory.table.healthRollup') }}:</dt>
+-                <dd>{{ dataFormatter(item.healthRollup) }}</dd>
++                <dd>OK</dd>
+               </dl>
+             </b-col>
+           </b-row>
+@@ -96,22 +82,7 @@
+                 <dd>{{ dataFormatter(item.chassisType) }}</dd>
+               </dl>
+             </b-col>
+-            <b-col class="mt-2" sm="6" xl="6">
+-              <dl>
+-                <!-- Min power -->
+-                <dt>{{ $t('pageInventory.table.minPowerWatts') }}:</dt>
+-                <dd>
+-                  {{ dataFormatter(item.minPowerWatts) }}
+-                  {{ $t('unit.W') }}
+-                </dd>
+-                <!-- Max power -->
+-                <dt>{{ $t('pageInventory.table.maxPowerWatts') }}:</dt>
+-                <dd>
+-                  {{ dataFormatter(item.maxPowerWatts) }}
+-                  {{ $t('unit.W') }}
+-                </dd>
+-              </dl>
+-            </b-col>
++            <b-col class="mt-2" sm="6" xl="6"> </b-col>
+           </b-row>
+         </b-container>
+       </template>
+@@ -158,11 +129,6 @@ export default {
+           label: this.$t('pageInventory.table.locationNumber'),
+           formatter: this.dataFormatter,
+         },
+-        {
+-          key: 'identifyLed',
+-          label: this.$t('pageInventory.table.identifyLed'),
+-          formatter: this.dataFormatter,
+-        },
+       ],
+       expandRowLabel: expandRowLabel,
+     };
+diff --git a/src/views/HardwareStatus/Inventory/InventoryTableDimmSlot.vue b/src/views/HardwareStatus/Inventory/InventoryTableDimmSlot.vue
+index f3db133..26933a4 100644
+--- a/src/views/HardwareStatus/Inventory/InventoryTableDimmSlot.vue
++++ b/src/views/HardwareStatus/Inventory/InventoryTableDimmSlot.vue
+@@ -82,26 +82,6 @@
+                 <dt>{{ $t('pageInventory.table.manufacturer') }}:</dt>
+                 <dd>{{ dataFormatter(item.manufacturer) }}</dd>
+               </dl>
+-              <dl>
+-                <!-- Part Number -->
+-                <dt>{{ $t('pageInventory.table.partNumber') }}:</dt>
+-                <dd>{{ dataFormatter(item.partNumber) }}</dd>
+-              </dl>
+-              <dl>
+-                <!-- Serial Number -->
+-                <dt>{{ $t('pageInventory.table.serialNumber') }}:</dt>
+-                <dd>{{ dataFormatter(item.serialNumber) }}</dd>
+-              </dl>
+-              <dl>
+-                <!-- Spare Part Number -->
+-                <dt>{{ $t('pageInventory.table.sparePartNumber') }}:</dt>
+-                <dd>{{ dataFormatter(item.sparePartNumber) }}</dd>
+-              </dl>
+-              <dl>
+-                <!-- Model -->
+-                <dt>{{ $t('pageInventory.table.model') }}:</dt>
+-                <dd>{{ dataFormatter(item.model) }}</dd>
+-              </dl>
+             </b-col>
+             <b-col sm="6" xl="6">
+               <dl>
+@@ -122,21 +102,11 @@
+                 <dt>{{ $t('pageInventory.table.statusState') }}:</dt>
+                 <dd>{{ dataFormatter(item.statusState) }}</dd>
+               </dl>
+-              <dl>
+-                <!-- Enabled-->
+-                <dt>{{ $t('pageInventory.table.enabled') }}:</dt>
+-                <dd>{{ dataFormatter(item.enabled) }}</dd>
+-              </dl>
+             </b-col>
+           </b-row>
+           <div class="section-divider mb-3 mt-3"></div>
+           <b-row>
+             <b-col sm="6" xl="6">
+-              <dl>
+-                <!-- Description -->
+-                <dt>{{ $t('pageInventory.table.description') }}:</dt>
+-                <dd>{{ dataFormatter(item.description) }}</dd>
+-              </dl>
+               <dl>
+                 <!-- Memory Type -->
+                 <dt>{{ $t('pageInventory.table.memoryType') }}:</dt>
+@@ -244,11 +214,6 @@ export default {
+           label: this.$t('pageInventory.table.locationNumber'),
+           formatter: this.dataFormatter,
+         },
+-        {
+-          key: 'identifyLed',
+-          label: this.$t('pageInventory.table.identifyLed'),
+-          formatter: this.dataFormatter,
+-        },
+       ],
+       searchFilter: searchFilter,
+       searchTotalFilteredRows: 0,
+diff --git a/src/views/HardwareStatus/Inventory/InventoryTablePowerSupplies.vue b/src/views/HardwareStatus/Inventory/InventoryTablePowerSupplies.vue
+index df03fdf..14a9528 100644
+--- a/src/views/HardwareStatus/Inventory/InventoryTablePowerSupplies.vue
++++ b/src/views/HardwareStatus/Inventory/InventoryTablePowerSupplies.vue
+@@ -172,11 +172,6 @@ export default {
+           formatter: this.dataFormatter,
+           sortable: true,
+         },
+-        {
+-          key: 'identifyLed',
+-          label: this.$t('pageInventory.table.identifyLed'),
+-          formatter: this.dataFormatter,
+-        },
+       ],
+       searchFilter: searchFilter,
+       searchTotalFilteredRows: 0,
+diff --git a/src/views/HardwareStatus/Inventory/InventoryTableProcessors.vue b/src/views/HardwareStatus/Inventory/InventoryTableProcessors.vue
+index 2887fc4..73b0f1d 100644
+--- a/src/views/HardwareStatus/Inventory/InventoryTableProcessors.vue
++++ b/src/views/HardwareStatus/Inventory/InventoryTableProcessors.vue
+@@ -79,21 +79,6 @@
+                 <!-- Name -->
+                 <dt>{{ $t('pageInventory.table.name') }}:</dt>
+                 <dd>{{ dataFormatter(item.name) }}</dd>
+-                <!-- Part Number -->
+-                <dt>{{ $t('pageInventory.table.partNumber') }}:</dt>
+-                <dd>{{ dataFormatter(item.partNumber) }}</dd>
+-                <!-- Serial Number -->
+-                <dt>{{ $t('pageInventory.table.serialNumber') }}:</dt>
+-                <dd>{{ dataFormatter(item.serialNumber) }}</dd>
+-                <!-- Spare Part Number -->
+-                <dt>{{ $t('pageInventory.table.sparePartNumber') }}:</dt>
+-                <dd>{{ dataFormatter(item.sparePartNumber) }}</dd>
+-                <!-- Model -->
+-                <dt>{{ $t('pageInventory.table.model') }}:</dt>
+-                <dd>{{ dataFormatter(item.model) }}</dd>
+-                <!-- Asset Tag -->
+-                <dt>{{ $t('pageInventory.table.assetTag') }}:</dt>
+-                <dd>{{ dataFormatter(item.assetTag) }}</dd>
+               </dl>
+             </b-col>
+             <b-col class="mt-2" sm="6" xl="6">
+@@ -101,9 +86,6 @@
+                 <!-- Status state -->
+                 <dt>{{ $t('pageInventory.table.statusState') }}:</dt>
+                 <dd>{{ dataFormatter(item.statusState) }}</dd>
+-                <!-- Health Rollup -->
+-                <dt>{{ $t('pageInventory.table.healthRollup') }}:</dt>
+-                <dd>{{ dataFormatter(item.healthRollup) }}</dd>
+               </dl>
+             </b-col>
+           </b-row>
+@@ -119,10 +101,7 @@
+                 <dd>{{ dataFormatter(item.processorType) }}</dd>
+                 <!-- Processor Architecture -->
+                 <dt>{{ $t('pageInventory.table.processorArchitecture') }}:</dt>
+-                <dd>{{ dataFormatter(item.processorArchitecture) }}</dd>
+-                <!-- Instruction Set -->
+-                <dt>{{ $t('pageInventory.table.instructionSet') }}:</dt>
+-                <dd>{{ dataFormatter(item.instructionSet) }}</dd>
++                <dd>X86</dd>
+                 <!-- Version -->
+                 <dt>{{ $t('pageInventory.table.version') }}:</dt>
+                 <dd>{{ dataFormatter(item.version) }}</dd>
+@@ -130,12 +109,6 @@
+             </b-col>
+             <b-col class="mt-1" sm="6" xl="6">
+               <dl>
+-                <!-- Min Speed MHz -->
+-                <dt>{{ $t('pageInventory.table.minSpeedMHz') }}:</dt>
+-                <dd>
+-                  {{ dataFormatter(item.minSpeedMHz) }}
+-                  {{ $t('unit.MHz') }}
+-                </dd>
+                 <!-- Max Speed MHz -->
+                 <dt>{{ $t('pageInventory.table.maxSpeedMHz') }}:</dt>
+                 <dd>
+@@ -218,12 +191,6 @@ export default {
+           formatter: this.dataFormatter,
+           sortable: true,
+         },
+-        {
+-          key: 'identifyLed',
+-          label: this.$t('pageInventory.table.identifyLed'),
+-          formatter: this.dataFormatter,
+-          sortable: false,
+-        },
+       ],
+       searchFilter: searchFilter,
+       searchTotalFilteredRows: 0,
+diff --git a/src/views/HardwareStatus/Inventory/InventoryTableSystem.vue b/src/views/HardwareStatus/Inventory/InventoryTableSystem.vue
+index 8ac1a25..c586dd5 100644
+--- a/src/views/HardwareStatus/Inventory/InventoryTableSystem.vue
++++ b/src/views/HardwareStatus/Inventory/InventoryTableSystem.vue
+@@ -51,14 +51,15 @@
+               <dl>
+                 <!-- Serial number -->
+                 <dt>{{ $t('pageInventory.table.serialNumber') }}:</dt>
+-                <dd>{{ dataFormatter(item.serialNumber) }}</dd>
++                <dd>
++                  {{
++                    dataFormatter(rawChassisData && rawChassisData.SerialNumber)
++                  }}
++                </dd>
+                 <!-- Model -->
+                 <dt>{{ $t('pageInventory.table.model') }}:</dt>
+-                <dd>{{ dataFormatter(item.model) }}</dd>
+-                <!-- Asset tag -->
+-                <dt>{{ $t('pageInventory.table.assetTag') }}:</dt>
+-                <dd class="mb-2">
+-                  {{ dataFormatter(item.assetTag) }}
++                <dd>
++                  {{ dataFormatter(rawChassisData && rawChassisData.Model) }}
+                 </dd>
+               </dl>
+             </b-col>
+@@ -72,7 +73,7 @@
+                 <dd>{{ dataFormatter(item.powerState) }}</dd>
+                 <!-- Health rollup -->
+                 <dt>{{ $t('pageInventory.table.healthRollup') }}:</dt>
+-                <dd>{{ dataFormatter(item.healthRollup) }}</dd>
++                <dd>OK</dd>
+               </dl>
+             </b-col>
+           </b-row>
+@@ -82,15 +83,14 @@
+               <dl>
+                 <!-- Manufacturer -->
+                 <dt>{{ $t('pageInventory.table.manufacturer') }}:</dt>
+-                <dd>{{ dataFormatter(item.manufacturer) }}</dd>
++                <dd>
++                  {{
++                    dataFormatter(rawChassisData && rawChassisData.Manufacturer)
++                  }}
++                </dd>
+                 <!-- Description -->
+                 <dt>{{ $t('pageInventory.table.description') }}:</dt>
+                 <dd>{{ dataFormatter(item.description) }}</dd>
+-                <!-- Sub Model -->
+-                <dt>{{ $t('pageInventory.table.subModel') }}:</dt>
+-                <dd>
+-                  {{ dataFormatter(item.subModel) }}
+-                </dd>
+                 <!-- System Type -->
+                 <dt>{{ $t('pageInventory.table.systemType') }}:</dt>
+                 <dd>
+@@ -107,7 +107,7 @@
+                 <!-- Total system memory -->
+                 <dt>{{ $t('pageInventory.table.totalSystemMemoryGiB') }}:</dt>
+                 <dd>
+-                  {{ dataFormatter(item.totalSystemMemoryGiB) }}
++                  64
+                   {{ $t('unit.GiB') }}
+                 </dd>
+               </dl>
+@@ -118,10 +118,10 @@
+               <dl class="ml-4">
+                 <!-- Count -->
+                 <dt>{{ $t('pageInventory.table.count') }}:</dt>
+-                <dd>{{ dataFormatter(item.processorSummaryCount) }}</dd>
++                <dd>1</dd>
+                 <!-- Core Count -->
+                 <dt>{{ $t('pageInventory.table.coreCount') }}:</dt>
+-                <dd>{{ dataFormatter(item.processorSummaryCoreCount) }}</dd>
++                <dd>8</dd>
+               </dl>
+             </b-col>
+           </b-row>
+@@ -138,6 +138,8 @@ import IconChevron from '@carbon/icons-vue/es/chevron--down/20';
+ 
+ import StatusIcon from '@/components/Global/StatusIcon';
+ 
++import api from '@/store/api';
++
+ import TableRowExpandMixin, {
+   expandRowLabel,
+ } from '@/components/Mixins/TableRowExpandMixin';
+@@ -149,6 +151,7 @@ export default {
+   data() {
+     return {
+       isBusy: true,
++      rawChassisData: null, // 存储原始接口数据
+       fields: [
+         {
+           key: 'expandRow',
+@@ -177,11 +180,6 @@ export default {
+           label: this.$t('pageInventory.table.locationNumber'),
+           formatter: this.dataFormatter,
+         },
+-        {
+-          key: 'locationIndicatorActive',
+-          label: this.$t('pageInventory.table.identifyLed'),
+-          formatter: this.dataFormatter,
+-        },
+       ],
+       expandRowLabel: expandRowLabel,
+     };
+@@ -197,6 +195,7 @@ export default {
+       this.$root.$emit('hardware-status-system-complete');
+       this.isBusy = false;
+     });
++    this.fetchChassisData();
+   },
+   methods: {
+     toggleIdentifyLedSwitch(state) {
+@@ -205,6 +204,34 @@ export default {
+         .then((message) => this.successToast(message))
+         .catch(({ message }) => this.errorToast(message));
+     },
++    // 直接获取机箱原始数据
++    async fetchChassisData() {
++      try {
++        // 第一步：获取机箱集合
++        const chassisResponse = await api.get('/redfish/v1/Chassis');
++        const members = chassisResponse.data.Members || [];
++
++        // 第二步：获取所有机箱详情
++        const detailPromises = members.map((member) =>
++          api.get(member['@odata.id']),
++        );
++
++        // 第三步：等待所有请求完成
++        const detailResponses = await Promise.all(detailPromises);
++
++        // 提取原始数据
++        const rawData = detailResponses.map((res) => res.data);
++
++        // 保存到组件数据
++        this.rawChassisData = rawData[0];
++
++        console.log('原始机箱接口数据:', rawData);
++      } catch (error) {
++        console.error('获取机箱数据失败:', error);
++      } finally {
++        this.$root.$emit('overview-server-complete');
++      }
++    },
+   },
+ };
+ </script>
+diff --git a/src/views/Login/Login.vue b/src/views/Login/Login.vue
+index db475c5..02d74bf 100644
+--- a/src/views/Login/Login.vue
++++ b/src/views/Login/Login.vue
+@@ -82,6 +82,10 @@ export default {
+       },
+       disableSubmitButton: false,
+       languages: [
++        {
++          value: 'zh-ZH',
++          text: '简体中文',
++        },
+         {
+           value: 'en-US',
+           text: 'English',
+@@ -90,6 +94,10 @@ export default {
+           value: 'ru-RU',
+           text: 'Русский',
+         },
++        {
++          value: 'zh-ZH',
++          text: '简体中文',
++        },
+       ],
+     };
+   },
+diff --git a/src/views/Operations/Firmware/FirmwareCardsBmc.vue b/src/views/Operations/Firmware/FirmwareCardsBmc.vue
+index bfca14c..52535c0 100644
+--- a/src/views/Operations/Firmware/FirmwareCardsBmc.vue
++++ b/src/views/Operations/Firmware/FirmwareCardsBmc.vue
+@@ -16,7 +16,7 @@
+         </b-card>
+ 
+         <!-- Backup image -->
+-        <b-card>
++        <!-- <b-card>
+           <template #header>
+             <p class="font-weight-bold m-0">
+               {{ $t('pageFirmware.cardTitleBackup') }}
+@@ -44,7 +44,7 @@
+             <icon-switch class="d-none d-sm-inline-block" />
+             {{ $t('pageFirmware.cardActionSwitchToRunning') }}
+           </b-btn>
+-        </b-card>
++        </b-card> -->
+       </b-card-group>
+     </page-section>
+     <modal-switch-to-running :backup="backupVersion" @ok="switchToRunning" />
+@@ -52,7 +52,6 @@
+ </template>
+ 
+ <script>
+-import IconSwitch from '@carbon/icons-vue/es/arrows--horizontal/20';
+ import PageSection from '@/components/Global/PageSection';
+ import LoadingBarMixin, { loading } from '@/components/Mixins/LoadingBarMixin';
+ import BVToastMixin from '@/components/Mixins/BVToastMixin';
+@@ -60,7 +59,7 @@ import BVToastMixin from '@/components/Mixins/BVToastMixin';
+ import ModalSwitchToRunning from './FirmwareModalSwitchToRunning';
+ 
+ export default {
+-  components: { IconSwitch, ModalSwitchToRunning, PageSection },
++  components: { ModalSwitchToRunning, PageSection },
+   mixins: [BVToastMixin, LoadingBarMixin],
+   props: {
+     isPageDisabled: {
+diff --git a/src/views/Overview/Overview.vue b/src/views/Overview/Overview.vue
+index d999be4..9e7575a 100644
+--- a/src/views/Overview/Overview.vue
++++ b/src/views/Overview/Overview.vue
+@@ -12,7 +12,6 @@
+       </b-card-group>
+       <b-card-group deck>
+         <overview-network />
+-        <overview-power />
+       </b-card-group>
+     </page-section>
+     <page-section :section-title="$t('pageOverview.statusInformation')">
+@@ -32,7 +31,7 @@ import OverviewEvents from './OverviewEvents.vue';
+ import OverviewFirmware from './OverviewFirmware.vue';
+ import OverviewInventory from './OverviewInventory.vue';
+ import OverviewNetwork from './OverviewNetwork';
+-import OverviewPower from './OverviewPower';
++// import OverviewPower from './OverviewPower';
+ import OverviewQuickLinks from './OverviewQuickLinks';
+ import OverviewServer from './OverviewServer';
+ import PageSection from '@/components/Global/PageSection';
+@@ -46,7 +45,7 @@ export default {
+     OverviewFirmware,
+     OverviewInventory,
+     OverviewNetwork,
+-    OverviewPower,
++    // OverviewPower,
+     OverviewQuickLinks,
+     OverviewServer,
+     PageSection,
+diff --git a/src/views/Overview/OverviewFirmware.vue b/src/views/Overview/OverviewFirmware.vue
+index c2c7f4a..8dfa81e 100644
+--- a/src/views/Overview/OverviewFirmware.vue
++++ b/src/views/Overview/OverviewFirmware.vue
+@@ -4,18 +4,18 @@
+     :to="`/operations/firmware`"
+   >
+     <b-row class="mt-3">
+-      <b-col sm="6">
++      <!-- <b-col sm="6">
+         <dl>
+           <dt>{{ $t('pageOverview.runningVersion') }}</dt>
+           <dd>{{ dataFormatter(runningVersion) }}</dd>
+           <dt>{{ $t('pageOverview.backupVersion') }}</dt>
+           <dd>{{ dataFormatter(backupVersion) }}</dd>
+         </dl>
+-      </b-col>
++      </b-col> -->
+       <b-col sm="6">
+         <dl>
+           <dt>{{ $t('pageOverview.firmwareVersion') }}</dt>
+-          <dd>{{ dataFormatter(firmwareVersion) }}</dd>
++          <dd>{{ dataFormatter(runningVersion) }}</dd>
+         </dl>
+       </b-col>
+     </b-row>
+diff --git a/src/views/Overview/OverviewInventory.vue b/src/views/Overview/OverviewInventory.vue
+index 1da5685..fce2df7 100644
+--- a/src/views/Overview/OverviewInventory.vue
++++ b/src/views/Overview/OverviewInventory.vue
+@@ -3,27 +3,7 @@
+     :title="$t('pageOverview.inventory')"
+     :to="`/hardware-status/inventory`"
+   >
+-    <b-row class="mt-3">
+-      <b-col sm="6">
+-        <dl sm="6">
+-          <dt>{{ $t('pageOverview.systemIdentifyLed') }}</dt>
+-          <dd>
+-            <b-form-checkbox
+-              id="identifyLedSwitch"
+-              v-model="systems.locationIndicatorActive"
+-              data-test-id="overviewInventory-checkbox-identifyLed"
+-              switch
+-              @change="toggleIdentifyLedSwitch"
+-            >
+-              <span v-if="systems.locationIndicatorActive">
+-                {{ $t('global.status.on') }}
+-              </span>
+-              <span v-else>{{ $t('global.status.off') }}</span>
+-            </b-form-checkbox>
+-          </dd>
+-        </dl>
+-      </b-col>
+-    </b-row>
++    <b-row class="mt-3"> </b-row>
+   </overview-card>
+ </template>
+ 
+diff --git a/src/views/Overview/OverviewNetwork.vue b/src/views/Overview/OverviewNetwork.vue
+index f25c7e0..044bf62 100644
+--- a/src/views/Overview/OverviewNetwork.vue
++++ b/src/views/Overview/OverviewNetwork.vue
+@@ -37,7 +37,7 @@
+               dataFormatter(
+                 network.dhcpAddress.length !== 0
+                   ? network.dhcpAddress[0].Address
+-                  : null,
++                  : '__.__.__.__',
+               )
+             }}
+           </dd>
+diff --git a/src/views/Overview/OverviewQuickLinks.vue b/src/views/Overview/OverviewQuickLinks.vue
+index bc579b0..bf453bf 100644
+--- a/src/views/Overview/OverviewQuickLinks.vue
++++ b/src/views/Overview/OverviewQuickLinks.vue
+@@ -10,7 +10,7 @@
+           <dd v-else>--</dd>
+         </dl>
+       </b-col>
+-      <b-col sm="6" lg="3" class="mb-2 mt-2">
++      <!-- <b-col sm="6" lg="3" class="mb-2 mt-2">
+         <b-button
+           to="/operations/serial-over-lan"
+           variant="secondary"
+@@ -20,19 +20,19 @@
+           {{ $t('pageOverview.solConsole') }}
+           <icon-arrow-right />
+         </b-button>
+-      </b-col>
++      </b-col> -->
+     </b-row>
+   </b-card>
+ </template>
+ 
+ <script>
+-import ArrowRight16 from '@carbon/icons-vue/es/arrow--right/16';
++// import ArrowRight16 from '@carbon/icons-vue/es/arrow--right/16';
+ import BVToastMixin from '@/components/Mixins/BVToastMixin';
+ 
+ export default {
+   name: 'QuickLinks',
+   components: {
+-    IconArrowRight: ArrowRight16,
++    // IconArrowRight: ArrowRight16,
+   },
+   mixins: [BVToastMixin],
+   computed: {
+diff --git a/src/views/Overview/OverviewServer.vue b/src/views/Overview/OverviewServer.vue
+index 8fc16d1..1ce60b1 100644
+--- a/src/views/Overview/OverviewServer.vue
++++ b/src/views/Overview/OverviewServer.vue
+@@ -7,15 +7,19 @@
+       <b-col sm="6">
+         <dl>
+           <dt>{{ $t('pageOverview.model') }}</dt>
+-          <dd>{{ dataFormatter(serverModel) }}</dd>
++          <dd>{{ dataFormatter(rawChassisData && rawChassisData.Model) }}</dd>
+           <dt>{{ $t('pageOverview.serialNumber') }}</dt>
+-          <dd>{{ dataFormatter(serverSerialNumber) }}</dd>
++          <dd>
++            {{ dataFormatter(rawChassisData && rawChassisData.SerialNumber) }}
++          </dd>
+         </dl>
+       </b-col>
+       <b-col sm="6">
+         <dl>
+           <dt>{{ $t('pageOverview.serverManufacturer') }}</dt>
+-          <dd>{{ dataFormatter(serverManufacturer) }}</dd>
++          <dd>
++            {{ dataFormatter(rawChassisData && rawChassisData.Manufacturer) }}
++          </dd>
+         </dl>
+       </b-col>
+     </b-row>
+@@ -26,31 +30,57 @@
+ import OverviewCard from './OverviewCard';
+ import DataFormatterMixin from '@/components/Mixins/DataFormatterMixin';
+ import { mapState } from 'vuex';
+-
++import api from '@/store/api';
+ export default {
+   name: 'Server',
+   components: {
+     OverviewCard,
+   },
+   mixins: [DataFormatterMixin],
++  data() {
++    return {
++      rawChassisData: null, // 存储原始接口数据
++    };
++  },
+   computed: {
+     ...mapState({
+       server: (state) => state.system.systems[0],
+-      serverModel() {
+-        return this.server?.model;
+-      },
+-      serverSerialNumber() {
+-        return this.server?.serialNumber;
+-      },
+-      serverManufacturer() {
+-        return this.server?.manufacturer;
+-      },
++      // 其他计算属性...
+     }),
+   },
+   created() {
+-    this.$store.dispatch('system/getSystem').finally(() => {
+-      this.$root.$emit('overview-server-complete');
+-    });
++    // 1. 直接调用 API 获取机箱信息
++    this.fetchChassisData();
++  },
++  methods: {
++    // 直接获取机箱原始数据
++    async fetchChassisData() {
++      try {
++        // 第一步：获取机箱集合
++        const chassisResponse = await api.get('/redfish/v1/Chassis');
++        const members = chassisResponse.data.Members || [];
++
++        // 第二步：获取所有机箱详情
++        const detailPromises = members.map((member) =>
++          api.get(member['@odata.id']),
++        );
++
++        // 第三步：等待所有请求完成
++        const detailResponses = await Promise.all(detailPromises);
++
++        // 提取原始数据
++        const rawData = detailResponses.map((res) => res.data);
++
++        // 保存到组件数据
++        this.rawChassisData = rawData[0];
++
++        console.log('原始机箱接口数据:', rawData);
++      } catch (error) {
++        console.error('获取机箱数据失败:', error);
++      } finally {
++        this.$root.$emit('overview-server-complete');
++      }
++    },
+   },
+ };
+ </script>
+diff --git a/src/views/SecurityAndAccess/Policies/Policies.vue b/src/views/SecurityAndAccess/Policies/Policies.vue
+index 3ebfee4..a5f0f90 100644
+--- a/src/views/SecurityAndAccess/Policies/Policies.vue
++++ b/src/views/SecurityAndAccess/Policies/Policies.vue
+@@ -55,13 +55,13 @@
+         </b-row>
+         <b-row class="setting-section">
+           <b-col class="d-flex align-items-center justify-content-between">
+-            <dl class="mt-3 mr-3 w-75">
++            <!-- <dl class="mt-3 mr-3 w-75">
+               <dt>{{ $t('pagePolicies.vtpm') }}</dt>
+               <dd>
+                 {{ $t('pagePolicies.vtpmDescription') }}
+               </dd>
+-            </dl>
+-            <b-form-checkbox
++            </dl> -->
++            <!-- <b-form-checkbox
+               id="vtpmSwitch"
+               v-model="vtpmState"
+               data-test-id="policies-toggle-vtpm"
+@@ -75,10 +75,10 @@
+                 {{ $t('global.status.enabled') }}
+               </span>
+               <span v-else>{{ $t('global.status.disabled') }}</span>
+-            </b-form-checkbox>
++            </b-form-checkbox> -->
+           </b-col>
+         </b-row>
+-        <b-row class="setting-section">
++        <!-- <b-row class="setting-section">
+           <b-col class="d-flex align-items-center justify-content-between">
+             <dl class="mt-3 mr-3 w-75">
+               <dt>{{ $t('pagePolicies.rtad') }}</dt>
+@@ -102,7 +102,7 @@
+               <span v-else>{{ $t('global.status.disabled') }}</span>
+             </b-form-checkbox>
+           </b-col>
+-        </b-row>
++        </b-row> -->
+         <b-row class="setting-section">
+           <b-col class="d-flex align-items-center justify-content-between">
+             <dl class="mt-3 mr-3 w-75">
+diff --git a/tests/unit/__snapshots__/AppHeader.spec.js.snap b/tests/unit/__snapshots__/AppHeader.spec.js.snap
+index b5e1222..15cff1b 100644
+--- a/tests/unit/__snapshots__/AppHeader.spec.js.snap
++++ b/tests/unit/__snapshots__/AppHeader.spec.js.snap
+@@ -54,7 +54,7 @@ exports[`AppHeader.vue should render correctly 1`] = `
+           to="/"
+         >
+           <img
+-            alt="Built on OpenBMC"
++            alt=" BMC Management System"
+             class="header-logo"
+             src="@/assets/images/logo-header.svg"
+             svg-inline=""
+-- 
+2.25.1
+

@@ -1,0 +1,39 @@
+{
+    "gpio_configs":[
+        {
+            "Name" : "PowerOk",
+            "LineName" : "PS_PWROK",
+            "Type" : "GPIO",
+            "Polarity" : "ActiveHigh"
+        },
+        {
+            "Name" : "PowerOut",
+            "LineName" : "POWER_OUT",
+            "Type" : "GPIO",
+            "Polarity" : "ActiveLow"
+        },
+        {
+            "Name" : "ResetButton",
+            "LineName" : "RESET_BUTTON",
+            "Type" : "GPIO",
+            "Polarity" : "ActiveLow"
+        },
+        {
+            "Name" : "ResetOut",
+            "LineName" : "RESET_OUT",
+            "Type" : "GPIO",
+            "Polarity" : "ActiveLow"
+        }
+    ],
+    "timing_configs": {
+        "PowerOn0Ms": 50,
+        "PowerOn1Ms": 1000,
+        "PowerOn2Ms": 1000,
+        "PowerOff0Ms": 50,
+        "PowerOff1Ms": 50,
+        "ResetPulseMs": 500,
+        "PowerCycleMs": 3000,
+        "PsPowerOKWatchdogMs": 15000,
+        "PowerOffSaveMs": 7000
+    }
+}

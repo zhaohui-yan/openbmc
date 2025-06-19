@@ -1,0 +1,10 @@
+[Unit]
+Description=TS1000 init
+After=multi-user.target
+Requires=multi-user.target
+[Service]
+Type=oneshot
+RemainAfterExit=no
+ExecStart=/bin/sh -c '/usr/sbin/TS1000_init.sh'
+[Install]
+WantedBy=multi-user.target

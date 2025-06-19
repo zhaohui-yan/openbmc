@@ -1,0 +1,244 @@
+From a74749fe8783885d20bcac670679a1df93183de7 Mon Sep 17 00:00:00 2001
+From: Troy Lee <troy_lee@aspeedtech.com>
+Date: Thu, 25 May 2023 14:58:55 +0800
+Subject: [PATCH 1/3] Add control for aspeed format
+
+Add '-m' to assign jpeg compression format
+  0: standard jpeg, 1: aspeed jpeg
+
+aspeed jpeg is aspeed propietary format which only compress data
+which is different with previous video frame to reduce compression
+output.
+
+Signed-off-by: Jammy Huang <jammy_huang@aspeedtech.com>
+Signed-off-by: Troy Lee <troy_lee@aspeedtech.com>
+---
+ ikvm_args.cpp    | 11 +++++++++--
+ ikvm_args.hpp    |  7 +++++++
+ ikvm_manager.cpp |  2 +-
+ ikvm_server.cpp  | 26 ++++++++++++++++++++++++++
+ ikvm_video.cpp   | 36 +++++++++++++++++++++++++++++++++---
+ ikvm_video.hpp   |  7 ++++++-
+ 6 files changed, 82 insertions(+), 7 deletions(-)
+
+Index: git/ikvm_args.cpp
+===================================================================
+--- git.orig/ikvm_args.cpp
++++ git/ikvm_args.cpp
+@@ -8,12 +8,13 @@
+ namespace ikvm
+ {
+ Args::Args(int argc, char* argv[]) :
+-    frameRate(30), subsampling(0), calcFrameCRC{false}, commandLine(argc, argv)
++    frameRate(30), subsampling(0), format(0), calcFrameCRC{false}, commandLine(argc, argv)
+ {
+     int option;
+-    const char* opts = "f:s:h:k:p:u:v:c";
++    const char* opts = "f:s:m:hk:p:u:v:c";
+     struct option lopts[] = {{"frameRate", 1, 0, 'f'},
+                              {"subsampling", 1, 0, 's'},
++                             {"format", 1, 0, 'm'},
+                              {"help", 0, 0, 'h'},
+                              {"keyboard", 1, 0, 'k'},
+                              {"mouse", 1, 0, 'p'},
+@@ -36,6 +37,11 @@ Args::Args(int argc, char* argv[]) :
+                 if (subsampling < 0 || subsampling > 1)
+                     subsampling = 0;
+                 break;
++            case 'm':
++                format = (int)strtol(optarg, NULL, 0);
++                if (format < 0 || format > 2)
++                    format = 0;
++                break;
+             case 'h':
+                 printUsage();
+                 exit(0);
+@@ -65,6 +71,7 @@ void Args::printUsage()
+     fprintf(stderr, "Usage: obmc-ikvm [options]\n");
+     fprintf(stderr, "-f frame rate          try this frame rate\n");
+     fprintf(stderr, "-s subsampling         try this subsampling\n");
++    fprintf(stderr, "-m format              try this format\n");
+     fprintf(stderr, "-h, --help             show this message and exit\n");
+     fprintf(stderr, "-k device              HID keyboard gadget device\n");
+     fprintf(stderr, "-p device              HID mouse gadget device\n");
+Index: git/ikvm_args.hpp
+===================================================================
+--- git.orig/ikvm_args.hpp
++++ git/ikvm_args.hpp
+@@ -78,6 +78,11 @@ class Args
+         return subsampling;
+     }
+ 
++    inline int getFormat() const
++    {
++        return format;
++    }
++
+     /*
+      * @brief Get the path to the USB keyboard device
+      *
+@@ -139,6 +144,8 @@ class Args
+     int frameRate;
+     /* @brief Desired subsampling (0: 444, 1: 420) */
+     int subsampling;
++    /* @brief Desired format (0: standard, 1: aspeed) */
++    int format;
+     /* @brief Path to the USB keyboard device */
+     std::string keyboardPath;
+     /* @brief Path to the USB mouse device */
+Index: git/ikvm_manager.cpp
+===================================================================
+--- git.orig/ikvm_manager.cpp
++++ git/ikvm_manager.cpp
+@@ -8,7 +8,7 @@ Manager::Manager(const Args& args) :
+     continueExecuting(true), serverDone(false), videoDone(true),
+     input(args.getKeyboardPath(), args.getPointerPath(), args.getUdcName()),
+     video(args.getVideoPath(), input, args.getFrameRate(),
+-          args.getSubsampling()),
++          args.getSubsampling(), args.getFormat()),
+     server(args, input, video)
+ {}
+ 
+Index: git/ikvm_server.cpp
+===================================================================
+--- git.orig/ikvm_server.cpp
++++ git/ikvm_server.cpp
+@@ -9,6 +9,8 @@
+ #include <phosphor-logging/log.hpp>
+ #include <xyz/openbmc_project/Common/error.hpp>
+ 
++#define        rfbEncodingAspeed   18
++
+ namespace ikvm
+ {
+ 
+@@ -95,6 +97,7 @@ void Server::run()
+ void Server::sendFrame()
+ {
+     char* data = video.getData();
++    uint32_t frameCount = 0;
+     rfbClientIteratorPtr it;
+     rfbClientPtr cl;
+     int64_t frame_crc = -1;
+@@ -176,6 +179,29 @@ void Server::sendFrame()
+                 rfbSendCompressedDataTight(cl, data, video.getFrameSize());
+                 if (cl->enableLastRectEncoding)
+                 {
++                    rfbSendLastRectMarker(cl);
++                }
++                rfbSendUpdateBuf(cl);
++                break;
++
++            case V4L2_PIX_FMT_AJPG:
++                fu->type = rfbFramebufferUpdate;
++                cl->ublen = sz_rfbFramebufferUpdateMsg;
++                rfbSendUpdateBuf(cl);
++                cl->tightEncoding = rfbEncodingAspeed;
++                rfbSendTightHeader(cl, 0, 0, video.getWidth(), video.getHeight());
++
++                cl->updateBuf[cl->ublen++] = (char)(0);
++                cl->updateBuf[cl->ublen++] = (char)(frameCount >> 24 & 0xff);
++                cl->updateBuf[cl->ublen++] = (char)(frameCount >> 16 & 0xff);
++                cl->updateBuf[cl->ublen++] = (char)(frameCount >> 8 & 0xff);
++                cl->updateBuf[cl->ublen++] = (char)(frameCount & 0xff);
++                cl->updateBuf[cl->ublen++] = (char)(video.getSubsampling());
++                cl->updateBuf[cl->ublen++] = (char)(0x00); // the value of quality if changed
++
++                rfbSendCompressedDataTight(cl, data, video.getFrameSize());
++                if (cl->enableLastRectEncoding)
++                {
+                     rfbSendLastRectMarker(cl);
+                 }
+                 rfbSendUpdateBuf(cl);
+Index: git/ikvm_video.cpp
+===================================================================
+--- git.orig/ikvm_video.cpp
++++ git/ikvm_video.cpp
+@@ -30,11 +30,26 @@ using namespace phosphor::logging;
+ using namespace sdbusplus::xyz::openbmc_project::Common::File::Error;
+ using namespace sdbusplus::xyz::openbmc_project::Common::Device::Error;
+ 
+-Video::Video(const std::string& p, Input& input, int fr, int sub) :
++Video::Video(const std::string& p, Input& input, int fr, int sub, int fmt) :
+     resizeAfterOpen(false), timingsError(false), fd(-1), frameRate(fr),
+     lastFrameIndex(-1), height(600), width(800), subSampling(sub), input(input),
+     path(p), pixelformat(V4L2_PIX_FMT_JPEG)
+-{}
++{
++    switch (fmt)
++    {
++        case 1:
++            pixelformat = V4L2_PIX_FMT_RGB24;
++            break;
++
++        case 2:
++            pixelformat = V4L2_PIX_FMT_AJPG;
++            break;
++        case 0:
++        default:
++            pixelformat = V4L2_PIX_FMT_JPEG;
++            break;
++    }
++}
+ 
+ Video::~Video()
+ {
+@@ -434,6 +449,20 @@ void Video::start()
+                 CALLOUT_DEVICE_PATH(path.c_str()));
+     }
+ 
++    fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_JPEG;
++    rc = ioctl(fd, VIDIOC_S_FMT, &fmt);
++    if (rc < 0)
++    {
++        log<level::ERR>("Failed to set video device format",
++                        entry("ERROR=%s", strerror(errno)));
++        elog<ReadFailure>(
++            xyz::openbmc_project::Common::Device::ReadFailure::CALLOUT_ERRNO(
++                errno),
++            xyz::openbmc_project::Common::Device::ReadFailure::
++                CALLOUT_DEVICE_PATH(path.c_str()));
++    }
++
++
+     memset(&sparm, 0, sizeof(v4l2_streamparm));
+     sparm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+     sparm.parm.capture.timeperframe.numerator = 1;
+@@ -459,7 +488,8 @@ void Video::start()
+     width = fmt.fmt.pix.width;
+     pixelformat = fmt.fmt.pix.pixelformat;
+ 
+-    if (pixelformat != V4L2_PIX_FMT_RGB24 && pixelformat != V4L2_PIX_FMT_JPEG)
++    if (pixelformat != V4L2_PIX_FMT_RGB24 && pixelformat != V4L2_PIX_FMT_JPEG
++	&& pixelformat != V4L2_PIX_FMT_AJPG)
+     {
+         log<level::ERR>("Pixel Format not supported",
+                         entry("PIXELFORMAT=%d", pixelformat));
+Index: git/ikvm_video.hpp
+===================================================================
+--- git.orig/ikvm_video.hpp
++++ git/ikvm_video.hpp
+@@ -6,6 +6,14 @@
+ #include <string>
+ #include <vector>
+ 
++#ifndef V4L2_PIX_FMT_AJPG
++#define V4L2_PIX_FMT_AJPG     v4l2_fourcc('A', 'J', 'P', 'G')
++#endif
++
++#ifndef V4L2_PIX_FMT_FLAG_PARTIAL_JPG
++#define V4L2_PIX_FMT_FLAG_PARTIAL_JPG   0x00000004
++#endif
++
+ namespace ikvm
+ {
+ 
+@@ -23,7 +31,7 @@ class Video
+      * @param[in] input - Reference to the Input object
+      * @param[in] fr    - desired frame rate of the video
+      */
+-    Video(const std::string& p, Input& input, int fr = 30, int sub = 0);
++    Video(const std::string& p, Input& input, int fr = 30, int sub = 0, int fmt = 0);
+     ~Video();
+     Video(const Video&) = default;
+     Video& operator=(const Video&) = default;

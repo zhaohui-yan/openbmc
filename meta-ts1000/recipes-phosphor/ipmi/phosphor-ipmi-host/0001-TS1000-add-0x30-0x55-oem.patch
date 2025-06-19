@@ -1,0 +1,105 @@
+From bce5cb91ff275f07a8d0d6341652ddbbea6759e9 Mon Sep 17 00:00:00 2001
+From: "zhaohui.yan" <zhaohui.yan@sophgo.com>
+Date: Fri, 13 Jun 2025 17:29:42 +0800
+Subject: [PATCH 1/1] TS1000: add 0x30 0x55 oem.
+
+---
+ chassishandler.cpp | 70 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 70 insertions(+)
+
+diff --git a/chassishandler.cpp b/chassishandler.cpp
+index b366b2a..3b1f8c4 100644
+--- a/chassishandler.cpp
++++ b/chassishandler.cpp
+@@ -36,6 +36,9 @@
+ #include <sstream>
+ #include <string>
+ 
++#include <iomanip>
++
++
+ std::unique_ptr<sdbusplus::Timer> identifyTimer
+     __attribute__((init_priority(101)));
+ 
+@@ -2365,6 +2368,68 @@ ipmi::RspType<> ipmiSetFrontPanelButtonEnables(ipmi::Context::ptr ctx,
+     return ipmi::responseSuccess();
+ }
+ 
++ipmi::RspType<> ipmiChassisSetSystemInfo(/* ipmi::Context::ptr ctx, */ ipmi::message::Payload& data)
++{
++    using namespace boot_options;
++    uint8_t memTotalH;
++    uint8_t memTotalL;
++    uint16_t memTotal;
++    uint8_t memUsage;
++    uint8_t diskTotalH;
++    uint8_t diskTotalL;
++    uint16_t diskTotal;
++    uint8_t diskUsage;
++    uint8_t cpuUsage;
++
++    if (data.unpack(memTotalH, memTotalL, memUsage, diskTotalH, diskTotalL, diskUsage, cpuUsage) != 0 ||
++            !data.fullyUnpacked())
++    {
++        return ipmi::responseReqDataLenInvalid();
++    }
++    memTotal  = (memTotalH << 8) | memTotalL;
++    diskTotal = (diskTotalH << 8) | diskTotalL;
++
++/*     std::cout << "ipmi recive 0x30 0x55: "
++              << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(memTotalH)
++              << " "
++              << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(memTotalL)
++               << " "
++              << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(memTotal)
++              << " "
++              << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(memUsage)
++              << " "
++              << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(diskTotalH)
++              << " "
++              << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(diskTotalL)
++              << " "
++              << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(diskTotal)
++              << " "
++              << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(diskUsage)
++              << " "
++              << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(cpuUsage)
++              << std::endl; */
++
++    std::ofstream outFile("/tmp/se8systeminfo", std::ios::trunc);
++    if (!outFile.is_open()) {
++        std::cout << "Failed to open output file" << std::endl;
++        return ipmi::responseUnspecifiedError();
++    } else {
++        // std::cout << "Success to open output file" << std::endl;
++        outFile << memTotal << " "
++                << static_cast<int>(memUsage) << " "
++                << diskTotal << " "
++                << static_cast<int>(diskUsage) << " "
++                << static_cast<int>(cpuUsage) << '\n';
++        outFile.flush();
++        if (!outFile) {
++            std::cout << "Write operation failed after flush" << std::endl;
++        }
++         outFile.close();
++    }
++    return ipmi::responseSuccess();
++}
++
++
+ void register_netfn_chassis_functions()
+ {
+     createIdentifyTimer();
+@@ -2427,4 +2492,9 @@ void register_netfn_chassis_functions()
+                           ipmi::chassis::cmdSetPowerRestorePolicy,
+                           ipmi::Privilege::Operator,
+                           ipmiChassisSetPowerRestorePolicy);
++    ipmi::registerHandler(ipmi::prioOpenBmcBase, 0x30,
++                          0x55,
++                          ipmi::Privilege::Operator,
++                          ipmiChassisSetSystemInfo);
++
+ }
+-- 
+2.25.1
+

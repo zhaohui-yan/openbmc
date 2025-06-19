@@ -1,0 +1,58 @@
+{
+  "gpio_configs":[
+    {
+        "Name" : "cpu0_m_b_event_lvt_n",
+        "LineName" : "CPU0_M_B_EVENT_LVT_N",
+        "Type" : "GPIO",
+        "Polarity" : "ActiveLow"
+    },
+    {
+        "Name" : "cpu0_m_a_event_lvt_n",
+        "LineName" : "CPU0_M_A_EVENT_LVT_N",
+        "Type" : "GPIO",
+        "Polarity" : "ActiveLow"
+    },
+    {
+        "Name" : "id_button",
+        "LineName" : "ID_BUTTON",
+        "Type" : "GPIO",
+        "Polarity" : "ActiveLow"
+    },
+    {
+        "Name" : "cpu0_prochot_n",
+        "LineName" : "CPU0_PROCHOT_N",
+        "Type" : "GPIO",
+        "Polarity" : "ActiveLow"
+    },
+    {
+        "Name" : "cpu0_memhot_n",
+        "LineName" : "CPU0_MEMHOT_N",
+        "Type" : "GPIO",
+        "Polarity" : "ActiveLow"
+    },
+    {
+        "Name" : "cpu0_present",
+        "LineName" : "CPU0_PRESENT",
+        "Type" : "GPIO",
+        "Polarity" : "ActiveLow"
+    },
+    {
+        "Name" : "vbat_gpio_ctl",
+        "LineName" : "VBAT_GPIO_CTL",
+        "Type" : "GPIO",
+        "Polarity" : "ActiveHigh"
+    },
+    {
+        "Name" : "bmc_present_n",
+        "LineName" : "BMC_PRESENT_N",
+        "Type" : "GPIO",
+        "Polarity" : "ActiveLow"
+    },
+    {
+        "Name" : "post_complete",
+        "LineName" : "POST_COMPLETE",
+        "Type" : "GPIO",
+        "Polarity" : "ActiveLow"
+    }
+]
+}
