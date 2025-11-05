@@ -3,8 +3,11 @@
 opt=$1
 oid=$2
 base_oid=".1.3.6.1.4.1.53367."
+se8SystemService="xyz.openbmc_project.se8SystemInfo"
+se8SystemPath="/xyz/openbmc_project/se8SystemInfo"
+se8SystemIntf="xyz.openbmc_project.se8SystemInfo.info"
 OIDS=(
-  ".1.3.6.1.4.1.53367.1.1.0"
+".1.3.6.1.4.1.53367.1.1.0"
   ".1.3.6.1.4.1.53367.1.2.0"
   ".1.3.6.1.4.1.53367.1.3.0"
   ".1.3.6.1.4.1.53367.2.1.0"
@@ -31,9 +34,19 @@ OIDS=(
   ".1.3.6.1.4.1.53367.4.4.0"
   ".1.3.6.1.4.1.53367.5.1.0"
   ".1.3.6.1.4.1.53367.5.2.0"
+  ".1.3.6.1.4.1.53367.5.3.0"
+  ".1.3.6.1.4.1.53367.5.4.0"
   ".1.3.6.1.4.1.53367.6.1.0"
   ".1.3.6.1.4.1.53367.6.2.0"
+  ".1.3.6.1.4.1.53367.6.3.0"
   ".1.3.6.1.4.1.53367.7.1.0"
+  ".1.3.6.1.4.1.53367.7.2.0"
+  ".1.3.6.1.4.1.53367.7.3.0"
+  ".1.3.6.1.4.1.53367.7.4.0"
+  ".1.3.6.1.4.1.53367.7.5.0"
+  ".1.3.6.1.4.1.53367.8.1.0"
+  ".1.3.6.1.4.1.53367.8.2.0"
+  ".1.3.6.1.4.1.53367.8.3.0"
 )
 
 handle_oid() {
@@ -143,23 +156,63 @@ handle_oid() {
             ;;
         "5.1.0")
             echo "Integer32"
-            awk '{print $1}' /tmp/se8systeminfo 2>/dev/null
+            busctl get-property  ${se8SystemService} ${se8SystemPath} ${se8SystemIntf} memTotal | awk '{print $2}' 2>/dev/null
             ;;
         "5.2.0")
             echo "Integer32"
-            awk '{print 100-$2}' /tmp/se8systeminfo 2>/dev/null
+            busctl get-property  ${se8SystemService} ${se8SystemPath} ${se8SystemIntf} memUsage | awk '{print $2}' 2>/dev/null
+            ;;
+        "5.3.0")
+            echo "Integer32"
+            busctl get-property  ${se8SystemService} ${se8SystemPath} ${se8SystemIntf} dimm0Health | awk '{print $2}' 2>/dev/null
+            ;;
+        "5.4.0")
+            echo "Integer32"
+            busctl get-property  ${se8SystemService} ${se8SystemPath} ${se8SystemIntf} dimm1Health | awk '{print $2}' 2>/dev/null
             ;;
         "6.1.0")
             echo "Integer32"
-            awk '{print $3}' /tmp/se8systeminfo 2>/dev/null
+            busctl get-property  ${se8SystemService} ${se8SystemPath} ${se8SystemIntf} diskTotal | awk '{print $2}' 2>/dev/null
             ;;
         "6.2.0")
             echo "Integer32"
-            awk '{print 100-$4}' /tmp/se8systeminfo 2>/dev/null
+            busctl get-property  ${se8SystemService} ${se8SystemPath} ${se8SystemIntf} diskUsage | awk '{print $2}' 2>/dev/null
+            ;;
+        "6.3.0")
+            echo "Integer32"
+            busctl get-property  ${se8SystemService} ${se8SystemPath} ${se8SystemIntf} diskHealth | awk '{print $2}' 2>/dev/null
             ;;
         "7.1.0")
             echo "Integer32"
-            awk '{print $5}' /tmp/se8systeminfo 2>/dev/null
+            busctl get-property  ${se8SystemService} ${se8SystemPath} ${se8SystemIntf} cpuUsage | awk '{print $2}' 2>/dev/null
+            ;;
+        "7.2.0")
+            echo "Integer32"
+            busctl get-property  ${se8SystemService} ${se8SystemPath} ${se8SystemIntf} cpuHealth | awk '{print $2}' 2>/dev/null
+            ;;
+        "7.3.0")
+            echo "Integer32"
+            busctl get-property  ${se8SystemService} ${se8SystemPath} ${se8SystemIntf} cpuFanRate | awk '{print $2}' 2>/dev/null
+            ;;
+        "7.4.0")
+            echo "Integer32"
+            busctl get-property  ${se8SystemService} ${se8SystemPath} ${se8SystemIntf} sysFanRate | awk '{print $2}' 2>/dev/null
+            ;;
+        "7.5.0")
+            echo "Integer32"
+            busctl get-property  ${se8SystemService} ${se8SystemPath} ${se8SystemIntf} fanHealth | awk '{print $2}' 2>/dev/null
+            ;;
+        "8.1.0")
+            echo "Integer32"
+            busctl get-property  ${se8SystemService} ${se8SystemPath} ${se8SystemIntf} powerHealth | awk '{print $2}' 2>/dev/null
+            ;;
+        "8.2.0")
+            echo "Integer32"
+            busctl get-property  ${se8SystemService} ${se8SystemPath} ${se8SystemIntf} networkHealth | awk '{print $2}' 2>/dev/null
+            ;;
+        "8.3.0")
+            echo "Integer32"
+            busctl get-property  ${se8SystemService} ${se8SystemPath} ${se8SystemIntf} systemHealth | awk '{print $2}' 2>/dev/null
             ;;
         *)
             exit 0
@@ -171,7 +224,6 @@ if [[ $opt == "-g" ]]; then
     last_three_segments=$(echo $oid | awk -F '.' '{for(i=NF-2;i<=NF;i++) printf $i (i<NF?".":"")}')
     handle_oid $last_three_segments
 elif [[ $opt == "-n" ]]; then
-    found=0
     for ((i=0; i<${#OIDS[@]}; i++)); do
         if [[ "$oid" < "${OIDS[$i]}" ]]; then
             last_three_segments=$(echo ${OIDS[$i]} | awk -F '.' '{for(i=NF-2;i<=NF;i++) printf $i (i<NF?".":"")}')
@@ -183,3 +235,4 @@ elif [[ $opt == "-n" ]]; then
 else
     exit 0
 fi
+

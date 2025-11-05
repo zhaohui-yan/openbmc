@@ -1,0 +1,865 @@
+From 3365beaf5635292b990fed3a7216a52a6980227f Mon Sep 17 00:00:00 2001
+From: "zhaohui.yan" <zhaohui.yan@sophgo.com>
+Date: Fri, 4 Jul 2025 10:40:45 +0800
+Subject: [PATCH 1/1] Add se8SystemInfo to web
+
+Signed-off-by: zhaohui.yan <zhaohui.yan@sophgo.com>
+---
+ src/locales/en-US.json                        |  31 +-
+ src/locales/zh-ZH.json                        |  31 +-
+ .../HardwareStatus/Inventory/Inventory.vue    |  12 +
+ .../Inventory/InventoryTableFans.vue          | 313 ++++++++++--------
+ .../Inventory/InventoryTablePower.vue         |  89 +++++
+ .../Inventory/InventoryTableProcessors.vue    |  21 +-
+ .../Inventory/InventoryTableStorage.vue       | 114 +++++++
+ .../Inventory/InventoryTableSystem.vue        |  20 +-
+ 8 files changed, 495 insertions(+), 136 deletions(-)
+ create mode 100644 src/views/HardwareStatus/Inventory/InventoryTablePower.vue
+ create mode 100644 src/views/HardwareStatus/Inventory/InventoryTableStorage.vue
+
+diff --git a/src/locales/en-US.json b/src/locales/en-US.json
+index 15ad277..f11e0d2 100644
+--- a/src/locales/en-US.json
++++ b/src/locales/en-US.json
+@@ -375,6 +375,11 @@
+         }
+     },
+     "pageInventory": {
++        "storage": "Storage Status",
++        "health": "Health Status",
++        "totalCapacity": "Total Capacity",
++        "usagePercent": "Usage",
++        "fetchError": "Failed to get storage status",
+         "dimmSlot": "DIMM slot",
+         "fans": "Fans",
+         "powerSupplies": "Power supplies",
+@@ -1003,6 +1008,30 @@
+             "serverClosedWithErrors": "Server closed with errors"
+         }
+     },
++    "pageFanStatus": {
++        "title": "Fan Status",
++        "fanId": "Fan ID",
++        "fanType": "Fan Type",
++        "health": "Health Status",
++        "speed": "Speed",
++        "cpuFanSpeed": "CPU Fan Speed",
++        "systemFanSpeed": "System Fan Speed",
++        "lastUpdated": "Last Updated",
++        "overallHealth": "Overall Health",
++        "relatedSystemHealth": "Related System Health",
++        "cpuHealth": "CPU Health",
++        "powerHealth": "Power Health",
++        "systemHealth": "System Health",
++        "combinedFans": "Combined Fans",
++        "cpuFans": "CPU Fan",
++        "sysFans": "System Fan",
++        "fetchError": "Failed to fetch fan data"
++    },
++    "pagePowerStatus": {
++        "powerId": "Power ID",
++        "health": "Status",
++        "fetchError": "Failed to fetch power status"
++    },
+     "countries": {
+         "AF": "Afghanistan",
+         "AL": "Albania",
+@@ -1266,4 +1295,4 @@
+         "V": "V",
+         "W": "W"
+     }
+-}
++}
+\ No newline at end of file
+diff --git a/src/locales/zh-ZH.json b/src/locales/zh-ZH.json
+index bc35ed1..b0a8bed 100644
+--- a/src/locales/zh-ZH.json
++++ b/src/locales/zh-ZH.json
+@@ -375,6 +375,11 @@
+         }
+     },
+     "pageInventory": {
++        "storage": "存储状态",
++        "health": "健康状态",
++        "totalCapacity": "总容量",
++        "usagePercent": "使用率",
++        "fetchError": "获取存储状态失败",
+         "dimmSlot": "DIMM 插槽",
+         "fans": "风扇",
+         "powerSupplies": "电源",
+@@ -1003,6 +1008,30 @@
+             "serverClosedWithErrors": "服务器关闭时出错"
+         }
+     },
++    "pageFanStatus": {
++        "title": "风扇状态",
++        "fanId": "风扇ID",
++        "fanType": "风扇类型",
++        "health": "健康状态",
++        "speed": "转速",
++        "cpuFanSpeed": "CPU风扇转速",
++        "systemFanSpeed": "系统风扇转速",
++        "lastUpdated": "最后更新时间",
++        "overallHealth": "整体健康状态",
++        "relatedSystemHealth": "相关系统健康状态",
++        "cpuHealth": "CPU健康",
++        "powerHealth": "电源健康",
++        "systemHealth": "系统健康",
++        "combinedFans": "风扇",
++        "cpuFans": "CPU风扇",
++        "sysFans": "系统风扇",
++        "fetchError": "获取风扇数据失败"
++    },
++    "pagePowerStatus": {
++        "powerId": "电源ID",
++        "health": "状态",
++        "fetchError": "获取电源状态失败"
++    },
+     "countries": {
+         "AF": "阿富汗",
+         "AL": "阿尔巴尼亚",
+@@ -1266,4 +1295,4 @@
+         "V": "伏",
+         "W": "瓦"
+     }
+-}
++}
+\ No newline at end of file
+diff --git a/src/views/HardwareStatus/Inventory/Inventory.vue b/src/views/HardwareStatus/Inventory/Inventory.vue
+index ec6e234..b63ca4b 100644
+--- a/src/views/HardwareStatus/Inventory/Inventory.vue
++++ b/src/views/HardwareStatus/Inventory/Inventory.vue
+@@ -31,6 +31,12 @@
+     <!-- DIMM slot table -->
+     <table-dimm-slot ref="dimms" />
+ 
++    <table-fans ref="fans" />
++
++    <table-power ref="power" />
++
++    <table-storage ref="power" />
++
+     <!-- Processors table -->
+     <table-processors ref="processors" />
+   </b-container>
+@@ -41,6 +47,9 @@ import PageTitle from '@/components/Global/PageTitle';
+ import ServiceIndicator from './InventoryServiceIndicator';
+ import TableSystem from './InventoryTableSystem';
+ import TableDimmSlot from './InventoryTableDimmSlot';
++import TableStorage from './InventoryTableStorage';
++import TableFans from './InventoryTableFans';
++import TablePower from './InventoryTablePower';
+ import TableProcessors from './InventoryTableProcessors';
+ import LoadingBarMixin from '@/components/Mixins/LoadingBarMixin';
+ import JumpLinkMixin from '@/components/Mixins/JumpLinkMixin';
+@@ -53,6 +62,9 @@ export default {
+     TableDimmSlot,
+     TableSystem,
+     TableProcessors,
++    TableFans,
++    TablePower,
++    TableStorage,
+   },
+   mixins: [LoadingBarMixin, JumpLinkMixin],
+   beforeRouteLeave(to, from, next) {
+diff --git a/src/views/HardwareStatus/Inventory/InventoryTableFans.vue b/src/views/HardwareStatus/Inventory/InventoryTableFans.vue
+index 62f0b76..7b15d68 100644
+--- a/src/views/HardwareStatus/Inventory/InventoryTableFans.vue
++++ b/src/views/HardwareStatus/Inventory/InventoryTableFans.vue
+@@ -1,95 +1,112 @@
+ <template>
+-  <page-section :section-title="$t('pageInventory.fans')">
+-    <b-row class="align-items-end">
+-      <b-col sm="6" md="5" xl="4">
+-        <search
+-          @change-search="onChangeSearchInput"
+-          @clear-search="onClearSearchInput"
+-        />
+-      </b-col>
+-      <b-col sm="6" md="3" xl="2">
+-        <table-cell-count
+-          :filtered-items-count="filteredRows"
+-          :total-number-of-cells="fans.length"
+-        ></table-cell-count>
+-      </b-col>
+-    </b-row>
++  <page-section :section-title="$t('pageFanStatus.title')">
+     <b-table
+-      sort-icon-left
+-      no-sort-reset
+-      hover
+       responsive="md"
+-      sort-by="health"
++      hover
+       show-empty
+-      :items="fans"
++      :items="fanData"
+       :fields="fields"
+-      :sort-desc="true"
+-      :sort-compare="sortCompare"
+-      :filter="searchFilter"
+       :empty-text="$t('global.table.emptyMessage')"
+-      :empty-filtered-text="$t('global.table.emptySearchMessage')"
+       :busy="isBusy"
+-      @filtered="onFiltered"
+     >
+-      <!-- Expand chevron icon -->
+-      <template #cell(expandRow)="row">
+-        <b-button
+-          variant="link"
+-          data-test-id="hardwareStatus-button-expandFans"
+-          :title="expandRowLabel"
+-          class="btn-icon-only"
+-          @click="toggleRowDetails(row)"
+-        >
+-          <icon-chevron />
+-          <span class="sr-only">{{ expandRowLabel }}</span>
+-        </b-button>
+-      </template>
+-
+-      <!-- Health -->
++      <!-- 健康状态 -->
+       <template #cell(health)="{ value }">
+         <status-icon :status="statusIcon(value)" />
+         {{ value }}
+       </template>
+ 
++      <!-- 风扇转速 -->
++      <template #cell(speed)="{ value }">
++        <div class="d-flex align-items-center">
++          <b-icon-fan class="mr-2 text-primary" />
++          <span>{{ value }} {{ $t('unit.RPM') }}</span>
++        </div>
++      </template>
++
++      <!-- 状态详情 -->
+       <template #row-details="{ item }">
+         <b-container fluid>
+           <b-row>
+-            <b-col sm="6" xl="4">
+-              <dl>
+-                <!-- ID -->
+-                <dt>{{ $t('pageInventory.table.id') }}:</dt>
+-                <dd>{{ dataFormatter(item.id) }}</dd>
+-              </dl>
+-              <dl>
+-                <!-- Serial number -->
+-                <dt>{{ $t('pageInventory.table.serialNumber') }}:</dt>
+-                <dd>{{ dataFormatter(item.serialNumber) }}</dd>
+-              </dl>
+-              <dl>
+-                <!-- Part number -->
+-                <dt>{{ $t('pageInventory.table.partNumber') }}:</dt>
+-                <dd>{{ dataFormatter(item.partNumber) }}</dd>
+-              </dl>
++            <b-col class="mt-2" sm="6">
++              <!-- CPU风扇单独一行 -->
++              <b-row class="mb-2">
++                <b-col>
++                  <dl>
++                    <dt>{{ $t('pageFanStatus.cpuFanSpeed') }}:</dt>
++                    <dd>{{ item.CPUFanSpeed }} {{ $t('unit.RPM') }}</dd>
++                  </dl>
++                </b-col>
++              </b-row>
++
++              <!-- 系统风扇单独一行 -->
++              <b-row>
++                <b-col>
++                  <dl>
++                    <dt>{{ $t('pageFanStatus.systemFanSpeed') }}:</dt>
++                    <dd>{{ item.CPUFanSpeed }} {{ $t('unit.RPM') }}</dd>
++                  </dl>
++                </b-col>
++              </b-row>
++            </b-col>
++
++            <b-col class="mt-2" sm="6">
+               <dl>
+-                <!-- Fan speed -->
+-                <dt>{{ $t('pageInventory.table.fanSpeed') }}:</dt>
++                <dt>{{ $t('pageFanStatus.lastUpdated') }}:</dt>
++                <dd>{{ lastUpdated }}</dd>
++
++                <dt>{{ $t('pageFanStatus.overallHealth') }}:</dt>
+                 <dd>
+-                  {{ dataFormatter(item.speed) }}
+-                  {{ $t('unit.RPM') }}
++                  <status-icon :status="statusIcon(item.FanHealth)" />
++                  {{ item.FanHealth }}
+                 </dd>
+               </dl>
+             </b-col>
+-            <b-col sm="6" xl="4">
+-              <dl>
+-                <!-- Status state -->
+-                <dt>{{ $t('pageInventory.table.statusState') }}:</dt>
+-                <dd>{{ dataFormatter(item.statusState) }}</dd>
+-              </dl>
+-              <dl>
+-                <!-- Health Rollup state -->
+-                <dt>{{ $t('pageInventory.table.statusHealthRollup') }}:</dt>
+-                <dd>{{ dataFormatter(item.healthRollup) }}</dd>
+-              </dl>
++          </b-row>
++
++          <div class="section-divider mb-3 mt-3"></div>
++
++          <b-row>
++            <b-col>
++              <h6 class="mb-3">
++                {{ $t('pageFanStatus.relatedSystemHealth') }}
++              </h6>
++              <b-row>
++                <b-col sm="4">
++                  <div class="health-indicator">
++                    <div class="health-label">
++                      {{ $t('pageFanStatus.cpuHealth') }}
++                    </div>
++                    <div class="health-value">
++                      <status-icon :status="statusIcon(item.CPUHealth)" />
++                      {{ item.CPUHealth }}
++                    </div>
++                  </div>
++                </b-col>
++                <b-col sm="4">
++                  <div class="health-indicator">
++                    <div class="health-label">
++                      {{ $t('pageFanStatus.powerHealth') }}
++                    </div>
++                    <div class="health-value">
++                      <status-icon
++                        :status="statusIcon(item.PowerSupplyHealth)"
++                      />
++                      {{ item.PowerSupplyHealth }}
++                    </div>
++                  </div>
++                </b-col>
++                <b-col sm="4">
++                  <div class="health-indicator">
++                    <div class="health-label">
++                      {{ $t('pageFanStatus.systemHealth') }}
++                    </div>
++                    <div class="health-value">
++                      <status-icon :status="statusIcon(item.SystemHealth)" />
++                      {{ item.SystemHealth }}
++                    </div>
++                  </div>
++                </b-col>
++              </b-row>
+             </b-col>
+           </b-row>
+         </b-container>
+@@ -99,95 +116,131 @@
+ </template>
+ 
+ <script>
++import BVToastMixin from '@/components/Mixins/BVToastMixin';
+ import PageSection from '@/components/Global/PageSection';
+-import IconChevron from '@carbon/icons-vue/es/chevron--down/20';
+-import TableCellCount from '@/components/Global/TableCellCount';
+-
+ import StatusIcon from '@/components/Global/StatusIcon';
++import api from '@/store/api';
+ import DataFormatterMixin from '@/components/Mixins/DataFormatterMixin';
+-import TableSortMixin from '@/components/Mixins/TableSortMixin';
+-import Search from '@/components/Global/Search';
+-import SearchFilterMixin, {
+-  searchFilter,
+-} from '@/components/Mixins/SearchFilterMixin';
+-import TableRowExpandMixin, {
+-  expandRowLabel,
+-} from '@/components/Mixins/TableRowExpandMixin';
++import { BIconFan } from 'bootstrap-vue';
+ 
+ export default {
+-  components: { IconChevron, PageSection, StatusIcon, Search, TableCellCount },
+-  mixins: [
+-    TableRowExpandMixin,
+-    DataFormatterMixin,
+-    TableSortMixin,
+-    SearchFilterMixin,
+-  ],
++  name: 'FanStatus',
++  components: { PageSection, StatusIcon, BIconFan },
++  mixins: [BVToastMixin, DataFormatterMixin],
+   data() {
+     return {
+       isBusy: true,
++      lastUpdated: null,
++      fanData: [],
+       fields: [
+         {
+-          key: 'expandRow',
+-          label: '',
+-          tdClass: 'table-row-expand',
+-          sortable: false,
++          key: 'id',
++          label: this.$t('pageFanStatus.fanId'),
++          formatter: this.dataFormatter,
+         },
+         {
+-          key: 'name',
+-          label: this.$t('pageInventory.table.name'),
++          key: 'type',
++          label: this.$t('pageFanStatus.fanType'),
+           formatter: this.dataFormatter,
+-          sortable: true,
+         },
+         {
+           key: 'health',
+-          label: this.$t('pageInventory.table.health'),
++          label: this.$t('pageFanStatus.health'),
+           formatter: this.dataFormatter,
+-          sortable: true,
+           tdClass: 'text-nowrap',
+         },
+         {
+-          key: 'partNumber',
+-          label: this.$t('pageInventory.table.partNumber'),
+-          formatter: this.dataFormatter,
+-          sortable: true,
+-        },
+-        {
+-          key: 'serialNumber',
+-          label: this.$t('pageInventory.table.serialNumber'),
+-          formatter: this.dataFormatter,
++          key: 'speed',
++          label: this.$t('pageFanStatus.speed'),
+         },
+       ],
+-      searchFilter: searchFilter,
+-      searchTotalFilteredRows: 0,
+-      expandRowLabel: expandRowLabel,
+     };
+   },
+-  computed: {
+-    filteredRows() {
+-      return this.searchFilter
+-        ? this.searchTotalFilteredRows
+-        : this.fans.length;
+-    },
+-    fans() {
+-      return this.$store.getters['fan/fans'];
+-    },
+-  },
+   created() {
+-    this.$store.dispatch('fan/getFanInfo').finally(() => {
+-      // Emit initial data fetch complete to parent component
+-      this.$root.$emit('hardware-status-fans-complete');
+-      this.isBusy = false;
+-    });
++    this.fetchFanData();
+   },
+   methods: {
+-    sortCompare(a, b, key) {
+-      if (key === 'health') {
+-        return this.sortStatus(a, b, key);
++    async fetchFanData() {
++      this.isBusy = true;
++      try {
++        const response = await api.get(
++          '/redfish/v1/Systems/system/se8SystemInfo',
++        );
++        const data = response.data;
++
++        // 格式化风扇数据
++        this.fanData = [
++          {
++            id: 'system fan',
++            type: this.$t('pageFanStatus.sysFans'),
++            health: data.FanHealth,
++            CPUFanSpeed: data.SystemFanSpeed,
++            SystemFanSpeed: data.SystemFanSpeed,
++            FanHealth: data.FanHealth,
++            CPUHealth: data.CPUHealth,
++            PowerSupplyHealth: data.PowerSupplyHealth,
++            SystemHealth: data.SystemHealth,
++            speed: `${data.SystemFanSpeed}`,
++          },
++          {
++            id: 'cpu fan',
++            type: this.$t('pageFanStatus.cpuFans'),
++            health: data.FanHealth,
++            CPUFanSpeed: data.CPUFanSpeed,
++            SystemFanSpeed: data.SystemFanSpeed,
++            FanHealth: data.FanHealth,
++            CPUHealth: data.CPUHealth,
++            PowerSupplyHealth: data.PowerSupplyHealth,
++            SystemHealth: data.SystemHealth,
++            speed: `${data.CPUFanSpeed}`,
++          },
++        ];
++
++        // 设置最后更新时间
++        this.lastUpdated = new Date().toLocaleString();
++      } catch (error) {
++        console.error('获取风扇数据失败:', error);
++        this.errorToast(this.$t('pageFanStatus.fetchError'));
++      } finally {
++        this.isBusy = false;
+       }
+     },
+-    onFiltered(filteredItems) {
+-      this.searchTotalFilteredRows = filteredItems.length;
++
++    // 健康状态图标映射
++    statusIcon(status) {
++      const statusIcons = {
++        OK: 'success',
++        Warning: 'warning',
++        Critical: 'danger',
++      };
++      return statusIcons[status] || 'secondary';
+     },
+   },
+ };
+ </script>
++
++<style scoped>
++.health-indicator {
++  background-color: #f8f9fa;
++  border-radius: 4px;
++  padding: 15px;
++  text-align: center;
++  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
++}
++
++.health-label {
++  font-size: 0.85rem;
++  color: #6c757d;
++  margin-bottom: 5px;
++}
++
++.health-value {
++  font-weight: 600;
++  font-size: 1.1rem;
++}
++
++.section-divider {
++  height: 1px;
++  background-color: #dee2e6;
++}
++</style>
+diff --git a/src/views/HardwareStatus/Inventory/InventoryTablePower.vue b/src/views/HardwareStatus/Inventory/InventoryTablePower.vue
+new file mode 100644
+index 0000000..afa6238
+--- /dev/null
++++ b/src/views/HardwareStatus/Inventory/InventoryTablePower.vue
+@@ -0,0 +1,89 @@
++<template>
++  <page-section :section-title="$t('pageInventory.powerSupplies')">
++    <b-table
++      responsive="md"
++      hover
++      show-empty
++      :items="powerData"
++      :fields="fields"
++      :empty-text="$t('global.table.emptyMessage')"
++      :busy="isBusy"
++    >
++      <!-- 状态列 -->
++      <template #cell(health)="{ value }">
++        <status-icon :status="statusIcon(value)" />
++        {{ value }}
++      </template>
++    </b-table>
++  </page-section>
++</template>
++
++<script>
++import BVToastMixin from '@/components/Mixins/BVToastMixin';
++import PageSection from '@/components/Global/PageSection';
++import StatusIcon from '@/components/Global/StatusIcon';
++import api from '@/store/api';
++import DataFormatterMixin from '@/components/Mixins/DataFormatterMixin';
++
++export default {
++  name: 'PowerStatus',
++  components: { PageSection, StatusIcon },
++  mixins: [BVToastMixin, DataFormatterMixin],
++  data() {
++    return {
++      isBusy: true,
++      powerData: [],
++      fields: [
++        {
++          key: 'id',
++          label: this.$t('pagePowerStatus.powerId'),
++          formatter: this.dataFormatter,
++        },
++        {
++          key: 'health',
++          label: this.$t('pagePowerStatus.health'),
++          formatter: this.dataFormatter,
++          tdClass: 'text-nowrap',
++        },
++      ],
++    };
++  },
++  created() {
++    this.fetchPowerData();
++  },
++  methods: {
++    async fetchPowerData() {
++      this.isBusy = true;
++      try {
++        const response = await api.get(
++          '/redfish/v1/Systems/system/se8SystemInfo',
++        );
++        const data = response.data;
++
++        // 构造电源数据（单条记录）
++        this.powerData = [
++          {
++            id: 'power',
++            health: data.PowerSupplyHealth,
++          },
++        ];
++      } catch (error) {
++        console.error('获取电源数据失败:', error);
++        this.errorToast(this.$t('pagePowerStatus.fetchError'));
++      } finally {
++        this.isBusy = false;
++      }
++    },
++
++    // 健康状态图标映射
++    statusIcon(status) {
++      const statusIcons = {
++        OK: 'success',
++        Warning: 'warning',
++        Critical: 'danger',
++      };
++      return statusIcons[status] || 'secondary';
++    },
++  },
++};
++</script>
+diff --git a/src/views/HardwareStatus/Inventory/InventoryTableProcessors.vue b/src/views/HardwareStatus/Inventory/InventoryTableProcessors.vue
+index 73b0f1d..7573e4d 100644
+--- a/src/views/HardwareStatus/Inventory/InventoryTableProcessors.vue
++++ b/src/views/HardwareStatus/Inventory/InventoryTableProcessors.vue
+@@ -44,9 +44,10 @@
+         </b-button>
+       </template>
+       <!-- Health -->
++      <!-- eslint-disable-next-line vue/no-unused-vars -->
+       <template #cell(health)="{ value }">
+-        <status-icon :status="statusIcon(value)" />
+-        {{ value }}
++        <status-icon :status="statusIcon(sysData.CPUHealth)" />
++        {{ sysData.CPUHealth }}
+       </template>
+       <!-- StatusState -->
+       <template #cell(statusState)="{ value }">
+@@ -139,6 +140,7 @@ import BVToastMixin from '@/components/Mixins/BVToastMixin';
+ import TableSortMixin from '@/components/Mixins/TableSortMixin';
+ import DataFormatterMixin from '@/components/Mixins/DataFormatterMixin';
+ import Search from '@/components/Global/Search';
++import api from '@/store/api';
+ import SearchFilterMixin, {
+   searchFilter,
+ } from '@/components/Mixins/SearchFilterMixin';
+@@ -158,6 +160,7 @@ export default {
+   data() {
+     return {
+       isBusy: true,
++      sysData: null,
+       fields: [
+         {
+           key: 'expandRow',
+@@ -213,8 +216,22 @@ export default {
+       this.$root.$emit('hardware-status-processors-complete');
+       this.isBusy = false;
+     });
++    this.fetchStorageData();
+   },
+   methods: {
++    async fetchStorageData() {
++      this.isBusy = true;
++      try {
++        const response = await api.get(
++          '/redfish/v1/Systems/system/se8SystemInfo',
++        );
++        this.sysData = response.data;
++      } catch (error) {
++        console.error('获取数据失败:', error);
++      } finally {
++        this.isBusy = false;
++      }
++    },
+     onFiltered(filteredItems) {
+       this.searchTotalFilteredRows = filteredItems.length;
+     },
+diff --git a/src/views/HardwareStatus/Inventory/InventoryTableStorage.vue b/src/views/HardwareStatus/Inventory/InventoryTableStorage.vue
+new file mode 100644
+index 0000000..844dd39
+--- /dev/null
++++ b/src/views/HardwareStatus/Inventory/InventoryTableStorage.vue
+@@ -0,0 +1,114 @@
++<template>
++  <page-section :section-title="$t('pageInventory.storage')">
++    <b-table
++      responsive="md"
++      hover
++      show-empty
++      :items="storageItems"
++      :fields="storageFields"
++      :empty-text="$t('global.table.emptyMessage')"
++      :busy="isBusy"
++    >
++      <!-- Health状态 -->
++      <template #cell(health)="{ value }">
++        <status-icon :status="statusIcon(value)" />
++        {{ value }}
++      </template>
++
++      <!-- 使用率 -->
++      <template #cell(usagePercent)="{ value }">
++        <div class="d-flex align-items-center">
++          <b-progress
++            :value="value"
++            :max="100"
++            :variant="usageVariant(value)"
++            height="1.5rem"
++            class="flex-grow-1"
++          />
++          <span class="ms-2" :class="{ 'text-danger': value < 5 }">
++            {{ value }}%
++          </span>
++        </div>
++      </template>
++    </b-table>
++  </page-section>
++</template>
++
++<script>
++import PageSection from '@/components/Global/PageSection';
++import StatusIcon from '@/components/Global/StatusIcon';
++import api from '@/store/api';
++import BVToastMixin from '@/components/Mixins/BVToastMixin';
++import DataFormatterMixin from '@/components/Mixins/DataFormatterMixin';
++
++export default {
++  components: { PageSection, StatusIcon },
++  mixins: [BVToastMixin, DataFormatterMixin],
++  data() {
++    return {
++      isBusy: true,
++      storageData: null,
++      storageFields: [
++        {
++          key: 'health',
++          label: this.$t('pageInventory.health'),
++          tdClass: 'text-nowrap',
++        },
++        {
++          key: 'totalCapacity',
++          label: this.$t('pageInventory.totalCapacity'),
++          formatter: (value) => `${value} ${this.$t('unit.GiB')}`,
++        },
++        {
++          key: 'usagePercent',
++          label: this.$t('pageInventory.usagePercent'),
++        },
++      ],
++    };
++  },
++  computed: {
++    storageItems() {
++      if (!this.storageData) return [];
++      return [
++        {
++          health: this.storageData.StorageHealth,
++          totalCapacity: this.storageData.StorageTotalGB,
++          usagePercent: this.storageData.StorageUsagePercent,
++        },
++      ];
++    },
++  },
++  created() {
++    this.fetchStorageData();
++  },
++  methods: {
++    async fetchStorageData() {
++      this.isBusy = true;
++      try {
++        const response = await api.get(
++          '/redfish/v1/Systems/system/se8SystemInfo',
++        );
++        this.storageData = response.data;
++      } catch (error) {
++        console.error('获取存储数据失败:', error);
++        this.errorToast(this.$t('pageInventory.storage.fetchError'));
++      } finally {
++        this.isBusy = false;
++      }
++    },
++    statusIcon(status) {
++      const statusMap = {
++        OK: 'success',
++        Warning: 'warning',
++        Critical: 'danger',
++      };
++      return statusMap[status] || '';
++    },
++    usageVariant(percent) {
++      if (percent >= 90) return 'danger';
++      if (percent >= 70) return 'warning';
++      return 'success';
++    },
++  },
++};
++</script>
+diff --git a/src/views/HardwareStatus/Inventory/InventoryTableSystem.vue b/src/views/HardwareStatus/Inventory/InventoryTableSystem.vue
+index c586dd5..272f2fa 100644
+--- a/src/views/HardwareStatus/Inventory/InventoryTableSystem.vue
++++ b/src/views/HardwareStatus/Inventory/InventoryTableSystem.vue
+@@ -24,9 +24,10 @@
+       </template>
+ 
+       <!-- Health -->
++      <!-- eslint-disable-next-line vue/no-unused-vars -->
+       <template #cell(health)="{ value }">
+-        <status-icon :status="statusIcon(value)" />
+-        {{ value }}
++        <status-icon :status="statusIcon(sysData.SystemHealth)" />
++        {{ sysData.SystemHealth }}
+       </template>
+ 
+       <template #cell(locationIndicatorActive)="{ item }">
+@@ -151,6 +152,7 @@ export default {
+   data() {
+     return {
+       isBusy: true,
++      sysData: null,
+       rawChassisData: null, // 存储原始接口数据
+       fields: [
+         {
+@@ -196,8 +198,22 @@ export default {
+       this.isBusy = false;
+     });
+     this.fetchChassisData();
++    this.fetchStorageData();
+   },
+   methods: {
++    async fetchStorageData() {
++      this.isBusy = true;
++      try {
++        const response = await api.get(
++          '/redfish/v1/Systems/system/se8SystemInfo',
++        );
++        this.sysData = response.data;
++      } catch (error) {
++        console.error('获取数据失败:', error);
++      } finally {
++        this.isBusy = false;
++      }
++    },
+     toggleIdentifyLedSwitch(state) {
+       this.$store
+         .dispatch('system/changeIdentifyLedState', state)
+-- 
+2.25.1
+

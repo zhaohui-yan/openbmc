@@ -1,0 +1,268 @@
+From a1d8dd48145a6f3247a6b840a700d6bf6e3a6557 Mon Sep 17 00:00:00 2001
+From: "zhaohui.yan" <zhaohui.yan@sophgo.com>
+Date: Fri, 4 Jul 2025 10:19:47 +0800
+Subject: [PATCH 1/1] Store se8SystemInfo to dbus
+
+Signed-off-by: zhaohui.yan <zhaohui.yan@sophgo.com>
+---
+ chassishandler.cpp | 151 ++++++++++++++++++++++++++++++++++-----------
+ chassishandler.hpp |  34 ++++++++++
+ 2 files changed, 149 insertions(+), 36 deletions(-)
+
+diff --git a/chassishandler.cpp b/chassishandler.cpp
+index 3b1f8c4..8cd71a2 100644
+--- a/chassishandler.cpp
++++ b/chassishandler.cpp
+@@ -26,6 +26,7 @@
+ #include <xyz/openbmc_project/State/Host/server.hpp>
+ #include <xyz/openbmc_project/State/PowerOnHours/server.hpp>
+ 
++
+ #include <array>
+ #include <chrono>
+ #include <cstring>
+@@ -39,6 +40,14 @@
+ #include <iomanip>
+ 
+ 
++#ifdef SE8_SYSTEM_INFO_DBUS_INF
++std::shared_ptr<sdbusplus::asio::connection> se8SystemInfoBusp;
++static std::string  se8SystemInfoDbusName = "xyz.openbmc_project.se8SystemInfo";
++static std::shared_ptr<sdbusplus::asio::dbus_interface> se8SystemInfoDbusPath;
++
++#endif
++
++
+ std::unique_ptr<sdbusplus::Timer> identifyTimer
+     __attribute__((init_priority(101)));
+ 
+@@ -2368,46 +2377,81 @@ ipmi::RspType<> ipmiSetFrontPanelButtonEnables(ipmi::Context::ptr ctx,
+     return ipmi::responseSuccess();
+ }
+ 
++
++#ifdef SE8_SYSTEM_INFO_DBUS_INF
++std::optional<bool> creatSe8SystemInfoDbus()
++{
++    struct se8SystemInfo tmpSe8SystemInfo;
++    uint16_t memTotal, diskTotal, cpuFanRate, sysFanRate;
++    bool result = false;
++
++    std::memset(&tmpSe8SystemInfo, 0x00, sizeof(tmpSe8SystemInfo));
++    memTotal                        = 62;
++    tmpSe8SystemInfo.memUsage       = 0;
++    tmpSe8SystemInfo.dimm0Health    = 0;
++    tmpSe8SystemInfo.dimm1Health    = 0;
++    diskTotal                       = 1576;
++    tmpSe8SystemInfo.diskUsage      = 0;
++    tmpSe8SystemInfo.diskHealth     = 0;
++    tmpSe8SystemInfo.cpuUsage       = 0;
++    tmpSe8SystemInfo.cpuHealth      = 0;
++    cpuFanRate                      = 1000;
++    sysFanRate                      = 1000;
++    tmpSe8SystemInfo.fanHealth      = 0;
++    tmpSe8SystemInfo.powerHealth    = 0;
++    tmpSe8SystemInfo.networkHealth  = 0;
++    tmpSe8SystemInfo.systemHealth   = 1;
++
++    se8SystemInfoBusp = getSdBus();
++    se8SystemInfoBusp->request_name(se8SystemInfoDbusName.c_str());
++    sdbusplus::asio::object_server objectServer(se8SystemInfoBusp);
++    se8SystemInfoDbusPath = objectServer.add_interface("/xyz/openbmc_project/se8SystemInfo", "xyz.openbmc_project.se8SystemInfo.info");
++    se8SystemInfoDbusPath->register_property("memTotal", memTotal, sdbusplus::asio::PropertyPermission::readWrite );
++    se8SystemInfoDbusPath->register_property("memUsage", tmpSe8SystemInfo.memUsage, sdbusplus::asio::PropertyPermission::readWrite );
++    se8SystemInfoDbusPath->register_property("dimm0Health", tmpSe8SystemInfo.dimm0Health, sdbusplus::asio::PropertyPermission::readWrite );
++    se8SystemInfoDbusPath->register_property("dimm1Health", tmpSe8SystemInfo.dimm1Health, sdbusplus::asio::PropertyPermission::readWrite );
++    se8SystemInfoDbusPath->register_property("diskTotal", diskTotal, sdbusplus::asio::PropertyPermission::readWrite );
++    se8SystemInfoDbusPath->register_property("diskUsage", tmpSe8SystemInfo.diskUsage, sdbusplus::asio::PropertyPermission::readWrite );
++    se8SystemInfoDbusPath->register_property("diskHealth", tmpSe8SystemInfo.diskHealth, sdbusplus::asio::PropertyPermission::readWrite );
++    se8SystemInfoDbusPath->register_property("cpuUsage", tmpSe8SystemInfo.cpuUsage, sdbusplus::asio::PropertyPermission::readWrite );
++    se8SystemInfoDbusPath->register_property("cpuHealth", tmpSe8SystemInfo.cpuHealth, sdbusplus::asio::PropertyPermission::readWrite );
++    se8SystemInfoDbusPath->register_property("cpuFanRate", cpuFanRate, sdbusplus::asio::PropertyPermission::readWrite );
++    se8SystemInfoDbusPath->register_property("sysFanRate", sysFanRate, sdbusplus::asio::PropertyPermission::readWrite );
++    se8SystemInfoDbusPath->register_property("fanHealth", tmpSe8SystemInfo.fanHealth, sdbusplus::asio::PropertyPermission::readWrite );
++    se8SystemInfoDbusPath->register_property("powerHealth", tmpSe8SystemInfo.powerHealth, sdbusplus::asio::PropertyPermission::readWrite );
++    se8SystemInfoDbusPath->register_property("networkHealth", tmpSe8SystemInfo.networkHealth, sdbusplus::asio::PropertyPermission::readWrite );
++    se8SystemInfoDbusPath->register_property("systemHealth", tmpSe8SystemInfo.systemHealth, sdbusplus::asio::PropertyPermission::readWrite );
++    se8SystemInfoDbusPath->initialize();
++
++    return std::make_optional(result);
++}
++#endif
++
+ ipmi::RspType<> ipmiChassisSetSystemInfo(/* ipmi::Context::ptr ctx, */ ipmi::message::Payload& data)
+ {
+     using namespace boot_options;
+-    uint8_t memTotalH;
+-    uint8_t memTotalL;
+-    uint16_t memTotal;
+-    uint8_t memUsage;
+-    uint8_t diskTotalH;
+-    uint8_t diskTotalL;
+-    uint16_t diskTotal;
+-    uint8_t diskUsage;
+-    uint8_t cpuUsage;
+-
+-    if (data.unpack(memTotalH, memTotalL, memUsage, diskTotalH, diskTotalL, diskUsage, cpuUsage) != 0 ||
++    struct se8SystemInfo tmpSe8SystemInfo;
++    uint16_t memTotal, diskTotal, cpuFanRate, sysFanRate;
++
++
++    if (data.unpack(tmpSe8SystemInfo.memTotalH,      tmpSe8SystemInfo.memTotalL,
++                    tmpSe8SystemInfo.memUsage,
++                    tmpSe8SystemInfo.dimm0Health,    tmpSe8SystemInfo.dimm1Health,
++                    tmpSe8SystemInfo.diskTotalH,     tmpSe8SystemInfo.diskTotalL,
++                    tmpSe8SystemInfo.diskUsage,      tmpSe8SystemInfo.diskHealth,
++                    tmpSe8SystemInfo.cpuUsage,       tmpSe8SystemInfo.cpuHealth,
++                    tmpSe8SystemInfo.cpuFanRateH,    tmpSe8SystemInfo.cpuFanRateL,
++                    tmpSe8SystemInfo.sysFanRateH,    tmpSe8SystemInfo.sysFanRateL,
++                    tmpSe8SystemInfo.fanHealth,      tmpSe8SystemInfo.powerHealth,
++                    tmpSe8SystemInfo.networkHealth,  tmpSe8SystemInfo.systemHealth) != 0 ||
+             !data.fullyUnpacked())
+     {
+         return ipmi::responseReqDataLenInvalid();
+     }
+-    memTotal  = (memTotalH << 8) | memTotalL;
+-    diskTotal = (diskTotalH << 8) | diskTotalL;
+-
+-/*     std::cout << "ipmi recive 0x30 0x55: "
+-              << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(memTotalH)
+-              << " "
+-              << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(memTotalL)
+-               << " "
+-              << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(memTotal)
+-              << " "
+-              << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(memUsage)
+-              << " "
+-              << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(diskTotalH)
+-              << " "
+-              << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(diskTotalL)
+-              << " "
+-              << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(diskTotal)
+-              << " "
+-              << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(diskUsage)
+-              << " "
+-              << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(cpuUsage)
+-              << std::endl; */
++    memTotal   = (tmpSe8SystemInfo.memTotalH << 8) | tmpSe8SystemInfo.memTotalL;
++    diskTotal  = (tmpSe8SystemInfo.diskTotalH << 8) | tmpSe8SystemInfo.diskTotalL;
++    cpuFanRate = (tmpSe8SystemInfo.cpuFanRateH << 8) | tmpSe8SystemInfo.cpuFanRateL;
++    sysFanRate = (tmpSe8SystemInfo.sysFanRateH << 8) | tmpSe8SystemInfo.sysFanRateL;
+ 
+     std::ofstream outFile("/tmp/se8systeminfo", std::ios::trunc);
+     if (!outFile.is_open()) {
+@@ -2416,24 +2460,59 @@ ipmi::RspType<> ipmiChassisSetSystemInfo(/* ipmi::Context::ptr ctx, */ ipmi::mes
+     } else {
+         // std::cout << "Success to open output file" << std::endl;
+         outFile << memTotal << " "
+-                << static_cast<int>(memUsage) << " "
++                << static_cast<int>(tmpSe8SystemInfo.memUsage) << " "
++                << static_cast<int>(tmpSe8SystemInfo.dimm0Health) << " "
++                << static_cast<int>(tmpSe8SystemInfo.dimm1Health) << " "
+                 << diskTotal << " "
+-                << static_cast<int>(diskUsage) << " "
+-                << static_cast<int>(cpuUsage) << '\n';
++                << static_cast<int>(tmpSe8SystemInfo.diskUsage) << " "
++                << static_cast<int>(tmpSe8SystemInfo.diskHealth) << " "
++                << static_cast<int>(tmpSe8SystemInfo.cpuUsage) << " "
++                << static_cast<int>(tmpSe8SystemInfo.cpuHealth) << " "
++                << cpuFanRate << " "
++                << sysFanRate << " "
++                << static_cast<int>(tmpSe8SystemInfo.fanHealth) << " "
++                << static_cast<int>(tmpSe8SystemInfo.powerHealth) << " "
++                << static_cast<int>(tmpSe8SystemInfo.networkHealth) << " "
++                << static_cast<int>(tmpSe8SystemInfo.systemHealth) << '\n';
+         outFile.flush();
+         if (!outFile) {
+             std::cout << "Write operation failed after flush" << std::endl;
+         }
+          outFile.close();
+     }
++#ifdef SE8_SYSTEM_INFO_DBUS_INF
++    se8SystemInfoDbusPath->set_property("memTotal", memTotal);
++    se8SystemInfoDbusPath->set_property("memUsage", tmpSe8SystemInfo.memUsage);
++    se8SystemInfoDbusPath->set_property("dimm0Health", tmpSe8SystemInfo.dimm0Health);
++    se8SystemInfoDbusPath->set_property("dimm1Health", tmpSe8SystemInfo.dimm1Health);
++    se8SystemInfoDbusPath->set_property("diskTotal", diskTotal);
++    se8SystemInfoDbusPath->set_property("diskUsage", tmpSe8SystemInfo.diskUsage);
++    se8SystemInfoDbusPath->set_property("diskHealth", tmpSe8SystemInfo.diskHealth);
++    se8SystemInfoDbusPath->set_property("cpuUsage", tmpSe8SystemInfo.cpuUsage);
++    se8SystemInfoDbusPath->set_property("cpuHealth", tmpSe8SystemInfo.cpuHealth);
++    se8SystemInfoDbusPath->set_property("cpuFanRate", cpuFanRate);
++    se8SystemInfoDbusPath->set_property("sysFanRate", sysFanRate);
++
++    se8SystemInfoDbusPath->set_property("fanHealth", tmpSe8SystemInfo.fanHealth);
++    se8SystemInfoDbusPath->set_property("powerHealth", tmpSe8SystemInfo.powerHealth);
++
++    se8SystemInfoDbusPath->set_property("networkHealth", tmpSe8SystemInfo.networkHealth);
++    se8SystemInfoDbusPath->set_property("systemHealth", tmpSe8SystemInfo.systemHealth);
++#endif
+     return ipmi::responseSuccess();
+ }
+ 
+ 
++
++
+ void register_netfn_chassis_functions()
+ {
+     createIdentifyTimer();
+ 
++#ifdef SE8_SYSTEM_INFO_DBUS_INF
++    creatSe8SystemInfoDbus();
++#endif
++
+     // Get Chassis Capabilities
+     ipmi::registerHandler(ipmi::prioOpenBmcBase, ipmi::netFnChassis,
+                           ipmi::chassis::cmdGetChassisCapabilities,
+diff --git a/chassishandler.hpp b/chassishandler.hpp
+index 2957127..1ad5d1f 100644
+--- a/chassishandler.hpp
++++ b/chassishandler.hpp
+@@ -4,6 +4,8 @@
+ 
+ #include <cstddef>
+ 
++#define SE8_SYSTEM_INFO_DBUS_INF
++
+ // IPMI commands for Chassis net functions.
+ enum ipmi_netfn_chassis_cmds
+ {
+@@ -68,3 +70,35 @@ enum class ChassisIDState : uint8_t
+     indefiniteOn = 0x2,
+     reserved = 0x3
+ };
++
++
++struct alignas(1) se8SystemInfo
++{
++    //mem
++    uint8_t memTotalH;
++    uint8_t memTotalL;
++    uint8_t memUsage;
++    //dimm
++    uint8_t dimm0Health;
++    uint8_t dimm1Health;
++    //disk
++    uint8_t diskTotalH;
++    uint8_t diskTotalL;
++    uint8_t diskUsage;
++    uint8_t diskHealth;
++    //cpu
++    uint8_t cpuUsage;
++    uint8_t cpuHealth;
++    //fan
++    uint8_t cpuFanRateH;
++    uint8_t cpuFanRateL;
++    uint8_t sysFanRateH;
++    uint8_t sysFanRateL;
++    uint8_t fanHealth;
++    //power
++    uint8_t powerHealth;
++    //network
++    uint8_t networkHealth;
++    //system
++    uint8_t systemHealth;
++};
+-- 
+2.25.1
+

@@ -1,0 +1,185 @@
+From 92ec55ad17e55312b1051db2b0f2cadd1899c93c Mon Sep 17 00:00:00 2001
+From: "zhaohui.yan" <zhaohui.yan@sophgo.com>
+Date: Fri, 4 Jul 2025 10:15:29 +0800
+Subject: [PATCH 1/1] add se8SystemInfo
+
+Signed-off-by: zhaohui.yan <zhaohui.yan@sophgo.com>
+---
+ redfish-core/lib/systems.hpp | 154 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 154 insertions(+)
+
+diff --git a/redfish-core/lib/systems.hpp b/redfish-core/lib/systems.hpp
+index 2687ecf9..45da6aff 100644
+--- a/redfish-core/lib/systems.hpp
++++ b/redfish-core/lib/systems.hpp
+@@ -49,7 +49,10 @@
+ #include <utility>
+ #include <variant>
+ #include <vector>
++#include <fstream>
++#include <sstream>
+ 
++#define SE8_SYSTEM_INFO_DBUS_INF
+ namespace redfish
+ {
+ 
+@@ -3470,5 +3473,156 @@ inline void requestRoutesSystems(App& app)
+         .privileges(redfish::privileges::getActionInfo)
+         .methods(boost::beast::http::verb::get)(std::bind_front(
+             handleSystemCollectionResetActionGet, std::ref(app)));
++
++
++#ifdef SE8_SYSTEM_INFO_DBUS_INF
++
++    BMCWEB_ROUTE(app, "/redfish/v1/Systems/system/se8SystemInfo")
++    .privileges({{"Login"}})
++    .methods(boost::beast::http::verb::get)(
++        [](const crow::Request& /* req */,
++           const std::shared_ptr<bmcweb::AsyncResp>& asyncResp) {
++
++            auto healthStatus = [](int status) -> std::string {
++                return (status == 0) ? "OK" : "Warning";
++            };
++
++            crow::connections::systemBus->async_method_call(
++                [asyncResp, healthStatus](const boost::system::error_code ec,
++                    const dbus::utility::DBusPropertiesMap& properties) {
++                    if (ec) {
++                        BMCWEB_LOG_ERROR("DBUS response error {}", ec);
++                        messages::internalError(asyncResp->res);
++                        return;
++                    }
++
++                    // parse D-Bus property
++                    uint16_t memTotal = 0;
++                    uint8_t memUsage = 0;
++                    uint8_t dimm0Health = 0;
++                    uint8_t dimm1Health = 0;
++                    uint16_t diskTotal = 0;
++                    uint8_t diskUsage = 0;
++                    uint8_t diskHealth = 0;
++                    uint8_t cpuUsage = 0;
++                    uint8_t cpuHealth = 0;
++                    uint16_t cpuFanRate = 0;
++                    uint16_t sysFanRate = 0;
++                    uint8_t fanHealth = 0;
++                    uint8_t powerHealth = 0;
++                    uint8_t networkHealth = 0;
++                    uint8_t systemHealth = 0;
++
++                    const bool success = sdbusplus::unpackPropertiesNoThrow(
++                        dbus_utils::UnpackErrorPrinter(),
++                        properties,
++                        "memTotal", memTotal,
++                        "memUsage", memUsage,
++                        "dimm0Health", dimm0Health,
++                        "dimm1Health", dimm1Health,
++                        "diskTotal", diskTotal,
++                        "diskUsage", diskUsage,
++                        "diskHealth", diskHealth,
++                        "cpuUsage", cpuUsage,
++                        "cpuHealth", cpuHealth,
++                        "cpuFanRate", cpuFanRate,
++                        "sysFanRate", sysFanRate,
++                        "fanHealth", fanHealth,
++                        "powerHealth", powerHealth,
++                        "networkHealth", networkHealth,
++                        "systemHealth", systemHealth
++                    );
++
++                    if (!success) {
++                        BMCWEB_LOG_ERROR("Failed to unpack properties");
++                        messages::internalError(asyncResp->res);
++                        return;
++                    }
++
++                    // creat JSON res
++                    asyncResp->res.jsonValue = {
++                        {"MemoryTotalGB", memTotal},
++                        {"MemoryUsagePercent", memUsage},
++                        {"DIMM0Health", healthStatus(dimm0Health)},
++                        {"DIMM1Health", healthStatus(dimm1Health)},
++                        {"StorageTotalGB", diskTotal},
++                        {"StorageUsagePercent", diskUsage},
++                        {"StorageHealth", healthStatus(diskHealth)},
++                        {"CPUUsagePercent", cpuUsage},
++                        {"CPUHealth", healthStatus(cpuHealth)},
++                        {"CPUFanSpeed", cpuFanRate},
++                        {"SystemFanSpeed", sysFanRate},
++                        {"FanHealth", healthStatus(fanHealth)},
++                        {"PowerSupplyHealth", healthStatus(powerHealth)},
++                        {"NetworkHealth", healthStatus(networkHealth)},
++                        {"SystemHealth", healthStatus(systemHealth)},
++                        {"@odata.type", "#SE8SystemInfo.v1_0_0.SE8SystemInfo"},
++                        {"@odata.id", "/redfish/v1/Systems/system/se8SystemInfo"}
++                    };
++                },
++                "xyz.openbmc_project.se8SystemInfo",
++                "/xyz/openbmc_project/se8SystemInfo",
++                "org.freedesktop.DBus.Properties", "GetAll",
++                "xyz.openbmc_project.se8SystemInfo.info");
++        });
++
++#else
++    //se8SystemInfo
++    BMCWEB_ROUTE(app, "/redfish/v1/Systems/system/se8SystemInfo")
++    .privileges({{"Login"}})
++    .methods(boost::beast::http::verb::get)(
++        [](const crow::Request& /* req */,
++           const std::shared_ptr<bmcweb::AsyncResp>& asyncResp) {
++            // read /tmp/se8systeminfo
++            std::ifstream file("/tmp/se8systeminfo");
++            if (!file.is_open()) {
++                messages::internalError(asyncResp->res);
++                return;
++            }
++
++            std::string line;
++            if (!std::getline(file, line)) {
++                messages::internalError(asyncResp->res);
++                return;
++            }
++
++            std::istringstream iss(line);
++            std::vector<int> data;
++            int value;
++            while (iss >> value) {
++                data.push_back(value);
++            }
++
++            if (data.size() != 15) {
++                messages::internalError(asyncResp->res);
++                return;
++            }
++
++            auto healthStatus = [](int status) -> std::string {
++                return (status == 0) ? "OK" : "Warning";
++            };
++
++            // great JSON res
++            asyncResp->res.jsonValue = {
++                {"MemoryTotalGB", data[0]},
++                {"MemoryUsagePercent", data[1]},
++                {"DIMM0Health", healthStatus(data[2])},
++                {"DIMM1Health", healthStatus(data[3])},
++                {"StorageTotalGB", data[4]},
++                {"StorageUsagePercent", data[5]},
++                {"StorageHealth", healthStatus(data[6])},
++                {"CPUUsagePercent", data[7]},
++                {"CPUHealth", healthStatus(data[8])},
++                {"CPUFanSpeed", data[9]},
++                {"SystemFanSpeed", data[10]},
++                {"FanHealth", healthStatus(data[11])},
++                {"PowerSupplyHealth", healthStatus(data[12])},
++                {"NetworkHealth", healthStatus(data[13])},
++                {"SystemHealth", healthStatus(data[14])},
++                {"@odata.type", "#SE8SystemInfo.v1_0_0.SE8SystemInfo"},
++                {"@odata.id", "/redfish/v1/Systems/system/se8SystemInfo"}
++            };
++        });
++#endif
+ }
+ } // namespace redfish
+-- 
+2.25.1
+

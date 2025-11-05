@@ -3,6 +3,7 @@ IMAGE_INSTALL:append = " \
         libmctp \
         entity-manager \
         net-snmp-server \
+        net-snmp-client \
         phosphor-snmp \
         sophgo-se8-extend-file \
         sophgo-se8-power-control \

@@ -1,0 +1,445 @@
+From b817c63246797cf7555ec7b64daf06aac76e7787 Mon Sep 17 00:00:00 2001
+From: "zhaohui.yan" <zhaohui.yan@sophgo.com>
+Date: Wed, 5 Nov 2025 11:50:36 +0800
+Subject: [PATCH 1/1] Add backend implementation for SNMP configuration
+
+Signed-off-by: zhaohui.yan <zhaohui.yan@sophgo.com>
+---
+ redfish-core/lib/ethernet.hpp |   9 +-
+ redfish-core/lib/systems.hpp  | 355 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 360 insertions(+), 4 deletions(-)
+
+diff --git a/redfish-core/lib/ethernet.hpp b/redfish-core/lib/ethernet.hpp
+index 5af63b52..59c5a284 100644
+--- a/redfish-core/lib/ethernet.hpp
++++ b/redfish-core/lib/ethernet.hpp
+@@ -1517,7 +1517,7 @@ inline void handleIPv4StaticPatch(
+     std::vector<IPv4AddressData>::const_iterator nicIpEntry =
+         getNextStaticIpEntry(ipv4Data.cbegin(), ipv4Data.cend());
+ 
+-    bool gatewayValueAssigned{};
++    // bool gatewayValueAssigned{};
+     bool preserveGateway{};
+     std::string activePath{};
+     std::string activeGateway{};
+@@ -1528,7 +1528,7 @@ inline void handleIPv4StaticPatch(
+         // static address.
+         activeGateway = ethData.defaultGateway;
+         activePath = "IPv4StaticAddresses/1";
+-        gatewayValueAssigned = true;
++        // gatewayValueAssigned = true;
+     }
+ 
+     for (std::variant<nlohmann::json::object_t, std::nullptr_t>& thisJson :
+@@ -1651,7 +1651,7 @@ inline void handleIPv4StaticPatch(
+                                           pathString + "/Gateway");
+                 return;
+             }
+-
++#if 0
+             if (gatewayValueAssigned)
+             {
+                 if (activeGateway != gateway)
+@@ -1666,13 +1666,14 @@ inline void handleIPv4StaticPatch(
+                 }
+             }
+             else
++#endif
+             {
+                 // Capture the very first gateway value from the incoming
+                 // JSON record and use it at the default gateway.
+                 updateIPv4DefaultGateway(ifaceId, *gateway, asyncResp);
+                 activeGateway = *gateway;
+                 activePath = pathString;
+-                gatewayValueAssigned = true;
++                // gatewayValueAssigned = true;
+             }
+ 
+             if (nicIpEntry != ipv4Data.cend())
+diff --git a/redfish-core/lib/systems.hpp b/redfish-core/lib/systems.hpp
+index 45da6aff..9fecba98 100644
+--- a/redfish-core/lib/systems.hpp
++++ b/redfish-core/lib/systems.hpp
+@@ -51,11 +51,19 @@
+ #include <vector>
+ #include <fstream>
+ #include <sstream>
++#include <cstdio>
++
++
++#include <boost/process/child.hpp>
++#include <boost/process/io.hpp>
++#include <boost/algorithm/string.hpp>
+ 
+ #define SE8_SYSTEM_INFO_DBUS_INF
+ namespace redfish
+ {
+ 
++std::atomic<int> snmp_conf_flag(0);
++
+ const static std::array<std::pair<std::string_view, std::string_view>, 2>
+     protocolToDBusForSystems{
+         {{"SSH", "obmc-console-ssh"}, {"IPMI", "phosphor-ipmi-net"}}};
+@@ -3429,6 +3437,8 @@ inline void handleSystemCollectionResetActionGet(
+         afterGetAllowedHostTransitions(asyncResp, ec, allowedHostTransitions);
+     });
+ }
++
++
+ /**
+  * SystemResetActionInfo derived class for delivering Computer Systems
+  * ResetType AllowableValues using ResetInfo schema.
+@@ -3624,5 +3634,350 @@ inline void requestRoutesSystems(App& app)
+             };
+         });
+ #endif
++
++    BMCWEB_ROUTE(app, "/redfish/v1/Systems/system/snmp/community/PermissionOID")
++    .privileges({{"Login"}})
++    .methods(boost::beast::http::verb::get)(
++        [](const crow::Request& /* req */,
++           const std::shared_ptr<bmcweb::AsyncResp>& asyncResp) {
++            std::vector<std::string> permissionViews = {
++                ".1",
++                ".1.3.6.1.2.1.1",
++                ".1.3.6.1.4.1.53367"
++            };
++            asyncResp->res.jsonValue = {
++                {"code", 0},
++                {"permissionViews", std::move(permissionViews)},
++                {"@odata.type", "#PermissionOID.v1_0_0.PermissionOID"},
++                {"@odata.id", "/redfish/v1/Systems/system/snmp/community/PermissionOID"}
++            };
++    });
++
++    BMCWEB_ROUTE(app, "/redfish/v1/Systems/system/snmp/community/entries")
++    .privileges({{"Login"}})
++    .methods(boost::beast::http::verb::get)(
++        [](const crow::Request& /* req */,
++           const std::shared_ptr<bmcweb::AsyncResp>& asyncResp) {
++           // 启动异步进程执行SNMP命令
++            boost::process::ipstream pipeStream;
++            boost::process::child commandProcess(
++                "/usr/sbin/snmp_manager.sh", "get",
++                boost::process::std_out > pipeStream,
++                boost::process::std_err > boost::process::null
++            );
++
++            // 读取命令输出
++            std::string output;
++            std::getline(pipeStream, output);
++            commandProcess.wait();
++
++            // 检查命令执行结果
++            if (commandProcess.exit_code() != 0) {
++                messages::internalError(asyncResp->res);
++                return;
++            }
++
++            // std::cout << "output:" << output << std::endl;
++
++            // 清理输出数据 - 移除方括号和空格
++            std::regex entryRegex(R"(\((\w+),\s*([\d\.]+)\))");
++            std::vector<nlohmann::json> entries;
++
++            auto words_begin = std::sregex_iterator(
++                output.begin(), output.end(), entryRegex);
++            auto words_end = std::sregex_iterator();
++
++            for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
++                std::smatch match = *i;
++                // std::cout << "name: " << match[1].str() << " permissionView: " << match[2].str() << std::endl;
++                entries.push_back({
++                    {"name", match[1].str()},
++                    {"permissionView", match[2].str()}
++                });
++            }
++
++            // 构建JSON响应
++            asyncResp->res.jsonValue = {
++                {"code", 0},
++                {"res", std::move(entries)},
++                {"@odata.type", "#SNMPCommunityCollection.SNMPCommunityCollection"},
++                {"@odata.id", "/redfish/v1/Systems/system/snmp/community/entries"},
++                {"Members@odata.count", entries.size()}  // 添加条目计数
++            };
++    });
++
++    BMCWEB_ROUTE(app, "/redfish/v1/Systems/system/snmp/community/modify")
++    .privileges({{"Login"}})
++    .methods(boost::beast::http::verb::post)(
++         [](const crow::Request& req,
++           const std::shared_ptr<bmcweb::AsyncResp>& asyncResp) {
++
++            // 解析请求的JSON
++            nlohmann::json jsonData;
++            try {
++                jsonData = nlohmann::json::parse(req.body());
++            } catch (const nlohmann::json::parse_error& e) {
++                // BMCWEB_LOG_ERROR << "JSON parse error: " << e.what();
++                messages::internalError(asyncResp->res);
++                return;
++            }
++
++            // 检查必需的字段
++            if (!jsonData.contains("oldname") ||
++                !jsonData.contains("oldPermissionView") ||
++                !jsonData.contains("name") ||
++                !jsonData.contains("permissionView")) {
++
++                messages::propertyMissing(asyncResp->res, "One or more required properties (oldname, oldPermissionView, name, permissionView)");
++                return;
++            }
++
++            // 提取字段值
++            std::string oldname, oldPermissionView, newname, newPermissionView;
++            oldname = jsonData["oldname"].get<std::string>();
++            oldPermissionView = jsonData["oldPermissionView"].get<std::string>();
++            newname = jsonData["name"].get<std::string>();
++            newPermissionView = jsonData["permissionView"].get<std::string>();
++            // try {
++            //     oldname = jsonData["oldname"].get<std::string>();
++            //     oldPermissionView = jsonData["oldPermissionView"].get<std::string>();
++            //     newname = jsonData["name"].get<std::string>();
++            //     newPermissionView = jsonData["permissionView"].get<std::string>();
++            // } catch (const nlohmann::json::type_error& e) {
++            //     // BMCWEB_LOG_ERROR << "JSON type error: " << e.what();
++            //     messages::propertyValueTypeError(asyncResp->res, e.what());
++            //     return;
++            // }
++
++            // 构建命令
++            std::string command = "/usr/sbin/snmp_manager.sh set " +
++                                  oldname + " " + oldPermissionView + " " +
++                                  newname + " " + newPermissionView;
++
++            // 执行命令
++            int ret = system(command.c_str());
++
++            // 检查命令执行结果
++            if (ret != 0) {
++                // BMCWEB_LOG_ERROR << "Command execution failed: " << command << " returned " << ret;
++                // messages::internalError(asyncResp->res);
++                asyncResp->res.result(boost::beast::http::status::ok);
++                asyncResp->res.jsonValue = {
++                    {"code", 1},
++                    {"message", oldname + " not exist"}
++                };
++                return;
++            }
++
++            // 返回成功响应
++            asyncResp->res.result(boost::beast::http::status::ok);
++            asyncResp->res.jsonValue = {
++                {"code", 0},
++                {"message", "success"}
++            };
++            snmp_conf_flag.fetch_add(1);
++        });
++
++    BMCWEB_ROUTE(app, "/redfish/v1/Systems/system/snmp/community/delete")
++    .privileges({{"Login"}})
++    .methods(boost::beast::http::verb::post)(
++         [](const crow::Request& req,
++           const std::shared_ptr<bmcweb::AsyncResp>& asyncResp) {
++            // 解析请求的JSON
++            nlohmann::json jsonData;
++            try {
++                jsonData = nlohmann::json::parse(req.body());
++            } catch (const nlohmann::json::parse_error& e) {
++                BMCWEB_LOG_ERROR("JSON parse error {}", e.what());
++                messages::internalError(asyncResp->res);
++                return;
++            }
++
++            // 检查必需的name字段
++            // if (!jsonData.contains("name")) {
++            //     messages::propertyMissing(asyncResp->res, "name");
++            //     return;
++            // }
++
++            // 提取name值
++            std::string communityName;
++            communityName = jsonData["name"].get<std::string>();
++            // try {
++            //     communityName = jsonData["name"].get<std::string>();
++            // } catch (const nlohmann::json::type_error& e) {
++            //     BMCWEB_LOG_ERROR("JSON type error {}", e.what());
++            //     messages::propertyValueTypeError(asyncResp->res, "name");
++            //     return;
++            // }
++
++              // 输入验证 - 确保只包含安全字符
++            // auto isValidInput = [](const std::string& input) {
++            //     return std::all_of(input.begin(), input.end(), [](char c) {
++            //         return std::isalnum(c) || c == '.' || c == '_' || c == '-';
++            //     });
++            // };
++
++            // if (!isValidInput(communityName)) {
++            //     messages::propertyValueFormatError(asyncResp->res, communityName, "name");
++            //     return;
++            // }
++
++            // 构建删除命令
++            std::string command = "/usr/sbin/snmp_manager.sh rm " + communityName;
++
++            // 执行命令
++            int ret = system(command.c_str());
++
++            // 处理命令执行结果
++            if (ret == 0) {
++                // 成功响应
++                asyncResp->res.result(boost::beast::http::status::ok);
++                asyncResp->res.jsonValue = {
++                    {"code", 0},
++                    {"message", "success"}
++                };
++                snmp_conf_flag.fetch_add(1);
++            } else {
++                // 失败响应
++                BMCWEB_LOG_ERROR("Command {} failed, ret {}", command, ret);
++                asyncResp->res.result(boost::beast::http::status::ok);
++                asyncResp->res.jsonValue = {
++                    {"code", 1},
++                    {"message", communityName + " not exist"}
++                };
++            }
++
++        });
++
++     BMCWEB_ROUTE(app, "/redfish/v1/Systems/system/snmp/community/add")
++    .privileges({{"Login"}})
++    .methods(boost::beast::http::verb::post)(
++         [](const crow::Request& req,
++           const std::shared_ptr<bmcweb::AsyncResp>& asyncResp) {
++            // 解析请求的JSON
++            nlohmann::json jsonData;
++            try {
++                jsonData = nlohmann::json::parse(req.body());
++            } catch (const nlohmann::json::parse_error& e) {
++                BMCWEB_LOG_ERROR("JSON parse error {}",  e.what());
++                messages::internalError(asyncResp->res);
++                return;
++            }
++
++            // 检查必需的字段
++            std::vector<std::string> requiredFields = {"name", "permissionView"};
++            for (const auto& field : requiredFields) {
++                if (!jsonData.contains(field)) {
++                    messages::propertyMissing(asyncResp->res, field);
++                    return;
++                }
++            }
++
++            // 提取字段值
++            std::string communityName, permissionView;
++            communityName = jsonData["name"].get<std::string>();
++            permissionView = jsonData["permissionView"].get<std::string>();
++            // try {
++            //     communityName = jsonData["name"].get<std::string>();
++            //     permissionView = jsonData["permissionView"].get<std::string>();
++            // } catch (const nlohmann::json::type_error& e) {
++            //     BMCWEB_LOG_ERROR("JSON type error {}",  e.what());
++            //     messages::propertyValueTypeError(asyncResp->res, "");
++            //     return;
++            // }
++
++            // 输入验证 - 确保只包含安全字符
++            // auto isValidInput = [](const std::string& input) {
++            //     return std::all_of(input.begin(), input.end(), [](char c) {
++            //         return std::isalnum(c) || c == '.' || c == '_' || c == '-';
++            //     });
++            // };
++
++            // if (!isValidInput(communityName)) {
++            //     messages::propertyValueFormatError(asyncResp->res, communityName, "name");
++            //     return;
++            // }
++
++            // if (!isValidInput(permissionView)) {
++            //     messages::propertyValueFormatError(asyncResp->res, permissionView, "permissionView");
++            //     return;
++            // }
++
++            // 构建添加命令
++            std::string command = "/usr/sbin/snmp_manager.sh add " +
++                                 communityName + " " + permissionView;
++
++            // BMCWEB_LOG_ERROR("Command {}, permissionView {}", communityName, permissionView);
++
++            // 执行命令
++            int ret = system(command.c_str());
++
++            // 处理命令执行结果
++            if (ret == 0) {
++                // 成功响应
++                asyncResp->res.result(boost::beast::http::status::ok);
++                asyncResp->res.jsonValue = {
++                    {"code", 0},
++                    {"message", "SNMP community added successfully"}
++                };
++                snmp_conf_flag.fetch_add(1);
++            } else {
++                // 失败响应
++                BMCWEB_LOG_ERROR("Command {} failed, ret {}", command, ret);
++
++                asyncResp->res.result(boost::beast::http::status::ok);
++                asyncResp->res.jsonValue = {
++                    {"code", 1},
++                    {"message", communityName + " already exist"}
++                };
++            }
++    });
++
++
++    BMCWEB_ROUTE(app, "/redfish/v1/Systems/system/snmp/community/apply")
++    .privileges({{"Login"}})
++    .methods(boost::beast::http::verb::post)(
++         [](const crow::Request&,
++           const std::shared_ptr<bmcweb::AsyncResp>& asyncResp) {
++
++            if(snmp_conf_flag.load()) {
++                //restart snmpd service : systemctl restart snmpd
++                // 创建异步 DBus 调用
++                crow::connections::systemBus->async_method_call(
++                    [asyncResp](const boost::system::error_code ec) {
++                        if (ec) {
++                            // 重启失败处理
++                            asyncResp->res.result(
++                                boost::beast::http::status::internal_server_error);
++                            asyncResp->res.jsonValue = {
++                                {"code", -1},
++                                {"message", "SNMP service restart failed: " + ec.message()}
++                            };
++                        } else {
++                            // 重启成功处理
++                            asyncResp->res.result(boost::beast::http::status::ok);
++                            asyncResp->res.jsonValue = {
++                                {"code", 0},
++                                {"message", "SNMP service restarted successfully"}
++                            };
++                            snmp_conf_flag.store(0);
++                        }
++                    },
++                    "org.freedesktop.systemd1",           // 目标服务
++                    "/org/freedesktop/systemd1",          // 对象路径
++                    "org.freedesktop.systemd1.Manager",   // 接口名
++                    "RestartUnit",                        // 方法名
++                    "snmpd.service",                      // 服务名
++                    "replace");                           // 重启模式
++
++            } else {
++                asyncResp->res.result(boost::beast::http::status::ok);
++                asyncResp->res.jsonValue = {
++                    {"code", 1},
++                    {"message", "No change in permissions, no need to restart the service!"}
++                };
++            }
++    });
++
+ }
+ } // namespace redfish
+-- 
+2.43.0
+

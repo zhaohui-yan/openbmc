@@ -1,0 +1,1005 @@
+From 7b53f915b2081d00c93e0d99a6a2d34ac0d80e79 Mon Sep 17 00:00:00 2001
+From: "zhaohui.yan" <zhaohui.yan@sophgo.com>
+Date: Wed, 5 Nov 2025 14:17:54 +0800
+Subject: [PATCH 1/1] Add SNMP settings page in web UI
+
+Signed-off-by: zhaohui.yan <zhaohui.yan@sophgo.com>
+---
+ .../AppNavigation/AppNavigationMixin.js       |   5 +
+ src/env/router/ibm.js                         |   9 +
+ src/env/router/intel.js                       |  33 +-
+ src/locales/en-US.json                        |  42 ++-
+ src/locales/zh-ZH.json                        |  46 ++-
+ src/router/routes.js                          |   9 +
+ src/views/Settings/Community/Community.vue    | 332 ++++++++++++++++++
+ .../Settings/Community/ModalEditCommunity.vue | 128 +++++++
+ src/views/Settings/Community/index.js         |   2 +
+ src/views/Settings/Network/ModalIpv4.vue      |  39 +-
+ src/views/Settings/Network/Network.vue        |  40 ++-
+ src/views/Settings/Network/TableIpv4.vue      |  17 +-
+ 12 files changed, 677 insertions(+), 25 deletions(-)
+ create mode 100644 src/views/Settings/Community/Community.vue
+ create mode 100644 src/views/Settings/Community/ModalEditCommunity.vue
+ create mode 100644 src/views/Settings/Community/index.js
+
+diff --git a/src/components/AppNavigation/AppNavigationMixin.js b/src/components/AppNavigation/AppNavigationMixin.js
+index a6ba020..876eeea 100644
+--- a/src/components/AppNavigation/AppNavigationMixin.js
++++ b/src/components/AppNavigation/AppNavigationMixin.js
+@@ -141,6 +141,11 @@ const AppNavigationMixin = {
+               label: this.$t('appNavigation.snmpAlerts'),
+               route: '/settings/snmp-alerts',
+             },
++            {
++              id: 'community',
++              label: this.$t('appNavigation.community'),
++              route: '/settings/community',
++            },
+           ],
+         },
+         {
+diff --git a/src/env/router/ibm.js b/src/env/router/ibm.js
+index 0ccf90b..56bb9a9 100644
+--- a/src/env/router/ibm.js
++++ b/src/env/router/ibm.js
+@@ -7,6 +7,7 @@ import EventLogs from '@/views/Logs/EventLogs';
+ import FactoryReset from '@/views/Operations/FactoryReset';
+ import Firmware from '@/views/Operations/Firmware';
+ import Inventory from '@/views/HardwareStatus/Inventory';
++import Community from '@/views/Settings/Community';
+ import Ldap from '@/views/SecurityAndAccess/Ldap';
+ import UserManagement from '@/views/SecurityAndAccess/UserManagement';
+ import Login from '@/views/Login';
+@@ -183,6 +184,14 @@ const routes = [
+           title: i18n.t('appPageTitle.dateTime'),
+         },
+       },
++      {
++        path: '/settings/community',
++        name: 'community',
++        component: Community,
++        meta: {
++          title: i18n.t('appPageTitle.dateTime'),
++        },
++      },
+       {
+         path: '/operations/firmware',
+         name: 'firmware',
+diff --git a/src/env/router/intel.js b/src/env/router/intel.js
+index 0392f0f..dc7f3ff 100644
+--- a/src/env/router/intel.js
++++ b/src/env/router/intel.js
+@@ -1,13 +1,14 @@
+ import AppLayout from '@/layouts/AppLayout.vue';
+ import ChangePassword from '@/views/ChangePassword';
+ import Sessions from '@/views/SecurityAndAccess/Sessions';
+-// import ConsoleLayout from '@/layouts/ConsoleLayout.vue';
++import ConsoleLayout from '@/layouts/ConsoleLayout.vue';
+ import DateTime from '@/views/Settings/DateTime';
++import Community from '@/views/Settings/Community';
+ import EventLogs from '@/views/Logs/EventLogs';
+ import Firmware from '@/views/Operations/Firmware';
+ import Inventory from '@/views/HardwareStatus/Inventory';
+-// import Kvm from '@/views/Operations/Kvm';
+-// import KvmConsole from '@/views/Operations/Kvm/KvmConsole';
++import Kvm from '@/views/Operations/Kvm';
++import KvmConsole from '@/views/Operations/Kvm/KvmConsole';
+ import UserManagement from '@/views/SecurityAndAccess/UserManagement';
+ import Login from '@/views/Login';
+ import LoginLayout from '@/layouts/LoginLayout';
+@@ -19,20 +20,20 @@ import ProfileSettings from '@/views/ProfileSettings';
+ import RebootBmc from '@/views/Operations/RebootBmc';
+ import Policies from '@/views/SecurityAndAccess/Policies';
+ import Sensors from '@/views/HardwareStatus/Sensors';
+-// import SerialOverLan from '@/views/Operations/SerialOverLan';
+-// import SerialOverLanConsole from '@/views/Operations/SerialOverLan/SerialOverLanConsole';
++import SerialOverLan from '@/views/Operations/SerialOverLan';
++import SerialOverLanConsole from '@/views/Operations/SerialOverLan/SerialOverLanConsole';
+ import ServerPowerOperations from '@/views/Operations/ServerPowerOperations';
+ import Certificates from '@/views/SecurityAndAccess/Certificates';
+-// import VirtualMedia from '@/views/Operations/VirtualMedia';
++import VirtualMedia from '@/views/Operations/VirtualMedia';
+ import Power from '@/views/ResourceManagement/Power';
+ import i18n from '@/i18n';
+ 
+-// const roles = {
+-//   administrator: 'Administrator',
+-//   operator: 'Operator',
+-//   readonly: 'ReadOnly',
+-//   noaccess: 'NoAccess',
+-// };
++const roles = {
++  administrator: 'Administrator',
++  operator: 'Operator',
++  readonly: 'ReadOnly',
++  noaccess: 'NoAccess',
++};
+ 
+ const routes = [
+   {
+@@ -178,6 +179,14 @@ const routes = [
+           title: i18n.t('appPageTitle.dateTime'),
+         },
+       },
++      {
++        path: '/settings/community',
++        name: 'community',
++        component: Community,
++        meta: {
++          title: i18n.t('appPageTitle.dateTime'),
++        },
++      },
+       // {
+       //   path: '/operations/kvm',
+       //   name: 'kvm',
+diff --git a/src/locales/en-US.json b/src/locales/en-US.json
+index f11e0d2..62d9480 100644
+--- a/src/locales/en-US.json
++++ b/src/locales/en-US.json
+@@ -131,6 +131,7 @@
+         "certificates": "@:appPageTitle.certificates",
+         "virtualMedia": "@:appPageTitle.virtualMedia",
+         "snmpAlerts": "@:appPageTitle.snmpAlerts",
++        "community": "SNMP Permissions",
+         "power": "@:appPageTitle.power",
+         "keyClear": "@:appPageTitle.keyClear"
+     },
+@@ -162,7 +163,8 @@
+         "certificates": "Certificates",
+         "snmpAlerts": "SNMP Alerts",
+         "virtualMedia": "Virtual media",
+-        "keyClear": "Key clear"
++        "keyClear": "Key clear",
++        "community": "SNMP Permissions"
+     },
+     "pageChangePassword": {
+         "changePassword": "Change password",
+@@ -1032,6 +1034,42 @@
+         "health": "Status",
+         "fetchError": "Failed to fetch power status"
+     },
++    "pageSnmpCommunity": {
++        "edit": "Edit",
++        "applyChanges": "Apply",
++        "delete": "Delete",
++        "pageDescription": "Note: After completing permission configuration in the table, click the Apply button to make the changes take effect.",
++        "unnamedCommunity": "Unnamed",
++        "noPermission": "No Permission",
++        "addCommunity": "Add",
++        "loading": "loading",
++        "deleteConfirmTitle": "Delete Confirmation",
++        "deleteConfirmMessage": "Are you sure you want to delete '{name}'?",
++        "table": {
++            "name": "Name",
++            "permissionView": "Permission View"
++        },
++        "toast": {
++            "editSuccess": "Edit successful",
++            "applySuccess": "Configuration applied successfully",
++            "applyError": "Failed to apply configuration: {message}",
++            "addSuccess": "Add successful",
++            "editError": "Edit failed",
++            "addError": "Add failed",
++            "deleteSuccess": "Delete successful",
++            "deleteError": "Delete failed",
++            "fetchError": "Failed to fetch data"
++        },
++        "modal": {
++            "name": "Name",
++            "communityName": " Name",
++            "permissionView": "Permission View",
++            "nameRequired": "Please enter name",
++            "permissionRequired": "Please select permission view",
++            "addTitle": "Add",
++            "editTitle": "Edit"
++        }
++    },
+     "countries": {
+         "AF": "Afghanistan",
+         "AL": "Albania",
+@@ -1295,4 +1333,4 @@
+         "V": "V",
+         "W": "W"
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/src/locales/zh-ZH.json b/src/locales/zh-ZH.json
+index b0a8bed..2568828 100644
+--- a/src/locales/zh-ZH.json
++++ b/src/locales/zh-ZH.json
+@@ -131,6 +131,7 @@
+         "certificates": "@:appPageTitle.certificates",
+         "virtualMedia": "@:appPageTitle.virtualMedia",
+         "snmpAlerts": "@:appPageTitle.snmpAlerts",
++        "community": "SNMP权限配置",
+         "power": "@:appPageTitle.power",
+         "keyClear": "@:appPageTitle.keyClear"
+     },
+@@ -162,7 +163,8 @@
+         "certificates": "证书",
+         "snmpAlerts": "SNMP 警报",
+         "virtualMedia": "虚拟介质",
+-        "keyClear": "密钥清除"
++        "keyClear": "密钥清除",
++        "community": "SNMP权限配置"
+     },
+     "pageChangePassword": {
+         "changePassword": "更改密码",
+@@ -573,7 +575,7 @@
+             "manual": "手动",
+             "maxFailedLoginAttempts": "最大登录失败尝试次数",
+             "noSpecialCharactersExceptUnderscore": "除下划线外不能包含特殊字符",
+-            "passwordMustBeBetween": "密码长度必须在 %{min} – %{max} 个字符之间",
++            "passwordMustBeBetween": "密码长度必须在 %{min} – %{max} 个字符之间且必须为复杂密码，建议使用英文+数字+特殊符号组合",
+             "passwordsDoNotMatch": "密码不匹配",
+             "privilege": "权限",
+             "timeoutDurationSeconds": "超时时长（秒）",
+@@ -694,7 +696,7 @@
+         "defaultUTC": "默认 (UTC)",
+         "newPassword": "新密码",
+         "currentPassword": "当前密码",
+-        "newPassLabelTextInfo": "密码长度必须在 %{min} - %{max} 个字符之间",
++        "newPassLabelTextInfo": "密码长度必须在 %{min} - %{max} 个字符之间且必须为复杂密码，建议使用英文+数字+特殊符号组合",
+         "passwordsDoNotMatch": "密码不匹配",
+         "profileInfoTitle": "个人资料信息",
+         "timezone": "时区",
+@@ -1032,6 +1034,42 @@
+         "health": "状态",
+         "fetchError": "获取电源状态失败"
+     },
++    "pageSnmpCommunity": {
++        "edit": "编辑",
++        "delete": "删除",
++        "pageDescription": "注意：在表格中完成权限配置后，需点击“应用”按钮使相关修改生效",
++        "unnamedCommunity": "无",
++        "noPermission": "无",
++        "loading": "加载中",
++        "addCommunity": "添加",
++        "deleteConfirmTitle": "删除确认",
++        "deleteConfirmMessage": "确定要删除 '{name}' 吗？",
++        "applyChanges": "应用",
++        "table": {
++            "name": "名称",
++            "permissionView": "权限视图"
++        },
++        "toast": {
++            "applySuccess": "配置生效成功",
++            "applyError": "配置生效失败: {message}",
++            "editSuccess": "编辑成功",
++            "addSuccess": "添加成功",
++            "editError": "编辑失败",
++            "addError": "添加失败",
++            "deleteSuccess": "删除成功",
++            "deleteError": "删除失败",
++            "fetchError": "获取数据失败"
++        },
++        "modal": {
++            "name": "名称",
++            "communityName": "名称",
++            "permissionView": "权限视图",
++            "nameRequired": "请输入名称",
++            "permissionRequired": "请选择权限视图",
++            "addTitle": "添加",
++            "editTitle": "编辑"
++        }
++    },
+     "countries": {
+         "AF": "阿富汗",
+         "AL": "阿尔巴尼亚",
+@@ -1295,4 +1333,4 @@
+         "V": "伏",
+         "W": "瓦"
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/src/router/routes.js b/src/router/routes.js
+index 5424cab..09211d8 100644
+--- a/src/router/routes.js
++++ b/src/router/routes.js
+@@ -14,6 +14,7 @@ import UserManagement from '@/views/SecurityAndAccess/UserManagement';
+ import Login from '@/views/Login';
+ import LoginLayout from '@/layouts/LoginLayout';
+ import Network from '@/views/Settings/Network';
++import Community from '@/views/Settings/Community';
+ import Overview from '@/views/Overview';
+ import PageNotFound from '@/views/PageNotFound';
+ import PostCodeLogs from '@/views/Logs/PostCodeLogs';
+@@ -239,6 +240,14 @@ const routes = [
+           title: i18n.t('appPageTitle.network'),
+         },
+       },
++      {
++        path: '/settings/community',
++        name: 'community',
++        component: Community,
++        meta: {
++          title: i18n.t('appPageTitle.network'),
++        },
++      },
+       {
+         path: '/settings/power-restore-policy',
+         name: 'power-restore-policy',
+diff --git a/src/views/Settings/Community/Community.vue b/src/views/Settings/Community/Community.vue
+new file mode 100644
+index 0000000..2b60b7e
+--- /dev/null
++++ b/src/views/Settings/Community/Community.vue
+@@ -0,0 +1,332 @@
++<template>
++  <b-container fluid="xl">
++    <page-title :description="$t('pageSnmpCommunity.pageDescription')" />
++    <b-row>
++      <b-col xl="9" class="text-right">
++        <b-button variant="primary" @click="showAddModal">
++          <icon-add />
++          {{ $t('pageSnmpCommunity.addCommunity') }}
++        </b-button>
++      </b-col>
++    </b-row>
++    <b-row>
++      <b-col xl="9">
++        <b-table
++          ref="table"
++          responsive="md"
++          show-empty
++          hover
++          :busy="isLoading"
++          :fields="fields"
++          :items="tableItems"
++          :empty-text="$t('global.table.emptyMessage')"
++        >
++          <!-- Name column -->
++          <template #cell(name)="row">
++            {{ row.item.name }}
++          </template>
++
++          <!-- Permission View column -->
++          <template #cell(permissionView)="row">
++            {{ row.item.permissionView }}
++          </template>
++
++          <!-- Table actions column -->
++          <template #cell(actions)="{ item }">
++            <table-row-action
++              v-for="(action, index) in item.actions"
++              :key="index"
++              :value="action.value"
++              :enabled="action.enabled"
++              :title="action.title"
++              :data-test-id="`snmpCommunity-button-${action.value}-${item.index}`"
++              @click-table-action="onTableRowAction($event, item)"
++            >
++              <template #icon>
++                <icon-edit v-if="action.value === 'edit'" />
++                <icon-trashcan v-if="action.value === 'delete'" />
++              </template>
++            </table-row-action>
++          </template>
++
++          <!-- Loading state -->
++          <template #table-busy>
++            <div class="text-center my-2">
++              <b-spinner class="align-middle" />
++              <strong>{{ $t('pageSnmpCommunity.loading') }}</strong>
++            </div>
++          </template>
++        </b-table>
++        <div class="table-action-button">
++          <b-button
++            variant="success"
++            :disabled="isApplying"
++            @click="applyChanges"
++          >
++            <b-spinner v-if="isApplying" small class="mr-2"></b-spinner>
++            {{ $t('pageSnmpCommunity.applyChanges') }}
++          </b-button>
++        </div>
++      </b-col>
++    </b-row>
++
++    <!-- Add/Edit Modal -->
++    <modal-edit-community
++      ref="editModal"
++      :community="selectedCommunity"
++      :permission-options="permissionOptions"
++      @save="handleSave"
++    />
++  </b-container>
++</template>
++
++<script>
++import api from '@/store/api';
++import IconAdd from '@carbon/icons-vue/es/add--alt/20';
++import IconEdit from '@carbon/icons-vue/es/edit/20';
++import IconTrashcan from '@carbon/icons-vue/es/trash-can/20';
++import ModalEditCommunity from './ModalEditCommunity';
++import PageTitle from '@/components/Global/PageTitle';
++import TableRowAction from '@/components/Global/TableRowAction';
++import LoadingBarMixin from '@/components/Mixins/LoadingBarMixin';
++import BVToastMixin from '@/components/Mixins/BVToastMixin';
++
++export default {
++  name: 'Community',
++  components: {
++    PageTitle,
++    IconAdd,
++    IconEdit,
++    IconTrashcan,
++    ModalEditCommunity,
++    TableRowAction,
++  },
++  mixins: [BVToastMixin, LoadingBarMixin],
++  beforeRouteLeave(to, from, next) {
++    this.hideLoader();
++    next();
++  },
++  data() {
++    return {
++      isLoading: false,
++      communities: [],
++      permissionOptions: [], // 存储权限视图选项
++      selectedCommunity: null,
++      isApplying: false,
++      fields: [
++        {
++          key: 'name',
++          label: this.$t('pageSnmpCommunity.table.name'),
++        },
++        {
++          key: 'permissionView',
++          label: this.$t('pageSnmpCommunity.table.permissionView'),
++        },
++        {
++          key: 'actions',
++          label: '',
++          tdClass: 'text-right text-nowrap',
++        },
++      ],
++    };
++  },
++  computed: {
++    tableItems() {
++      return this.communities.map((community) => {
++        return {
++          ...community,
++          id: community.name,
++          actions: [
++            {
++              value: 'edit',
++              enabled: true,
++              title: this.$t('pageSnmpCommunity.edit'),
++            },
++            {
++              value: 'delete',
++              enabled: true,
++              title: this.$t('pageSnmpCommunity.delete'),
++            },
++          ],
++        };
++      });
++    },
++  },
++  created() {
++    this.startLoader();
++    this.fetchPermissionOptions(); // 先获取权限选项
++    this.fetchCommunities();
++  },
++  methods: {
++    async applyChanges() {
++      this.isApplying = true;
++      try {
++        const response = await api.post(
++          '/redfish/v1/Systems/system/snmp/community/apply',
++          {},
++        );
++
++        if (response.data.code === 0) {
++          this.successToast(this.$t('pageSnmpCommunity.toast.applySuccess'));
++        } else {
++          this.errorToast(
++            this.$t('pageSnmpCommunity.toast.applyError', {
++              message: response.data.message,
++            }),
++          );
++        }
++      } catch (error) {
++        console.error('SNMP apply changes error:', error);
++        this.errorToast(
++          this.$t('pageSnmpCommunity.toast.applyError', {
++            message: error.message || 'Unknown error',
++          }),
++        );
++      } finally {
++        this.isApplying = false;
++      }
++    },
++    async fetchPermissionOptions() {
++      try {
++        const response = await api.get(
++          '/redfish/v1/Systems/system/snmp/community/PermissionOID',
++        );
++        this.permissionOptions = response.data.permissionViews || [];
++      } catch (error) {
++        console.error('Failed to fetch permission options:', error);
++        this.permissionOptions = [];
++      }
++    },
++    async fetchCommunities() {
++      this.isLoading = true;
++      try {
++        const response = await api.get(
++          '/redfish/v1/Systems/system/snmp/community/entries',
++        );
++        const items = response.data?.res?.filter((item) => item !== null) || [];
++
++        this.communities = items.map((item) => ({
++          ...item,
++          name: item.name || this.$t('pageSnmpCommunity.unnamedCommunity'),
++          permissionView:
++            item.permissionView || this.$t('pageSnmpCommunity.noPermission'),
++        }));
++      } catch (error) {
++        console.error('SNMP communities fetch error:', error);
++        this.errorToast(this.$t('pageSnmpCommunity.toast.fetchError'));
++      } finally {
++        this.isLoading = false;
++        this.endLoader();
++      }
++    },
++    showAddModal() {
++      this.selectedCommunity = null;
++      this.$refs.editModal.show();
++    },
++    async handleSave({ isEdit, community }) {
++      const action = isEdit ? 'modify' : 'add';
++      const endpoint = `/redfish/v1/Systems/system/snmp/community/${action}`;
++
++      const payload = isEdit
++        ? {
++            oldname: community.originalName,
++            oldPermissionView: community.originalPermissionView,
++            name: community.name,
++            permissionView: community.permissionView,
++          }
++        : {
++            name: community.name,
++            permissionView: community.permissionView,
++          };
++
++      this.startLoader();
++      try {
++        const response = await api.post(endpoint, payload);
++        if (response.data.code === 0) {
++          this.successToast(
++            isEdit
++              ? this.$t('pageSnmpCommunity.toast.editSuccess')
++              : this.$t('pageSnmpCommunity.toast.addSuccess'),
++          );
++          this.fetchCommunities();
++        } else {
++          throw new Error(response.data.message);
++        }
++      } catch (error) {
++        console.error('SNMP community save error:', error);
++        this.errorToast(
++          isEdit
++            ? this.$t('pageSnmpCommunity.toast.editError')
++            : this.$t('pageSnmpCommunity.toast.addError'),
++        );
++      } finally {
++        this.endLoader();
++        this.fetchCommunities();
++      }
++    },
++    initModalDeleteCommunity(community) {
++      this.$bvModal
++        .msgBoxConfirm(
++          this.$t('pageSnmpCommunity.deleteConfirmMessage', {
++            name: community.name,
++          }),
++          {
++            title: this.$t('pageSnmpCommunity.deleteConfirmTitle'),
++            okTitle: this.$t('pageSnmpCommunity.delete'),
++            cancelTitle: this.$t('global.action.cancel'),
++            autoFocusButton: 'ok',
++          },
++        )
++        .then((deleteConfirmed) => {
++          if (deleteConfirmed) {
++            this.deleteCommunity(community);
++          }
++        });
++    },
++    async deleteCommunity(community) {
++      this.startLoader();
++      try {
++        const response = await api.post(
++          '/redfish/v1/Systems/system/snmp/community/delete',
++          {
++            name: community.name,
++          },
++        );
++
++        if (response.data.code === 0) {
++          this.successToast(this.$t('pageSnmpCommunity.toast.deleteSuccess'));
++          this.fetchCommunities();
++        } else {
++          throw new Error(response.data.message);
++        }
++      } catch (error) {
++        console.error('SNMP community delete error:', error);
++        // this.errorToast(this.$t('pageSnmpCommunity.toast.deleteError'));
++      } finally {
++        this.endLoader();
++        this.fetchCommunities();
++      }
++    },
++    onTableRowAction(action, item) {
++      if (action === 'edit') {
++        this.selectedCommunity = {
++          ...item,
++          originalName: item.name,
++          originalPermissionView: item.permissionView,
++        };
++        this.$refs.editModal.show();
++      } else if (action === 'delete') {
++        this.initModalDeleteCommunity(item);
++      }
++    },
++  },
++};
++</script>
++<style scoped>
++.table-action-button {
++  position: absolute;
++  bottom: -50px;
++  right: 50;
++  margin-top: 0px;
++}
++</style>
+diff --git a/src/views/Settings/Community/ModalEditCommunity.vue b/src/views/Settings/Community/ModalEditCommunity.vue
+new file mode 100644
+index 0000000..7c12956
+--- /dev/null
++++ b/src/views/Settings/Community/ModalEditCommunity.vue
+@@ -0,0 +1,128 @@
++<template>
++  <b-modal
++    :id="modalId"
++    ref="modal"
++    :title="modalTitle"
++    @hidden="resetModal"
++    @ok="handleOk"
++  >
++    <b-form @submit.prevent="handleSubmit">
++      <b-form-group
++        :label="$t('pageSnmpCommunity.modal.communityName')"
++        label-for="community-name"
++      >
++        <b-form-input
++          id="community-name"
++          v-model="form.name"
++          :state="nameState"
++        />
++        <b-form-invalid-feedback>
++          {{ $t('pageSnmpCommunity.modal.nameRequired') }}
++        </b-form-invalid-feedback>
++      </b-form-group>
++
++      <b-form-group
++        :label="$t('pageSnmpCommunity.modal.permissionView')"
++        label-for="permission-view"
++      >
++        <b-form-select
++          id="permission-view"
++          v-model="form.permissionView"
++          :options="permissionOptions"
++          :state="permissionState"
++        />
++        <b-form-invalid-feedback>
++          {{ $t('pageSnmpCommunity.modal.permissionRequired') }}
++        </b-form-invalid-feedback>
++      </b-form-group>
++    </b-form>
++  </b-modal>
++</template>
++
++<script>
++export default {
++  name: 'ModalEditCommunity',
++  props: {
++    community: {
++      type: Object,
++      default: null,
++    },
++    permissionOptions: {
++      type: Array,
++      default: () => [],
++    },
++  },
++  data() {
++    return {
++      modalId: 'edit-community-modal',
++      form: {
++        name: '',
++        permissionView: null,
++      },
++    };
++  },
++  computed: {
++    modalTitle() {
++      return this.community
++        ? this.$t('pageSnmpCommunity.modal.editTitle')
++        : this.$t('pageSnmpCommunity.modal.addTitle');
++    },
++    isEdit() {
++      return !!this.community;
++    },
++    nameState() {
++      return this.form.name.length > 0 ? true : false;
++    },
++    permissionState() {
++      return this.form.permissionView ? true : false;
++    },
++  },
++  watch: {
++    community: {
++      immediate: true,
++      handler(newVal) {
++        if (newVal) {
++          this.form.name = newVal.name;
++          this.form.permissionView = newVal.permissionView;
++        }
++      },
++    },
++  },
++  methods: {
++    show() {
++      this.$refs.modal.show();
++    },
++    resetModal() {
++      this.form = {
++        name: '',
++        permissionView: null,
++      };
++    },
++    handleOk(bvModalEvt) {
++      bvModalEvt.preventDefault();
++      this.handleSubmit();
++    },
++    handleSubmit() {
++      if (!this.validateForm()) return;
++
++      this.$emit('save', {
++        isEdit: this.isEdit,
++        community: {
++          ...this.form,
++          originalName: this.community?.originalName || this.community?.name,
++          originalPermissionView:
++            this.community?.originalPermissionView ||
++            this.community?.permissionView,
++        },
++      });
++
++      this.$nextTick(() => {
++        this.$refs.modal.hide();
++      });
++    },
++    validateForm() {
++      return this.nameState && this.permissionState;
++    },
++  },
++};
++</script>
+diff --git a/src/views/Settings/Community/index.js b/src/views/Settings/Community/index.js
+new file mode 100644
+index 0000000..1af16c7
+--- /dev/null
++++ b/src/views/Settings/Community/index.js
+@@ -0,0 +1,2 @@
++import Community from './Community.vue';
++export default Community;
+diff --git a/src/views/Settings/Network/ModalIpv4.vue b/src/views/Settings/Network/ModalIpv4.vue
+index dcf4a57..6ca15ae 100644
+--- a/src/views/Settings/Network/ModalIpv4.vue
++++ b/src/views/Settings/Network/ModalIpv4.vue
+@@ -2,7 +2,11 @@
+   <b-modal
+     id="modal-add-ipv4"
+     ref="modal"
+-    :title="$t('pageNetwork.table.addIpv4Address')"
++    :title="
++      isEditMode
++        ? $t('global.action.edit')
++        : $t('pageNetwork.table.addIpv4Address')
++    "
+     @hidden="resetForm"
+   >
+     <b-form id="form-ipv4" @submit.prevent="handleSubmit">
+@@ -82,7 +86,7 @@
+         {{ $t('global.action.cancel') }}
+       </b-button>
+       <b-button form="form-ipv4" type="submit" variant="primary" @click="onOk">
+-        {{ $t('global.action.add') }}
++        {{ isEditMode ? $t('global.action.save') : $t('global.action.add') }}
+       </b-button>
+     </template>
+   </b-modal>
+@@ -102,6 +106,8 @@ export default {
+   },
+   data() {
+     return {
++      isEditMode: false,
++      editIndex: null,
+       form: {
+         ipAddress: '',
+         gateway: '',
+@@ -132,15 +138,38 @@ export default {
+       },
+     };
+   },
++  mounted() {
++    // 监听编辑事件
++    this.$root.$on('edit-ipv4-data', this.handleEditData);
++  },
++  beforeDestroy() {
++    // 清理事件监听
++    this.$root.$off('edit-ipv4-data', this.handleEditData);
++  },
+   methods: {
++    handleEditData(data) {
++      this.isEditMode = true;
++      this.editIndex = data.index;
++      this.form.ipAddress = data.item.Address;
++      this.form.gateway = data.item.Gateway;
++      this.form.subnetMask = data.item.SubnetMask;
++    },
+     handleSubmit() {
+       this.$v.$touch();
+       if (this.$v.$invalid) return;
+-      this.$emit('ok', {
++
++      const result = {
+         Address: this.form.ipAddress,
+         Gateway: this.form.gateway,
+         SubnetMask: this.form.subnetMask,
+-      });
++      };
++
++      if (this.isEditMode) {
++        this.$emit('edit', result, this.editIndex);
++      } else {
++        this.$emit('ok', result);
++      }
++
+       this.closeModal();
+     },
+     closeModal() {
+@@ -149,6 +178,8 @@ export default {
+       });
+     },
+     resetForm() {
++      this.isEditMode = false;
++      this.editIndex = null;
+       this.form.ipAddress = null;
+       this.form.gateway = this.defaultGateway;
+       this.form.subnetMask = null;
+diff --git a/src/views/Settings/Network/Network.vue b/src/views/Settings/Network/Network.vue
+index f731c25..6f1dfed 100644
+--- a/src/views/Settings/Network/Network.vue
++++ b/src/views/Settings/Network/Network.vue
+@@ -22,7 +22,7 @@
+                 <!-- Interface settings -->
+                 <network-interface-settings :tab-index="tabIndex" />
+                 <!-- IPV4 table -->
+-                <table-ipv-4 :tab-index="tabIndex" />
++                <table-ipv-4 ref="tableIpv4" :tab-index="tabIndex" />
+                 <!-- Static DNS table -->
+                 <table-dns :tab-index="tabIndex" />
+               </b-tab>
+@@ -32,7 +32,11 @@
+       </b-row>
+     </page-section>
+     <!-- Modals -->
+-    <modal-ipv4 :default-gateway="defaultGateway" @ok="saveIpv4Address" />
++    <modal-ipv4
++      :default-gateway="defaultGateway"
++      @ok="saveIpv4Address"
++      @edit="editIpv4Address"
++    />
+     <modal-dns @ok="saveDnsAddress" />
+     <modal-hostname :hostname="currentHostname" @ok="saveSettings" />
+     <modal-mac-address :mac-address="currentMacAddress" @ok="saveSettings" />
+@@ -149,6 +153,38 @@ export default {
+         .catch(({ message }) => this.errorToast(message))
+         .finally(() => this.endLoader());
+     },
++    editIpv4Address(modalFormData, index) {
++      this.startLoader();
++
++      const tableComponent = this.$refs.tableIpv4
++        ? this.$refs.tableIpv4[0]
++        : null;
++      console.log('tableComponent:', tableComponent);
++
++      if (!tableComponent) {
++        this.errorToast('无法获取表格组件');
++        this.endLoader();
++        return;
++      }
++
++      // 获取当前的所有IP地址数据
++      const tableItems = tableComponent.form.ipv4TableItems || [];
++      const currentIpv4Array = tableItems.map((ipv4) => {
++        const { Address, SubnetMask, Gateway } = ipv4;
++        return {
++          Address,
++          SubnetMask,
++          Gateway,
++        };
++      });
++      // 替换指定索引的数据
++      currentIpv4Array.splice(index, 1, modalFormData);
++
++      this.$store
++        .dispatch('network/editIpv4Address', currentIpv4Array)
++        .then((message) => this.successToast(message))
++        .catch(({ message }) => this.errorToast(message));
++    },
+     saveDnsAddress(modalFormData) {
+       this.startLoader();
+       this.$store
+diff --git a/src/views/Settings/Network/TableIpv4.vue b/src/views/Settings/Network/TableIpv4.vue
+index 0a06e0e..5f04fe6 100644
+--- a/src/views/Settings/Network/TableIpv4.vue
++++ b/src/views/Settings/Network/TableIpv4.vue
+@@ -142,7 +142,8 @@ export default {
+     filteredActions() {
+       return (item) => {
+         if (item.AddressOrigin === 'DHCP') {
+-          return item.actions.filter((action) => action.value !== 'delete');
++          // return item.actions.filter((action) => action.value !== 'delete');
++          return [];
+         } else {
+           return item.actions;
+         }
+@@ -176,6 +177,10 @@ export default {
+           Gateway: ipv4.Gateway,
+           AddressOrigin: ipv4.AddressOrigin,
+           actions: [
++            {
++              value: 'edit',
++              title: this.$t('global.action.edit'),
++            },
+             {
+               value: 'delete',
+               title: this.$t('pageNetwork.table.deleteIpv4'),
+@@ -187,6 +192,8 @@ export default {
+     onIpv4TableAction(action, $event, index) {
+       if ($event === 'delete') {
+         this.deleteIpv4TableRow(index);
++      } else if ($event === 'edit') {
++        this.editIpv4TableRow(index);
+       }
+     },
+     deleteIpv4TableRow(index) {
+@@ -204,6 +211,14 @@ export default {
+         .then((message) => this.successToast(message))
+         .catch(({ message }) => this.errorToast(message));
+     },
++    editIpv4TableRow(index) {
++      const item = this.form.ipv4TableItems[index];
++      this.$root.$emit('edit-ipv4-data', {
++        item: item,
++        index: index,
++      });
++      this.$bvModal.show('modal-add-ipv4');
++    },
+     initAddIpv4Address() {
+       this.$bvModal.show('modal-add-ipv4');
+     },
+-- 
+2.43.0
+

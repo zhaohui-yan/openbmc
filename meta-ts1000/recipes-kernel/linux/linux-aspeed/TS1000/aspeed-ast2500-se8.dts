@@ -153,7 +153,30 @@
 	status = "okay";
 };
 
+&uart1 {
+	status = "okay";
+};
+&uart2 {
+	status = "okay";
+};
+&uart3 {
+	status = "okay";
+};
+&uart4 {
+	status = "okay";
+};
+
 &uart5 {
+	status = "okay";
+};
+
+// &vuart {
+// 	current-speed = <115200>;
+// 	clock-frequency = <24750000>; // 24.75MHz
+// 	status = "okay";
+// };
+
+&uart_routing {
 	status = "okay";
 };
 

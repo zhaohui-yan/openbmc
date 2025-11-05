@@ -1,0 +1,63 @@
+description: >
+  SE8 system information interface
+
+properties:
+  - name: MemTotal
+    type: uint16
+    description: Total memory in MB
+
+  - name: MemUsage
+    type: byte
+    description: Memory usage percentage
+
+  - name: Dimm0Health
+    type: byte
+    description: Health status of DIMM0 (0: normal, 1: warning, 2: critical)
+
+  - name: Dimm1Health
+    type: byte
+    description: Health status of DIMM1 (0: normal, 1: warning, 2: critical)
+
+  - name: DiskTotal
+    type: uint16
+    description: Total disk space in GB
+
+  - name: DiskUsage
+    type: byte
+    description: Disk usage percentage
+
+  - name: DiskHealth
+    type: byte
+    description: Disk health status (0: normal, 1: warning, 2: critical)
+
+  - name: CpuUsage
+    type: byte
+    description: CPU usage percentage
+
+  - name: CpuHealth
+    type: byte
+    description: CPU health status (0: normal, 1: warning, 2: critical)
+
+  - name: CpuFanRate
+    type: uint16
+    description: CPU fan speed in RPM
+
+  - name: SysFanRate
+    type: uint16
+    description: System fan speed in RPM
+
+  - name: FanHealth
+    type: byte
+    description: Fan health status (0: normal, 1: warning, 2: critical)
+
+  - name: PowerHealth
+    type: byte
+    description: Power health status (0: normal, 1: warning, 2: critical)
+
+  - name: NetworkHealth
+    type: byte
+    description: Network health status (0: normal, 1: warning, 2: critical)
+
+  - name: SystemHealth
+    type: byte
+    description: Overall system health status (0: normal, 1: warning, 2: critical)
